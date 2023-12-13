@@ -1,0 +1,15 @@
+---
+- name: "Cleanup remote temporary directory..."
+  ansible.builtin.file:
+    path: "{{_tmp.path }}"
+    state: absent
+  changed_when: false
+  when: keep_tmp is not defined
+
+- name: "Cleanup local temporary directory..."
+  ansible.builtin.file:
+    path: "{{_ltmp.path }}"
+    state: absent
+  changed_when: false
+  when: keep_tmp is not defined
+  delegate_to: localhost

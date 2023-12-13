@@ -1,0 +1,9 @@
+---
+- name: "Create empty groups list ..."
+  set_fact:
+    my_groups: []
+
+- name: "Append group {{ item.key }} to the group list ..."
+  set_fact:
+    my_groups: "{{ my_groups + [ item.key ] }}"
+  loop: "{{ wum_groups | dict2items }}"

@@ -1,0 +1,32 @@
+- name: "Update ssh configuration..."
+  block:
+    - name: "/etc/sshd_config update..."
+      lineinfile:
+        insertbefore: BOF
+        dest: /etc/ssh/sshd_config
+        backup: no
+        regexp: "{{ item.re }}"
+        line: "{{ item.ln }}"
+        state: "{{ item.st }}"
+      loop:
+          # cleanup old configuration
+        - { re: '^##RevokedKeys', ln: '', st: 'absent' }
+          # Setup new configuration
+        - { re: '(?i)^(?!(AuthorizedPrincipalsFile {{ ca_ssh_role_dir }}/%u$))AuthorizedPrincipalsFile', ln: '', st: 'absent' }
+        - { re: '(?i)^AuthorizedPrincipalsFile {{ ca_ssh_role_dir }}/%u$', ln: 'AuthorizedPrincipalsFile {{ ca_ssh_role_dir }}/%u', st: 'present' }
+        - { re: '(?i)^(?!(TrustedUserCAKeys {{ ca_ssh_ca_dir }}/user-ca.pub$))TrustedUserCAKeys', ln: '', st: 'absent' }
+        - { re: '(?i)^TrustedUserCAKeys {{ ca_ssh_ca_dir }}/user-ca.pub$', ln: 'TrustedUserCAKeys {{ ca_ssh_ca_dir }}/user-ca.pub', st: 'present' }
+        - { re: '(?i)^(?!(AuthorizedKeysFile {{ ssh_pool_dir}}/%u$))AuthorizedKeysFile', ln: '', st: 'absent' }
+        - { re: '(?i)^AuthorizedKeysFile {{ ssh_pool_dir}}/%u$', ln: 'AuthorizedKeysFile {{ ssh_pool_dir}}/%u', st: 'present' }
+      register: sshd
+  always:
+    - name: "Testing sshd configuration..."
+      command: sshd -t
+      when: sshd.changed
+      register: ssh_check
+
+    - name: "Restarting sshd..."
+      service:
+        name: ssh
+        state: restarted
+      when: sshd.changed and ssh_check.rc == 0

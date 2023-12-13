@@ -1,0 +1,17 @@
+---
+- name: "Check if OS is supported ..."
+  assert:
+    that:
+      - ansible_distribution in ['Ubuntu']
+      - ansible_distribution_version in ["22.04","20.04"]
+    fail_msg: "Unsupported distribution: {{ ansible_distribution }} {{ ansible_distribution_version }}"
+    quiet: true
+
+- name: "Check if {{ host_policy_dir }}/static-ip is present ..."
+  stat:
+    path: "{{ host_policy_dir }}/static-ip"
+  register: static_ip
+
+- name: "Set static ip address ..."
+  include_tasks: "network/netplan/static.yml"
+  when: not static_ip.stat.exists

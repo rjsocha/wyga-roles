@@ -1,0 +1,17 @@
+- name: "Make sure CA key is present in the ssh-agent..."
+  block:
+    - name: "Check if host CA key is loaded..."
+      command: ssh-add -q -T "{{ _ca_public_file }}"
+      register: _ca_key_is_present
+      ignore_errors: yes
+      # not supported any way with free strategy
+      #run_once: yes
+      delegate_to: localhost
+
+    - name: "Load CA key if missing..."
+      command: ssh-add "{{ _ca_private_file }}"
+      when: _ca_key_is_present.rc != 0
+      # not supported any way with free strategy
+      #run_once: yes
+      delegate_to: localhost
+  when: use_ssh_agent | bool == True

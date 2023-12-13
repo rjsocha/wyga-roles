@@ -1,0 +1,116 @@
+---
+# This is more "not ansible way" than others task ... 
+- name: "Verifiy IP address is provided ..."
+  fail:
+    msg: "Missing network.static.ip ..."
+  when: host.network.static.ip is not defined or not host.network.static.ip
+
+- name: "Verifiy DNS address is provided ..."
+  fail:
+    msg: "Missing network.static.dns ..."
+  when: host.network.static.dns is not defined
+
+- name: "Prepare static IP ..."
+  set_fact:
+    host_network_static_ip: "{{ host.network.static.ip }}/{{ ip | ipaddr('prefix') }}"
+  vars:
+    ip: "{{ ansible_default_ipv4.address }}/{{ansible_default_ipv4.netmask }}"
+  when: "'/' not in host.network.static.ip"
+
+- name: "Prepare static IP ..."
+  set_fact:
+    host_network_static_ip: "{{ host.network.static.ip }}"
+  when: "'/' in host.network.static.ip"
+
+- name: "Verify IP address ..."
+  fail:
+    msg: "not an IP address: {{ host_network_static_ip }}"
+  when: not host_network_static_ip | ipv4
+
+- name: "New IP ..."
+  set_fact:
+    new_ip: "{{ host_network_static_ip | ipaddr('address') }}"
+
+- name: "Versify DNS servers ..."
+  set_fact:
+    DNS_SERVERS: "{{ DNS_SERVERS + [ dns_entry | ipaddr('address') ] }}"
+  vars:
+    DNS_SERVERS: []
+  loop: "{{ host.network.static.dns }}"
+  loop_control:
+    loop_var: dns_entry
+  when: dns_entry | ipv4
+
+- name: "Cleanup netplan directory ..."
+  find:
+    paths: /etc/netplan/
+    file_type: file
+    excludes: 
+      - "interfaces.yaml"
+      - "docker-mirror.yaml"
+  register: netplan_cleanup
+
+- name: "Delete files from /etc/netplan ..."
+  file:
+    path: "{{ item.path }}"
+    state: absent
+  with_items: "{{ netplan_cleanup['files'] }}"
+
+- name: "Configure /etc/netplan/interfaces.yaml ..."
+  template:
+    src: "netplan/interfaces"
+    dest: "/etc/netplan/interfaces.yaml"
+    group: root
+    owner: root
+    mode: 0600
+      
+- name: "Test netplan configuration ..."
+  command: netplan generate
+  notify: reboot-host
+
+- name: "Create {{ host_policy_dir }}/static-ip ..."
+  block:
+    - name: "Create {{ host_policy_dir }} directory ..."
+      file:
+        path: "{{ host_policy_dir }}"
+        state: directory
+    - name: "Create static-ip marker ..."
+      copy:
+        content: "{{ ansible_default_ipv4.address }}"
+        dest: "{{ host_policy_dir }}/static-ip"
+        mode: "0600"
+        owner: "root"
+        group: "root"
+
+- name: "Set ansible_port if not defined..."
+  set_fact:
+    ansible_port: 22
+  when: ansible_port is not defined
+
+- name: "Reboot with new IP: {{ new_ip }}"
+  shell: reboot
+  ignore_errors: yes
+  async: 1
+  poll: 0
+
+- name: "Wait for server to be back online with IP: {{ new_ip }}"
+  local_action: wait_for host={{ new_ip }} delay=5 port={{ ansible_port }} timeout=180 sleep=2 state=started
+  become: false
+
+- name: "Update connection to new IP ..."
+  set_fact:
+    ansible_host: "{{ new_ip }}"
+  delegate_to: localhost
+
+- name: "Cancel any pending handlers ..."
+  set_fact:
+    simple_rick_skip_reboot: true
+  delegate_to: localhost
+
+- name: "Stop play ..."
+  debug:
+    msg:
+      - "IP changed - reexecute this play with new IP address ..."
+
+- name: "End the play"
+  meta: end_play

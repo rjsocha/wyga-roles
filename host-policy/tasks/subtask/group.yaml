@@ -1,0 +1,8 @@
+- name: "Create group ..."
+  include_tasks: "group-create.yaml"
+  loop: "{{ wum_groups | dict2items }}"
+  loop_control:
+    loop_var: target
+
+- name: "Cleanup group ..."
+  include_tasks: "group-remove.yaml"

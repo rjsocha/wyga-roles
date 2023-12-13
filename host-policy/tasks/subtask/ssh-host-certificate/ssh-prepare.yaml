@@ -1,0 +1,16 @@
+---
+- name: "Prepare /etc/ssh/sshd_config..."
+  lineinfile:
+    dest: /etc/ssh/sshd_config
+    regexp: '{{ item }}'
+    state: absent
+  loop:
+    - '(?i)^(#?HostKey|#?HostCertificate|# HostKeys for protocol version 2)'
+
+- name: "Prepare /etc/ssh/sshd_config..."
+  lineinfile:
+    dest: /etc/ssh/sshd_config
+    regexp: '^{{ wyga_ssh_config_mark }}'
+    line: "{{ wyga_ssh_config_mark }}"
+    insertafter: '^#?Port '
+    state: present

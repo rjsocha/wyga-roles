@@ -1,0 +1,10 @@
+---
+- name: "Check if the host certificate /etc/ssh/ssh_host_{{item}}_key-cert.pub is present..."
+  stat:
+    path: "/etc/ssh/ssh_host_{{item}}_key-cert.pub"
+  register: _wyga_ssh_host_certs
+
+- name: "Append {{item}} to generation list..."
+  set_fact:
+    wyga_generate_certs: "{{ wyga_generate_certs + [ item ] }}"
+  when: not _wyga_ssh_host_certs.stat.exists

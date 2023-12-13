@@ -1,0 +1,21 @@
+---
+- name: "Create/update group {{ target.key }}"
+  ansible.builtin.group:
+    name: "{{ target.key }}"
+    gid: "{{ target.value.gid | default(omit) }}"
+    non_unique: "{{ not target.value.unique }}"
+    system: "{{ target.value.system }}"
+    state: present
+
+- name: "Create managed group state directory ..."
+  include_tasks: "create-dir.yaml"
+  loop:
+    - "{{wum_group_managed}}"
+
+- name: "Mark group {{ target.key }} as managed ..."
+  copy:
+    dest: "{{wum_group_managed }}/{{target.key}}"
+    content: "{{ target.key }}"
+    owner: root
+    group: root
+    mode:  0400

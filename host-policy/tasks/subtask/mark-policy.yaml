@@ -1,0 +1,14 @@
+---
+- name: "Create {{ host_policy_dir }}/policy ..."
+  block:
+    - name: "Create {{ host_policy_dir }} directory ..."
+      file:
+        path: "{{ host_policy_dir }}"
+        state: directory
+    - name: "Create policy marker ..."
+      copy:
+        content: "{{ host.hostname }}"
+        dest: "{{ host_policy_dir }}/policy"
+        mode: "0600"
+        owner: "root"
+        group: "root"

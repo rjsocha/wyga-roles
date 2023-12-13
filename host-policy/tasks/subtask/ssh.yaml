@@ -1,0 +1,50 @@
+- name: SSHD
+  block:
+    - name: "Install /etc/ssh/ssh_known_hosts"
+      copy:
+        dest: "/etc/ssh/ssh_known_hosts"
+        src: "ssh/ssh_known_hosts"
+        mode: "0644"
+        owner: "root"
+        group: "root"
+
+    - name: SSHD/Configuration
+      lineinfile:
+        dest: /etc/ssh/sshd_config
+        backup: no
+        regexp: "{{ item.regexp }}"
+        line: "{{ item.line }}"
+        state: "{{ item.state }}"
+        backrefs: "{{ item.backrefs }}"
+        insertafter: "{{ item.insertafter }}"
+      loop:
+        - { backrefs: no,  regexp: '(?i)^(?!(#Port 22$|Port {{ target_ssh_port|default(22) }}$))#?Port ', line: '', insertafter: EOF, state: 'absent' }
+        - { backrefs: no,  regexp: '(?i)^#?Port ', line: 'Port {{ target_ssh_port|default("22") }}', insertafter: 'LoginGraceTime', state: 'present' }
+        - { backrefs: no,  regexp: '(?i)^(?!(#?PermitRootLogin prohibit-password))#?PermitRootLogin', line: '', insertafter: EOF, state: 'absent' }
+        - { backrefs: no,  regexp: '(?i)^#?PermitRootLogin', line: 'PermitRootLogin prohibit-password', insertafter: 'LoginGraceTime', state: 'present' }
+        - { backrefs: no,  regexp: '(?i)^(?!(PasswordAuthentication no$))#?PasswordAuthentication', line: '', insertafter: EOF, state: 'absent' }
+        - { backrefs: no,  regexp: '(?i)^#?PasswordAuthentication', line: 'PasswordAuthentication no', insertafter: 'disable tunneled clear text passwords', state: 'present' }
+        - { backrefs: no,  regexp: '(?i)^(?!(ChallengeResponseAuthentication no))ChallengeResponseAuthentication', line: '', insertafter: EOF, state: 'absent' }
+        - { backrefs: no,  regexp: '(?i)^ChallengeResponseAuthentication', line: 'ChallengeResponseAuthentication no', insertafter: 'some PAM modules and threads', state: 'present' }
+        - { backrefs: no,  regexp: '(?i)^#?X11Forwarding', line: 'X11Forwarding no', insertafter: EOF, state: 'present' }
+        - { backrefs: yes, regexp: '(?i)^(AcceptEnv.*)', line: '#\1', insertafter: EOF, state: 'present' }
+        - { backrefs: no,  regexp: '(?i)^(?!(#?AllowAgentForwarding yes$))#?AllowAgentForwarding', line: '', insertafter: EOF, state: 'absent' }
+        - { backrefs: no,  regexp: '(?i)^#?AllowAgentForwarding', line: 'AllowAgentForwarding yes', insertafter: EOF, state: 'present' }
+        - { backrefs: no,  regexp: '(?i)^(?!(#?AllowTcpForwarding yes$|AllowTcpForwarding yes$))#?AllowTcpForwarding', line: '', insertafter: EOF, state: 'absent' }
+        - { backrefs: no,  regexp: '(?i)^#?AllowTcpForwarding', line: 'AllowTcpForwarding yes', insertafter: EOF, state: 'present' }
+      register: sshd
+  always:
+    - name: SSHD/Checking configuration
+      command: sshd -t
+      when: sshd.changed
+      register: ssh_check
+
+    - name: SSHD/Restarting with new configuration
+      service:
+        name: sshd
+        state: restarted
+      when: sshd.changed and ssh_check.rc == 0
+
+    - name: "Configure ansible to use port target_ssh_port"
+      set_fact:
+        ansible_port: "{{ target_ssh_port|default('22') }}"

@@ -1,0 +1,65 @@
+- name: Setup BASH profile
+  block:
+    - name: Create /etc/skel vim directories
+      file:
+        path: "/etc/skel/{{ item }}"
+        state: directory
+      with_items:
+        - .vim/swap
+        - .vim/backup
+        - .vim/undo
+
+    - name: Setup /etc/skel profile
+      copy:
+        src: "profile/{{ item }}"
+        dest: "/etc/skel/"
+        group: root
+        owner: root
+        mode: 0644
+        force: yes
+      with_items:
+        - .hushlogin
+        - .tmux.conf
+        - .vimrc
+        - .vimrc.local
+        - .bashrc
+        - .bashrc.managed
+        - .bashrc.local
+
+    - name: Setup /root profile
+      copy:
+        src: "/etc/skel/{{ item }}"
+        dest: "/root/"
+        group: root
+        owner: root
+        mode: 0644
+        force: yes
+        remote_src: yes
+      with_items:
+        - .hushlogin
+        - .tmux.conf
+        - .vimrc
+        - .bashrc
+        - .bashrc.managed
+
+    - name: Setup /root profile (.bashrc.local)
+      copy:
+        src: "/etc/skel/{{ item }}"
+        dest: "/root/"
+        group: root
+        owner: root
+        mode: 0644
+        force: no
+        remote_src: yes
+      with_items:
+        - .bashrc.local
+        - .vimrc.local
+
+    - name: Create /root vim directories
+      file:
+        path: "/root/{{ item }}"
+        state: directory
+      with_items:
+        - .vim/swap
+        - .vim/backup
+        - .vim/undo

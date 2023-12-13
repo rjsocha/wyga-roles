@@ -1,0 +1,114 @@
+---
+- name: "Collect host information ..."
+  ansible.builtin.setup:
+    gather_subset:
+      - 'min'
+      - 'network'
+      - 'mounts'
+
+- name: "Ansible tmp directory ..."
+  include_tasks: "ansible-tmp-directory.yaml"
+
+- name: "Hostname setup ..."
+  include_tasks: "hostname.yaml"
+  when: skip_hostname is not defined
+
+- name: "Static IP setup (netplan) ..."
+  include_tasks: "network-static-ip.yaml"
+  when: skip_static_ip is not defined and host.network.skip is not defined and host.network.static is defined
+
+- name: "Network configuration (systemd) ..."
+  block:
+    - include_role: 
+        name: wyga-system-network
+
+    - debug:
+        msg:
+          - "Reboot required ..."
+      when: wyga_system_network.changed
+
+    - meta: end_host
+      when: wyga_system_network.changed
+  when: skip_network is not defined and host.network.skip is not defined and host.network.interface is defined
+
+- name: "Trigger any pending reboots ..."
+  meta: flush_handlers
+
+- name: "APT Configuration ..."
+  include_tasks: "apt-configuration.yaml"
+
+- name: "SSH Configuration ..."
+  include_tasks: "ssh.yaml"
+  when: host.setup.ssh.configuration|default(false)
+
+- name: "SSH Host Certificate ..."
+  include_tasks: "ssh-host-certificate.yaml"
+  when: host.setup.ssh.host.certificate|default(false) and host.setup.ssh.host.group is defined
+
+- name: "Process packages ..."
+  include_tasks: "packages.yaml"
+  when: host.package.packages is defined and skip_packages is not defined and not host.package.skip|default(false)
+
+- name: "BASH profile ..."
+  include_tasks: "bash-profile.yaml"
+  when: host.setup.bash.profile|default(false)
+
+- name: "Canonicalization of group configuation ..."
+  include_tasks: "normalize-group.yaml"
+  loop: "{{ host.group }}"
+  loop_control:
+    loop_var: wum_target
+  when: host.group is defined 
+
+- name: "Canonicalization of users configuation ..."
+  include_tasks: "normalize-user.yaml"
+  loop: "{{ host.user }}"
+  loop_control:
+    loop_var: wum_target
+
+- name: "Load user CA certificate ..."
+  include_tasks: "load-user-cert.yaml"
+
+- name: "Fail if there is no user_cert defined ..."
+  fail:
+    msg: "the 'user_cert' is not defined"
+  delegate_to: localhost
+  when: user_cert is not defined
+
+- name: "Enumerate groups ..."
+  include_tasks: "enumerate-groups.yaml"
+
+- name: "Group management ..."
+  include_tasks: "group.yaml"
+
+- name: "Enumerate users ..."
+  include_tasks: "enumerate-users.yaml"
+
+- name: "User management ..."
+  include_tasks: "user.yaml"
+
+- include_tasks: "create-dir.yaml"
+  with_items:
+    - "{{ ca_ssh_ca_dir }}"
+    - "{{ ca_ssh_role_dir }}"
+    - "{{ ssh_pool_dir }}"
+
+- include_tasks: "update-ca-cert.yaml"
+
+- name: "Update roles ..."
+  include_tasks: "update-roles.yaml"
+  loop: "{{ wum_users | dict2items }}"
+  loop_control:
+    loop_var: target
+
+- name: "Remove orphaned roles ..."
+  include_tasks: "remove-roles.yaml"
+
+- name: "Manage ssh authorized keys ..."
+  include_tasks: "authorized.yaml"
+
+- name: "Configure /etc/ssh/sshd_config"
+  include_tasks: "update-ssh.yaml"
+
+- name: "Policy marker ..."
+  include_tasks: "mark-policy.yaml"

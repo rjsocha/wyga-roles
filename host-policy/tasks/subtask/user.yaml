@@ -1,0 +1,9 @@
+- name: "Create user ..."
+  include_tasks: "user-create.yaml"
+  loop: "{{ wum_users | dict2items }}"
+  loop_control:
+    loop_var: target
+  when: target.key != 'root'
+
+- name: "Cleanup users ..."
+  include_tasks: "user-remove.yaml"

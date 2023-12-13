@@ -1,0 +1,44 @@
+---
+- name: "Get user info ..."
+  getent:
+    database: passwd
+    key: "{{ target.key }}"
+
+- name: "Get user home directory ..."
+  set_fact:
+    userhome: "{{ ansible_facts.getent_passwd[target.key][4] }}"
+
+- name: "Create directory {{ userhome }}/.ssh"
+  file:
+    path:   "{{ userhome }}/.ssh"
+    state:  directory
+    owner:  "{{ target.key }}"
+    group:  "{{ target.key }}"
+    mode:   0700
+
+- name: "Generate SSH key {{ keygen.file }} ..."
+  user:
+    name:               "{{ target.key }}"
+    generate_ssh_key:   true
+    ssh_key_type:       "{{ keygen.type }}"
+    ssh_key_bits:       "{{ keygen.bits }}"
+    ssh_key_passphrase: "{{ keygen.passphrase }}"
+    ssh_key_comment:    "{{ keygen.comment }}"
+    ssh_key_file:       "{{ userhome }}/.ssh/{{ keygen.file }}"
+
+- name: "Read public key ..."
+  slurp:
+    src: "{{ userhome }}/.ssh/{{ keygen.file }}.pub"
+  register: generated_key
+
+- name: "Get public key ..."
+  set_fact:
+    generated_key: "BASE64:{{ generated_key.content }}"
+
+- name: "Append generated key to authorized list ..."
+  set_fact:
+    wum_users: "{{ wum_users | combine({ append:  { 'authorized': wum_users[append].authorized + [ generated_key ] } }, recursive=true) }}"
+  loop: "{{ keygen.append }}"
+  loop_control:
+    loop_var: append
+  when: keygen.append is defined

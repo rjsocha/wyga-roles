@@ -1,0 +1,33 @@
+---
+- name: "Check if 'user_ca_key' is defined"
+  fail:
+    msg: "missing 'user_ca_key' ..."
+  delegate_to: localhost
+  when: user_ca_key is not defined
+
+- name: "Check if {{user_ca_key}}.pub exists ..."
+  stat:
+    path: "{{ playbook_dir }}/{{user_ca_key}}.pub"
+  register: _public_user_ca_exists
+  delegate_to: localhost
+
+- debug:
+    msg:
+      - "{{ user_ca_key }}"
+
+- name: "Select public key ..."
+  set_fact:
+    user_cert_file: "{{ _public_user_ca_exists.stat.path }}"
+  delegate_to: localhost
+  when: _public_user_ca_exists.stat.exists == True
+
+- name: "No such file ..."
+  fail:
+    msg: "No such file {{ user_ca_key }}"
+  delegate_to: localhost
+  when: _public_user_ca_exists.stat.exists == False
+
+- name: "Load key ..."
+  set_fact:
+    user_cert: "{{ lookup('file',user_cert_file) }}"
+  delegate_to: localhost

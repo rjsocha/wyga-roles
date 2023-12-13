@@ -1,0 +1,43 @@
+- name: "Load policy for {{ inventory_hostname }} ..."
+  include_vars:
+    file: "{{ item }}"
+    name: policy
+  with_first_found:
+   - "{{ playbook_dir }}/policy/{{ select_policy | default('.nonexistent.host.policy.') }}"
+   - "{{ playbook_dir }}/policy/{{ inventory_hostname }}"
+   - "{{ playbook_dir }}/policy/missing"
+
+- name: "No policy for host {{ inventory_hostname }} ..."
+  fail:
+    msg:
+      - "No policy for host {{ inventory_hostname }} found ..."
+  when: policy is not defined or policy | length == 0
+
+- name: "Host policy ..."
+  set_fact:
+    host: "{{ policy.policy | first }}"
+
+- name: "Verify whether the policy has been applied to the host ..."
+  slurp:
+    src: "{{ host_policy_dir }}/policy"
+  register: policy_on_host
+  ignore_errors: yes
+  no_log: true
+
+- name: "Verify used policy ..."
+  block:
+    - name: "Policy mismatch ..."
+      debug:
+        msg:
+          - "Policy mismtach ..."
+          - " use -eforece_policy=1 to force ..."
+    - fail:
+        msg: "POLICY MISMTACH"
+  when: policy_on_host is not failed and force_policy is not defined and policy_on_host.content | b64decode != host.hostname
+
+- name: "Create empty group list ..."
+  set_fact:
+    wum_groups: {}
+
+- include_tasks: "subtask/execute.yaml"
+  when: host is defined

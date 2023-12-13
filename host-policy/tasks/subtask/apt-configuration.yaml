@@ -1,0 +1,27 @@
+- name: "Configure /etc/apt/apt.conf.d/99-host-policy ..."
+  template:
+    src: "apt/99-host-policy"
+    dest: "/etc/apt/apt.conf.d/99-host-policy"
+    group: root
+    owner: root
+    mode: 0644
+  register: apt_host_policy
+
+- name: "Configure /etc/apt/sources.list ..."
+  template:
+    src: "apt/{{ ansible_distribution | lower }}/{{ ansible_distribution_version }}/sources.list"
+    dest: "/etc/apt/sources.list"
+    group: root
+    owner: root
+    mode: 0644
+  vars:
+    mirror: "{{ host.setup.apt.mirror | default('pl') }}"
+    backports: "{{ host.setup.apt.sources.backports | default(false) | bool }}"
+    universe: "{{ host.setup.apt.sources.universe | default(true) | bool }}"
+    multiverse: "{{ host.setup.apt.sources.multiverse | default(false) | bool }}"
+  register: apt_sources
+  when: host.setup.apt is defined
+
+- name: "Cleanup apt ..."
+  shell: "find /var/lib/apt/lists /var/cache/apt -type f -delete && apt-get clean"
+  when: apt_host_policy.changed or apt_sources.changed

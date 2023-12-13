@@ -1,0 +1,35 @@
+---
+#- name: "Select users..." 
+#  set_fact:
+#    files_regexp: "^({{ pool.value.authorized | join('|') }})$"
+
+- name: "Create temporary key directory..."
+  ansible.builtin.tempfile:
+    state: directory
+    suffix: ".ssh_keys"
+  changed_when: false
+  register: user_keys_directory
+
+#- name: "Selected keys for {{ pool.key }}"
+#  debug:
+#    msg: "{{ files_regexp }}"
+
+- include_tasks: "generate-user-key.yaml"
+  loop: "{{pool.value.authorized}}"
+  loop_control:
+    loop_var: keyname
+
+- name: "Update pool for {{pool.key}}"
+  assemble:
+    src: "{{ user_keys_directory.path }}"
+    remote_src: yes
+    dest: "{{ ssh_pool_dir }}/{{ pool.key }}"
+    owner: "root"
+    group: "root"
+    mode: "0644"
+
+- name: "Cleanup temporary key directory"
+  file:
+    state: absent
+    path: "{{ user_keys_directory.path }}"
+  changed_when: false

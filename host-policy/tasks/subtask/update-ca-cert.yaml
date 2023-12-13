@@ -1,0 +1,8 @@
+---
+- name: "Update user CA certificate {{ ca_ssh_ca_dir }}/user-ca.pub"
+  copy:
+    content: "{{ user_cert }}"
+    dest: "{{ ca_ssh_ca_dir }}/user-ca.pub"
+    owner: "root"
+    group: "root"
+    mode: "0644"

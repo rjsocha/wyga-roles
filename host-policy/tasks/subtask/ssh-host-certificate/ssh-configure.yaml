@@ -1,0 +1,16 @@
+---
+- name: "Append HostKey to /etc/ssh/sshd_config for {{ item }}"
+  lineinfile:
+    dest: /etc/ssh/sshd_config
+    regexp: '^HostKey /etc/ssh/ssh_host_{{ item }}_key$'
+    line: 'HostKey /etc/ssh/ssh_host_{{ item }}_key'
+    insertafter: '^{{ wyga_ssh_config_mark }}'
+    state: present
+
+- name: "Append HostCertificate to /etc/ssh/sshd_config for {{ item }}"
+  lineinfile:
+    dest: /etc/ssh/sshd_config
+    regexp: '^HostCertificate /etc/ssh/ssh_host_{{ item }}_key-cert.pub$'
+    line: 'HostCertificate /etc/ssh/ssh_host_{{ item }}_key-cert.pub'
+    insertafter: '^HostKey /etc/ssh/ssh_host_{{ item }}_key$'
+    state: present

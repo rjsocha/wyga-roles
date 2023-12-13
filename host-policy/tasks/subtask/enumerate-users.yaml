@@ -1,0 +1,9 @@
+---
+- name: "Create empty user list ..."
+  set_fact:
+    my_users: []
+
+- name: "Append user {{ item.key }} to the users list ..."
+  set_fact:
+    my_users: "{{ my_users + [ item.key ] }}"
+  loop: "{{ wum_users | dict2items }}"

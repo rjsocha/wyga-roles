@@ -1,0 +1,13 @@
+---
+- name: "Find removed keys..."
+  find:
+    path: "{{ ssh_pool_dir }}"
+    file_type: file
+    excludes: "{{ my_users }}"
+  register: remove_keys
+
+- name: "Delete removed keys..."
+  file:
+    path: "{{ item.path }}"
+    state: absent
+  with_items: "{{ remove_keys['files'] }}"

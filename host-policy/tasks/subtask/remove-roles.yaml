@@ -1,0 +1,13 @@
+---
+- name: "Locate orphaned roles ..."
+  find:
+    path: "{{ ca_ssh_role_dir }}"
+    file_type: file
+    excludes: "{{ my_users }}"
+  register: remove_roles
+
+- name: "Delete orphaned role {{ item.path }} ..."
+  file:
+    path: "{{ item.path }}"
+    state: absent
+  with_items: "{{ remove_roles['files'] }}"

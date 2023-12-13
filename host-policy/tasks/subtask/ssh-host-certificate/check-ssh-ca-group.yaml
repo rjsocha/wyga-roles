@@ -1,0 +1,38 @@
+---
+- block:
+  - name: "Check if SSH_CA_PATH is set..."
+    fail:
+      msg: "Missing env variable SSH_CA_PATH..."
+    when: lookup('ansible.builtin.env', 'SSH_CA_PATH') == ''
+
+  - name: "Assign SSH_CA_PATH from enviroment variable..."
+    set_fact:
+      SSH_CA_PATH: "{{ lookup('ansible.builtin.env', 'SSH_CA_PATH') }}"
+
+  - name: "Check if SSH_CA_PATH {{ SSH_CA_PATH }} exists..."
+    delegate_to: localhost
+    stat:
+      path: "{{ SSH_CA_PATH }}"
+    register: ssh_ca_path_exist
+
+  - name: "SSH_CA_PATH {{ SSH_CA_PATH }} not exists..."
+    delegate_to: localhost
+    fail:
+      msg: "SSH_CA_PATH {{ SSH_CA_PATH }} not exists..."
+    when: not ssh_ca_path_exist.stat.exists
+
+  - name: "SSH_CA_PATH {{ SSH_CA_PATH }} is not a directory..."
+    delegate_to: localhost
+    fail:
+      msg: "SSH_CA_PATH {{ SSH_CA_PATH }} is not a directory or link..."
+    when: not (ssh_ca_path_exist.stat.isdir or ssh_ca_path_exist.stat.islnk)
+
+  - name: "Canonical path for SSH_CA_PATH..."
+    set_fact:
+      SSH_CA_PATH: "{{ SSH_CA_PATH | regex_replace('\\/+$', '') }}"
+
+  - name: "Set host_ca_key based on ssh_ca_group..."
+    set_fact:
+      host_ca_key: "{{ SSH_CA_PATH }}/{{ ssh_ca_group }}/host-ca"
+    when: SSH_CA_PATH is defined
+  when: ssh_ca_group is defined
