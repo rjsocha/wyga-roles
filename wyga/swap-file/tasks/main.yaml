@@ -1,0 +1,37 @@
+- name: "Check if swap is present..."
+  stat:
+    path: "/swap.space"
+  register: swap_file
+
+- set_fact:
+    swap_file_size: "4G"
+  when: swap_file_size is undefined
+  
+- block:
+    - name: Create swapfile
+      file:
+        path: "/swap.space"
+        state: touch
+        mode: "0600"
+        owner: "root"
+        group: "root"
+
+    - name: Allocate swap file...
+      command: fallocate -l {{ swap_file_size }} /swap.space
+
+    - name: Make swap file
+      command: mkswap /swap.space
+
+    - name: Add the swapfile to /etc/fstab
+      mount: 
+        name: none
+        src: /swap.space
+        fstype: swap
+        opts: sw
+        passno: "0"
+        dump: "0"
+        state: present
+
+    - name: Mount swap
+      shell: "swapon /swap.space"
+  when: not swap_file.stat.exists
