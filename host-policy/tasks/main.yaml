@@ -6,6 +6,13 @@
    - "{{ playbook_dir }}/policy/{{ select_policy | default('.nonexistent.host.policy.') }}"
    - "{{ playbook_dir }}/policy/{{ inventory_hostname }}"
    - "{{ playbook_dir }}/policy/missing"
+  when: policy_file is not defined
+
+- name: "Load policy for {{ inventory_hostname }} ..."
+  include_vars:
+    file: "{{ policy_file }}"
+    name: policy
+  when: policy_file is defined
 
 - name: "No policy for host {{ inventory_hostname }} ..."
   fail:
