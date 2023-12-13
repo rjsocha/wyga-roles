@@ -10,4 +10,3 @@
       msg: "Rebooting server ..."
       post_reboot_delay: 5
       test_command: uname -r
-  when: simple_rick_skip_reboot is not defined
