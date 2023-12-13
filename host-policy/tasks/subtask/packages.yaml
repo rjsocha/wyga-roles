@@ -9,8 +9,8 @@
 
 - name: "Configuration ..."
   set_fact:
-    targetos: "{{ ansible_distribution | lower }}"
-    targetver: "{{ ansible_distribution_version }}"
+    target_distribution: "{{ ansible_distribution | lower }}"
+    target_distribution_version: "{{ ansible_distribution_version }}"
     package_list: []
     prerequisite_list: []
     repository_list: []
@@ -76,7 +76,7 @@
 
 - name: "Prepare packages list ..."
   set_fact:
-     package_list: "{{ package_list + [ { 'name': package, 'manifest': role_path + '/files/packages/' + targetos + '/' + targetver + '/' + package } ] }}"
+     package_list: "{{ package_list + [ { 'name': package, 'manifest': role_path + '/files/packages/' + target_distribution + '/' + target_distribution_version + '/' + package } ] }}"
   loop: "{{ packages }}"
   loop_control:
     loop_var: package
@@ -102,7 +102,7 @@
         package_list: []
     - name: "Prepare package list (require) ..."
       set_fact:
-        package_list: "{{ package_list + [ { 'name': package, 'manifest': role_path + '/files/packages/' + targetos + '/' + targetver + '/' + package } ] }}"
+        package_list: "{{ package_list + [ { 'name': package, 'manifest': role_path + '/files/packages/' + target_distribution + '/' + target_distribution_version + '/' + package } ] }}"
         packages: "{{ packages + [ package ] }}"
       loop: "{{ require_list }}"
       loop_control:
@@ -142,7 +142,7 @@
 - name: "Information ..."
   debug:
     msg:
-      - "TARGET:        {{ targetos | capitalize }} {{ targetver }}"
+      - "TARGET:        {{ target_distribution | capitalize }} {{ target_distribution_version }}"
       - "PACKAGES:      {{ packages }}"
       - "REPOSITORIES:  {{ repository_list }}"
       - "PREREQUISITES: {{ prerequisite_list }}"
@@ -161,11 +161,12 @@
   when: prerequisite_list | length > 0
 
 - name: "Install respositories ..."
-  include_tasks: "packages/repository/{{ targetos }}/{{ targetver }}/{{ repository }}.yml"
+  include_role:
+    name: wyga/system-network
   loop: "{{ repository_list }}"
   when: repository_list | length > 0
   loop_control:
-    loop_var: repository
+    loop_var: repository_name
 
 - name: "."
   debug:
