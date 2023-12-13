@@ -1,0 +1,13 @@
+---
+- debug:
+    msg:
+      - "vars"
+      - "{{ vars }}"
+      - "environment"
+      - "{{ environment }}"
+      - "group_names"
+      - "{{ group_names }}"
+      - "groups"
+      - "{{ groups }}"
+      - "hostvars"
+      - "{{ hostvars }}"
