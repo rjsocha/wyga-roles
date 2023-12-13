@@ -1,12 +1,24 @@
+- name: "Prepare search list (file) ..."
+  set_fact:
+    search_list:
+      - "{{ policy_file }}"
+  delegate_to: localhost
+  when: policy_file is defined
+
+- name: "Prepare search list (default) ..."
+  set_fact:
+    search_list:
+      - "{{ playbook_dir }}/policy/{{ select_policy | default('.nonexistent.host.policy.') }}"
+      - "{{ playbook_dir }}/policy/{{ inventory_hostname }}"
+      - "{{ playbook_dir }}/policy/missing"
+  delegate_to: localhost
+  when: policy_file is not defined
+
 - name: "Load policy for {{ inventory_hostname }} ..."
   include_vars:
     file: "{{ item }}"
     name: policy
-  with_first_found:
-   - "{{ playbook_dir }}/policy/{{ select_policy | default('.nonexistent.host.policy.') }}"
-   - "{{ playbook_dir }}/policy/{{ inventory_hostname }}"
-   - "{{ playbook_dir }}/policy/missing"
-  when: policy_file is not defined
+  with_first_found: "{{ search_list }"
 
 - name: "Load policy for {{ inventory_hostname }} ..."
   include_vars:
