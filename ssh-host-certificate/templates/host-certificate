@@ -1,0 +1,12 @@
+{% if 'rsa' in wyga_ssh_host_keys %}
+HostKey /etc/ssh/ssh_host_rsa_key
+HostCertificate /etc/ssh/ssh_host_rsa_key-cert.pub
+{% endif %}
+{% if 'ecdsa' in wyga_ssh_host_keys %}
+HostKey /etc/ssh/ssh_host_ecdsa_key
+HostCertificate /etc/ssh/ssh_host_ecdsa_key-cert.pub
+{% endif %}
+{% if 'ed25519' in wyga_ssh_host_keys %}
+HostKey /etc/ssh/ssh_host_ed25519_key
+HostCertificate /etc/ssh/ssh_host_ed25519_key-cert.pub
+{% endif %}

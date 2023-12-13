@@ -77,6 +77,9 @@
           set_fact:
             wyga_generate_certs: "{{ wyga_generate_certs | sort | unique | list }}"
 
+    - name: "Cleanup unwanted keys ..."
+      include_tasks: "certificate/ssh-remove-keys.yaml"
+
     - name: "Preapre /etc/sshd_config"
       include_tasks: "certificate/ssh-prepare.yaml"
 

@@ -2,8 +2,5 @@
 use_ssh_agent: True
 sign_existing: True
 wyga_ssh_host_keys:
-  - "rsa"
-  - "ecdsa"
   - "ed25519"
-wyga_ssh_config_mark: '# ----- Host keys/certificates ------------------------- #'
 wyga_generate_certs: []
