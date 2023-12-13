@@ -18,7 +18,7 @@
   include_vars:
     file: "{{ item }}"
     name: policy
-  with_first_found: "{{ search_list }"
+  with_first_found: "{{ search_list }}"
 
 - name: "Load policy for {{ inventory_hostname }} ..."
   include_vars:
