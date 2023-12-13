@@ -1,0 +1,11 @@
+- name: "Install gitlab-runner apt repository ..."
+  copy:
+    src: "repository/gitlab-runner/ubuntu/23.10/{{ item.src }}"
+    dest: "{{ item.dst }}"
+    group: root
+    owner: root
+    mode: 0644
+    force: yes
+  loop:
+    - { 'src': 'gitlab-runner.list', 'dst': '/etc/apt/sources.list.d/gitlab-runner.list' }
+    - { 'src': 'gitlab-runner.gpg',  'dst': '/usr/share/keyrings/gitlab-runner.gpg' }

@@ -1,0 +1,14 @@
+[Match]
+Name={{ interface.name }}
+
+[Network]
+{% for ip in interface.ip %}
+Address={{ ip }}
+{% endfor %}
+LLMNR=False
+LLDP=False
+IPv6AcceptRA={{ interface.ra | default('False') | string }}
+LinkLocalAddressing={{ interface.lla | default('False') | string }}
+
+[Link]
+RequiredForOnline={{ interface.required4online | default('False') | string }}

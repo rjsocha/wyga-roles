@@ -1,0 +1,78 @@
+---
+- name: "Routes ..."
+  set_fact:
+    routes: "{{ interface.route | default([]) }}"
+
+- name: "Append gw to routes ..."
+  set_fact:
+    routes: "{{ [ { 'to': '0.0.0.0/0', 'via': interface.gw } ] + routes }}"
+  when: interface.gw is defined 
+
+- name: "Configure dummy interface ..."
+  block:
+    - name: "Configure device {{ interface.name }} ..."
+      template:
+        src: "{{ interface.kind }}.kind"
+        dest: "/etc/systemd/network/02-{{ interface.name }}.netdev"
+        group: root
+        owner: root
+        mode: 0644
+    - name: "Configure interface {{ interface.name }} ..."
+      template:
+        src: "{{ interface.method }}.dummy"
+        dest: "/etc/systemd/network/02-{{ interface.name }}.network"
+        group: root
+        owner: root
+        mode: 0644
+      register: dummychange
+    - name: "Mark configuration of device {{ interface.name }} as managed ..."
+      set_fact:
+        managed_files: "{{ managed_files + [ '02-' +  interface.name + '.netdev', '02-' +  interface.name + '.network' ] }}"
+  when: interface.kind | default('') == 'dummy'
+
+- name: "Configure loopback interface ..."
+  block:
+    - name: "Configure interface {{ interface.type }} ..."
+      template:
+        src: "{{ interface.type }}.{{ interface.method }}"
+        dest: "/etc/systemd/network/00-{{ interface.type }}.network"
+        group: root
+        owner: root
+        mode: 0644
+      register: loopbackchange
+    - name: "Mark configuration of {{ interface.type }} as managed ..."
+      set_fact:
+        managed_files: "{{ managed_files + [ '00-' + interface.type + '.network' ] }}"
+  when: interface.type | default('') == 'loopback'
+
+- name: "Configure /etc/systemd/network link {{ interface.name }} ..."
+  block:
+    - template:
+        src: "mac.link"
+        dest: "/etc/systemd/network/00-{{ interface.name }}.link"
+        group: root
+        owner: root
+        mode: 0644
+      register: iflink
+    - name: "Mark configuration of {{ interface.name }} as managed ..."
+      set_fact:
+        managed_files: "{{ managed_files + [ '00-' + interface.name + '.link' ] }}"
+  when: interface.mac is defined
+
+- name: "Configure /etc/systemd/network interface {{ interface.name }} ..."
+  block:
+    - template:
+        src: "{{ interface.method }}.template"
+        dest: "/etc/systemd/network/01-{{ interface.name }}.network"
+        group: root
+        owner: root
+        mode: 0644
+      register: ifchange
+    - name: "Mark configuration of {{ interface.name }} as managed ..."
+      set_fact:
+        managed_files: "{{ managed_files + [ '01-' + interface.name + '.network' ] }}"
+  when: interface.type | default('') != 'loopback' and interface.kind | default('') != 'dummy' and interface.name is defined
+
+- name: "Store changed status ..."
+  set_fact:
+    ifchanged: "{{ ifchanged | default(false) or dummychange.changed or loopbackchange.changed or ifchange.changed or iflink.changed }}"
