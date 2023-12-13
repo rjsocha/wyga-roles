@@ -8,7 +8,9 @@
   - name: "Assign SSH_CA_PATH from enviroment variable..."
     set_fact:
       SSH_CA_PATH: "{{ lookup('ansible.builtin.env', 'SSH_CA_PATH') }}"
-
+  when: SSH_CA_PATH is not defined and ssh_ca_group is defined
+    
+- block:
   - name: "Check if SSH_CA_PATH {{ SSH_CA_PATH }} exists..."
     delegate_to: localhost
     stat:
