@@ -4,9 +4,14 @@
     path: "/etc/ssh/ssh_host_{{item}}_key-cert.pub"
   register: _wyga_ssh_host_certs
 
-- name: "Evalute if certificate exists ..."
+- name: "Store certificate status  ..."
   set_fact:
     cert_exists: _wyga_ssh_host_certs.stat.exists
+
+- debug:
+    msg:
+      - "{{ _wyga_ssh_host_certs }}"
+      - "{{ cert_exists }}"
 
 - name: "Verify is certificate have valid Key ID ..."
   block:
