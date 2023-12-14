@@ -20,3 +20,8 @@ AcceptEnv {{ aenv }}
 {% for subsys in ssh_subsystem %}
 Subsystem {{ subsys }}
 {% endfor %}
+{% if ssh_gatewayports | type_debug == 'bool' %}
+GatewayPorts {{ 'yes' if ssh_gatewayports else 'no' }}
+{% else %}
+GatewayPorts {{ ssh_gatewayports }}
+{% endif %}

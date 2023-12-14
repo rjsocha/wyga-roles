@@ -42,6 +42,7 @@
     ssh_printmotd: "{{ 'yes' if host.setup.ssh.configuration.printmotd|default(false) else 'no' }}"
     ssh_acceptenv: "{{ host.setup.ssh.configuration.acceptenv|default([]) }}"
     ssh_subsystem: "{{ host.setup.ssh.configuration.subsystem|default(['sftp /usr/lib/openssh/sftp-server']) }}"
+    ssh_gatewayports: "{{ host.setup.ssh.configuration.gatewayports|default('no') }}"
 
 - name: "Update registred configurations ..."
   set_fact:
