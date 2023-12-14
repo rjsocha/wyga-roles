@@ -3,6 +3,7 @@
   loop: "{{ wum_users | dict2items }}"
   loop_control:
     loop_var: target
+    label: "{{ target.key }}"
   when: target.key != 'root'
 
 - name: "Cleanup users ..."
