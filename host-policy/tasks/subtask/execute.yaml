@@ -18,6 +18,9 @@
   include_tasks: "hostname.yaml"
   when: skip_hostname is not defined
 
+- name: "Initramfs configuration ..."
+  include_tasks: "initramfs-tools.yaml"
+
 - name: "Network configuration (systemd) ..."
   block:
     - include_role: 

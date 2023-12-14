@@ -1,0 +1,11 @@
+- name: "Setup resume device ..."
+  copy:
+    dest: "/etc/initramfs-tools/conf.d/resume"
+    content: "RESUME={{ host.setup.initramfs.resume | default('none') }}\n"
+  notify: update-initramfs
+
+- name: "Setup driver policy ..."
+  copy:
+    dest: "/etc/initramfs-tools/conf.d/driver-policy"
+    content: "MODULES={{ host.setup.initramfs.modules | default('dep') }}\n"
+  notify: update-initramfs
