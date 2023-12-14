@@ -78,6 +78,7 @@
   loop: "{{ packages }}"
   loop_control:
     loop_var: package
+    label: "{{ package }}"
 
 - name: "Process packages ... (PASS 1) ..."
   include_tasks: "packages/process-package.yml"
