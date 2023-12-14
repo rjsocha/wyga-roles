@@ -2,15 +2,13 @@
 - name: "Check if OS is supported ..."
   assert:
     that:
-      - ansible_distribution in ['Ubuntu']
-      - ansible_distribution_version in ["22.04","20.04","23.10"]
-    fail_msg: "Unsupported distribution: {{ ansible_distribution }} {{ ansible_distribution_version }}"
+      - target_distribution in ['ubuntu','debian']
+      - target_distribution_version in ["22.04","20.04","23.10"]
+    fail_msg: "Unsupported distribution: {{ target_distribution }} {{ target_distribution_version }}"
     quiet: true
 
 - name: "Configuration ..."
   set_fact:
-    target_distribution: "{{ ansible_distribution | lower }}"
-    target_distribution_version: "{{ ansible_distribution_version }}"
     package_list: []
     prerequisite_list: []
     repository_list: []

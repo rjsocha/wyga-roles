@@ -5,4 +5,5 @@
     regexp: '{{ item }}'
     state: absent
   loop:
-    - '(?i)^(#?HostKey|#?HostCertificate|# HostKeys for protocol version 2)'
+    - '(?i)^(HostKey|HostCertificate)'
+  notify: restart-ssh

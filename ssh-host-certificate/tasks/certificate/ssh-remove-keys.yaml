@@ -25,6 +25,7 @@
     path: "{{ key_to_remove }}"
     state: absent
   loop: "{{ keys_to_remove }}"
+  notify: restart-ssh
   loop_control:
     loop_var: key_to_remove
     label: "{{ key_to_remove }}"

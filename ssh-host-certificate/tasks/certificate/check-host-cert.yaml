@@ -4,7 +4,32 @@
     path: "/etc/ssh/ssh_host_{{item}}_key-cert.pub"
   register: _wyga_ssh_host_certs
 
+- name: "Evalute if certificate exists ..."
+  set_fact:
+    cert_exists: _wyga_ssh_host_certs.stat.exists
+
+- name: "Verify is certificate have valid Key ID ..."
+  block:
+    - name: "Fetch Key ID from certificate ..."
+      shell: "ssh-keygen -L -f '/etc/ssh/ssh_host_{{item}}_key-cert.pub' | grep -oP '(?<=Key ID: \")([^\"]+)'"
+      register: cert_keyid
+      changed_when: false
+      ignore_errors: true
+    - debug:
+        msg:
+          - "{{ cert_keyid.stdout }}"
+
+    - name: "Force certificate regeneration ..."
+      set_fact:
+        cert_exists: false
+      when: cert_keyid.stdout != host.hostname
+  when: cert_exists
+
+- debug:
+    msg:
+      - "{{ cert_exists }}"
+
 - name: "Append {{item}} to generation list..."
   set_fact:
     wyga_generate_certs: "{{ wyga_generate_certs + [ item ] }}"
-  when: not _wyga_ssh_host_certs.stat.exists
+  when: not cert_exists

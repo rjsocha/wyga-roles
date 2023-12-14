@@ -6,16 +6,17 @@
       - 'network'
       - 'mounts'
 
+- name: "Configuration ..."
+  set_fact:
+    target_distribution: "{{ ansible_distribution | lower }}"
+    target_distribution_version: "{{ ansible_distribution_version }}"
+
 - name: "Ansible tmp directory ..."
   include_tasks: "ansible-tmp-directory.yaml"
 
 - name: "Hostname setup ..."
   include_tasks: "hostname.yaml"
   when: skip_hostname is not defined
-
-- name: "Static IP setup (netplan) ..."
-  include_tasks: "network-static-ip.yaml"
-  when: skip_static_ip is not defined and host.network.skip is not defined and host.network.static is defined
 
 - name: "Network configuration (systemd) ..."
   block:
@@ -37,21 +38,23 @@
 - name: "APT Configuration ..."
   include_tasks: "apt-configuration.yaml"
 
-- name: "SSH Configuration ..."
-  include_tasks: "ssh.yaml"
-  when: host.setup.ssh.configuration|default(false)
-
-- name: "SSH Host Certificate ..."
-  include_tasks: "ssh-host-certificate.yaml"
-  when: host.setup.ssh.host.certificate|default(false) and host.setup.ssh.host.group is defined
-
 - name: "Process packages ..."
   include_tasks: "packages.yaml"
   when: host.package.packages is defined and skip_packages is not defined and not host.package.skip|default(false)
 
+- name: "SSH Configuration ..."
+  include_role: 
+    name: wyga/ssh-configuration
+
+- name: "SSH Host Certificate ..."
+  include_role:
+    name: wyga/ssh-host-certificate
+  when: host.setup.ssh.host.certificate|default(true) and host.setup.ssh.host.group is defined
+
 - name: "BASH profile ..."
-  include_tasks: "bash-profile.yaml"
-  when: host.setup.bash.profile|default(false)
+  include_role:
+    name: wyga/bash-profile
+  when: host.setup.bash.profile|default(true)
 
 - name: "Canonicalization of group configuation ..."
   include_tasks: "normalize-group.yaml"

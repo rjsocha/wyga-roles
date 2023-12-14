@@ -19,6 +19,9 @@ require:
   - wget
   - curl
   - zstd
+  - openssh-client
+  - openssh-sftp-server
+  - less
 purge:
   - accountsservice
   - acct
@@ -245,7 +248,6 @@ purge:
   - linux-headers-*
   - linux-image-generic
   - linux-modules-extra-*
-  - locales
   - lshw
   - lsof
   - ltrace

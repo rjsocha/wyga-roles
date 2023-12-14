@@ -12,6 +12,12 @@ require:
   - mc
   - haveged
   - qemu-guest-agent
+  - wget
+  - curl
+  - zstd
+  - openssh-client
+  - openssh-sftp-server
+  - less
 purge:
   - linux-headers-*
   - accountsservice
@@ -209,7 +215,6 @@ purge:
   - linux-generic
   - linux-headers-generic
   - linux-image-generic
-  - locales
   - lshw
   - lxd-agent-loader
   - man-db

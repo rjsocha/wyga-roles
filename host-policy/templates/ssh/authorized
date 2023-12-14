@@ -1,0 +1,3 @@
+AuthorizedPrincipalsFile {{ ca_ssh_role_dir }}/%u
+TrustedUserCAKeys {{ ca_ssh_ca_dir }}/user-ca.pub
+AuthorizedKeysFile {{ ssh_pool_dir}}/%u

@@ -87,8 +87,5 @@
       include_tasks: "certificate/ssh-configure.yaml"
       with_items: "{{ wyga_generate_certs }}"
 
-    - name: "Restart sshd"
-      include_tasks: "certificate/ssh-restart.yaml"
-
     - name: "Cleanup..."
       include_tasks: "certificate/cleanup-temp-dirs.yaml"
