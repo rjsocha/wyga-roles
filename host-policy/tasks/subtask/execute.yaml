@@ -106,6 +106,7 @@
   loop: "{{ wum_users | dict2items }}"
   loop_control:
     loop_var: target
+    label: "{{ target.key }}"
 
 - name: "Remove orphaned roles ..."
   include_tasks: "remove-roles.yaml"
