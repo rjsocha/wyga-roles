@@ -64,6 +64,7 @@
   loop: "{{ host.group }}"
   loop_control:
     loop_var: wum_target
+    label: "group"
   when: host.group is defined 
 
 - name: "Canonicalization of users configuation ..."
@@ -71,6 +72,7 @@
   loop: "{{ host.user }}"
   loop_control:
     loop_var: wum_target
+    label: "user"
 
 - name: "Load user CA certificate ..."
   include_tasks: "load-user-cert.yaml"
