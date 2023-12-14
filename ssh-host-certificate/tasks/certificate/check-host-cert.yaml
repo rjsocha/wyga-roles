@@ -15,19 +15,12 @@
       register: cert_keyid
       changed_when: false
       ignore_errors: true
-    - debug:
-        msg:
-          - "{{ cert_keyid.stdout }}"
 
     - name: "Force certificate regeneration ..."
       set_fact:
         cert_exists: false
       when: cert_keyid.stdout != host.hostname
   when: cert_exists
-
-- debug:
-    msg:
-      - "{{ cert_exists }}"
 
 - name: "Append {{item}} to generation list..."
   set_fact:
