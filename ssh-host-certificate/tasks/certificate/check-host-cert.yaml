@@ -6,12 +6,7 @@
 
 - name: "Store certificate status  ..."
   set_fact:
-    cert_exists: _wyga_ssh_host_certs.stat.exists
-
-- debug:
-    msg:
-      - "{{ _wyga_ssh_host_certs }}"
-      - "{{ cert_exists }}"
+    cert_exists: "{{ _wyga_ssh_host_certs.stat.exists }}"
 
 - name: "Verify is certificate have valid Key ID ..."
   block:
