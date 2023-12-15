@@ -45,6 +45,21 @@
         managed_files: "{{ managed_files + [ '00-' + interface.type + '.network' ] }}"
   when: interface.type | default('') == 'loopback'
 
+- name: "Configure ether interface ..."
+  block:
+    - name: "Configure interface {{ interface.type }} ..."
+      template:
+        src: "{{ interface.type }}.{{ interface.method }}"
+        dest: "/etc/systemd/network/20-{{ interface.type }}-{{ interface.method }}.network"
+        group: root
+        owner: root
+        mode: 0644
+      register: etherchange
+    - name: "Mark configuration of {{ interface.type }} as managed ..."
+      set_fact:
+        managed_files: "{{ managed_files + [ '20-' + interface.type + '-' + interface.method + '.network' ] }}"
+  when: interface.type | default('') == 'ether'
+
 - name: "Configure /etc/systemd/network link {{ interface.name }} ..."
   block:
     - template:
@@ -71,7 +86,7 @@
     - name: "Mark configuration of {{ interface.name }} as managed ..."
       set_fact:
         managed_files: "{{ managed_files + [ '20-' + interface.name + '.network' ] }}"
-  when: interface.type | default('') != 'loopback' and interface.kind | default('') != 'dummy' and interface.name is defined
+  when: interface.type | default('') is not in [ 'loopback', 'ether' ] and interface.kind | default('') != 'dummy' and interface.name is defined
 
 - name: "Store changed status ..."
   set_fact:

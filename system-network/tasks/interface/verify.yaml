@@ -11,10 +11,17 @@
     that:
       - interface.name is not defined
       - interface.kind is not defined
-      - interface.type in ['loopback']
-      - interface.method in ['static']
+      - interface.type in ['loopback','ether']
+      - interface.method in ['static','dhcp']
     msg: "Unable to continue, check interface configuration ..."
   when: interface.type is defined
+
+- name: "Verify configuration for interface.type=ether ..."
+  assert:
+    that:
+      - interface.driver is defined
+    msg: "Unable to continue, check interface configuration ..."
+  when: interface.type is defined and interface.type == 'ether'
 
 - name: "Verify configuration for interface.kind ..."
   assert:
