@@ -1,7 +1,6 @@
 [Match]
 Type={{ interface.type }}
 Driver={{ interface.driver }}
-{% endif %}
 
 [Network]
 DHCP=ipv4
