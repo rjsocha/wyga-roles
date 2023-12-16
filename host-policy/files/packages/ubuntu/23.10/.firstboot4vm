@@ -10,12 +10,10 @@ prerequisite:
   - secureboot-db
   - busybox-initramfs
 require:
-  - vim
   - tmux
   - tcpdump
   - mc
   - haveged
-  - qemu-guest-agent
   - wget
   - curl
   - zstd

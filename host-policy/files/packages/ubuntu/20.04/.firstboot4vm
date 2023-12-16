@@ -6,12 +6,10 @@ prerequisite:
   - python3-apt
   - python-apt-common
 require:
-  - vim
   - tmux
   - tcpdump
   - mc
   - haveged
-  - qemu-guest-agent
   - wget
   - curl
   - zstd

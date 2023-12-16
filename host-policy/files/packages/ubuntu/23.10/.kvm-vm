@@ -1,0 +1,2 @@
+require:
+  - qemu-guest-agent
