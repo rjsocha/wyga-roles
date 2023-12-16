@@ -74,7 +74,7 @@
 
 - name: "Prepare packages list ..."
   set_fact:
-     package_list: "{{ package_list + [ { 'name': package, 'manifest': role_path + '/files/packages/' + target_distribution + '/' + target_distribution_version + '/' + package } ] }}"
+     package_list: "{{ package_list + [ { 'name': package, 'manifest': playbook_dir + '/site/packages/' + target_distribution + '/' + target_distribution_version + '/' + package } ] + [ { 'name': package, 'manifest': role_path + '/files/packages/' + target_distribution + '/' + target_distribution_version + '/' + package } ] }}"
   loop: "{{ packages }}"
   loop_control:
     loop_var: package
@@ -102,7 +102,7 @@
         package_list: []
     - name: "Prepare package list (require) ..."
       set_fact:
-        package_list: "{{ package_list + [ { 'name': package, 'manifest': role_path + '/files/packages/' + target_distribution + '/' + target_distribution_version + '/' + package } ] }}"
+        package_list: "{{ package_list + [ { 'name': package, 'manifest': playbook_dir + '/site/packages/' + target_distribution + '/' + target_distribution_version + '/' + package } ] + [ { 'name': package, 'manifest': role_path + '/files/packages/' + target_distribution + '/' + target_distribution_version + '/' + package } ] }}"
         packages: "{{ packages + [ package ] }}"
       loop: "{{ require_list }}"
       loop_control:
