@@ -1,0 +1,12 @@
+- name: "Collect only minimal facts..."
+  ansible.builtin.setup:
+    gather_subset:
+      - 'min'
+      - 'network'
+      - 'mounts'
+
+- name: "Configuration ..."
+  set_fact:
+    target_distribution: "{{ ansible_distribution | lower }}"
+    target_distribution_version: "{{ ansible_distribution_version }}"
+  when: target_distribution is not defined or target_distribution_version is not defined

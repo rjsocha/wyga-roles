@@ -1,0 +1,3 @@
+---
+- name: reboot-host
+  include_tasks: "task/reboot-host.yaml"

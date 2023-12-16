@@ -1,0 +1,63 @@
+- name: "wyga-vim url"
+  set_fact:
+    wyga_vim: "https://github.com/rjsocha/wyga-vim/releases/download/8.2/wyga-vim_8.2.deb"
+
+- name: "Check if OS is supported ..."
+  assert:
+    that:
+      - target_distribution in ['ubuntu','debian']
+      - target_distribution_version in ["22.04","20.04","23.10","12","11"]
+    fail_msg: "Unsupported distribution: {{ target_distribution }} {{ target_distribution_version }}"
+    quiet: true
+
+- block:
+    - name: "Create temporary directory at {{ ansible_facts.user_dir }}/.ansible/tmp"
+      file:
+        path: "{{ ansible_facts.user_dir }}/.ansible/tmp"
+        state: directory
+        mode: 0700
+
+    - name: "Create temporary file ..."
+      ansible.builtin.tempfile:
+        state: file
+        suffix: ".deb"
+      register: vimdeb
+      changed_when: false
+
+    - debug:
+        msg:
+          - "{{ vimdeb.path }}"
+
+    - name: "Download {{ wyga_vim }}"
+      get_url:
+        url: "{{ wyga_vim }}"
+        dest: "{{ vimdeb.path }}"
+        force: true
+      register: getresult
+      until: "getresult is not failed"
+      retries: 6
+      delay: 5
+
+    - name: Remove vim
+      apt:
+        name:
+          - vim*
+          - xxd
+        state: absent
+        autoremove: yes
+        purge: yes
+        update_cache: yes
+      register: _action
+      retries: 25
+      until: _action is success or ('Failed to lock apt for exclusive operation' not in _action.msg and '/var/lib/dpkg/lock' not in _action.msg)
+
+    - name: Install wyga-vim
+      command: dpkg -i "{{ vimdeb.path }}"
+
+  always:
+    - name: "Remove tempoary file ..."
+      ansible.builtin.file:
+        path: "{{ vimdeb.path }}"
+        state: absent
+      when: vimdeb.path is defined
+
