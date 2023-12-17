@@ -17,8 +17,12 @@
 
 - name: "..."
   fail:
-    msg: "missing packages list ..."
-  when: packages is not defined
+    msg: "missing install_packages ..."
+  when: install_packages is not defined
+
+- name: "Slurp packages list ..."
+  set_fact:
+    packages: "{{ install_packages }}"
 
 - block:
     - name: "Check if {{ host_policy_dir }}/firstboot is present ..."

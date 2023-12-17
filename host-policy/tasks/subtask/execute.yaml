@@ -30,7 +30,7 @@
   include_role: 
     name: wyga/install-package
   vars:
-    packages: "{{ host.package.packages }}"
+    install_packages: "{{ host.package.packages }}"
   when: host.package.packages is defined and skip_packages is not defined and not host.package.skip|default(false)
 
 - name: "SSH Configuration ..."
