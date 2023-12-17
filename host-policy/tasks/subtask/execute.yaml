@@ -27,7 +27,9 @@
   include_tasks: "apt-configuration.yaml"
 
 - name: "Process packages ..."
-  include_tasks: "packages.yaml"
+  include_role: wyga/install-package
+  vars:
+    packages: "{{ host.package.packages }}"
   when: host.package.packages is defined and skip_packages is not defined and not host.package.skip|default(false)
 
 - name: "SSH Configuration ..."
