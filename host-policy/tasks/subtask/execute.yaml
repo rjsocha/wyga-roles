@@ -36,16 +36,17 @@
 - name: "SSH Configuration ..."
   include_role: 
     name: wyga/ssh-configuration
+  when: skip_ssh_configuration is not defined
 
 - name: "SSH Host Certificate ..."
   include_role:
     name: wyga/ssh-host-certificate
-  when: host.setup.ssh.host.certificate|default(true) and host.setup.ssh.host.group is defined
+  when: host.setup.ssh.host.certificate|default(true) and host.setup.ssh.host.group is defined and skip_ssh_certificate is not defined
 
 - name: "BASH profile ..."
   include_role:
     name: wyga/bash-profile
-  when: host.setup.bash.profile|default(true)
+  when: host.setup.bash.profile|default(true) and skip_bash_profile is not defined
 
 - name: "Canonicalization of group configuation ..."
   include_tasks: "normalize-group.yaml"
