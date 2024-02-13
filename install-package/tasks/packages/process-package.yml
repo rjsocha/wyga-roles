@@ -1,0 +1,25 @@
+---
+- name: "Load manifest for {{ package.name }} ..."
+  include_vars:
+    file: "{{ package.manifest }}"
+    name: loaded_manifest
+
+- name: "Append prerequisite packages ..."
+  set_fact:
+    prerequisite_list: "{{ prerequisite_list + loaded_manifest.prerequisite }}"
+  when: loaded_manifest.prerequisite is defined
+
+- name: "Append repositories ..."
+  set_fact:
+    repository_list: "{{ repository_list + loaded_manifest.repository }}"
+  when: loaded_manifest.repository is defined
+
+- name: "Append required packages ..."
+  set_fact:
+    require_list: "{{ require_list + loaded_manifest.require }}"
+  when: process_require | default(false) and loaded_manifest.require is defined
+
+- name: "Append purged packages ..."
+  set_fact:
+    purge_list: "{{ purge_list + loaded_manifest.purge }}"
+  when: loaded_manifest.purge is defined

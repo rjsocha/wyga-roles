@@ -1,0 +1,33 @@
+---
+- name: "Copy host private {{ item }} key"
+  ansible.builtin.copy:
+    src: "{{ _tmp.path }}/ssh_host_{{ item }}_key"
+    dest: "/etc/ssh/ssh_host_{{ item }}_key"
+    remote_src: yes
+    force: yes
+    mode: "0600"
+    owner: "root"
+    group: "root"
+  notify: restart-ssh
+
+- name: "Copy host public {{ item }} key"
+  ansible.builtin.copy:
+    src: "{{ _tmp.path }}/ssh_host_{{ item }}_key.pub"
+    dest: "/etc/ssh/ssh_host_{{ item }}_key.pub"
+    remote_src: yes
+    force: yes
+    mode: "0644"
+    owner: "root"
+    group: "root"
+  notify: restart-ssh
+
+- name: "Copy host certificate for key type {{ item }}"
+  ansible.builtin.copy:
+    src: "{{ _tmp.path }}/ssh_host_{{ item }}_key-cert.pub"
+    dest: "/etc/ssh/ssh_host_{{ item }}_key-cert.pub"
+    remote_src: yes
+    force: yes
+    mode: "0644"
+    owner: "root"
+    group: "root"
+  notify: restart-ssh

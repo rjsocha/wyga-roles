@@ -1,0 +1,51 @@
+---
+- name: "Install /etc/ssh/sshd_config ..."
+  copy:
+    dest: "/etc/ssh/sshd_config"
+    src: "sshd/common/sshd_config"
+    mode: "0644"
+    owner: "root"
+    group: "root"
+  notify: restart-ssh
+
+- name: "Create /etc/ssh/sshd_match.d directory ..."
+  file:
+    path: "/etc/ssh/sshd_match.d"
+    state: directory
+
+- name: "Install /etc/ssh/ssh_known_hosts"
+  copy:
+    dest: "/etc/ssh/ssh_known_hosts"
+    src: "key/known_hosts/{{ whp_site }}/ssh_known_hosts"
+    mode: "0644"
+    owner: "root"
+    group: "root"
+
+- name: "Configure /etc/ssh/sshd_config.d/host-policy.conf ..."
+  template:
+    src: "sshd/host-policy"
+    dest: "/etc/ssh/sshd_config.d/host-policy.conf"
+    group: root
+    owner: root
+    mode: 0644
+  notify: restart-ssh
+  vars:
+    ssh_port: "{{ host.setup.ssh.configuration.port | default('22') }}"
+    ssh_addressfamily: "{{ host.setup.ssh.configuration.addressfamily | default('inet') }}"
+    ssh_listenaddress: "{{ host.setup.ssh.configuration.listenaddress | default('0.0.0.0') }}"
+    ssh_forcei18n: "{{ host.setup.ssh.configuration.forcei18n | default('none') }}"
+    ssh_allowtcpforwarding: "{{ 'yes' if host.setup.ssh.configuration.allowtcpforwarding|default(true) else 'no' }}"
+    ssh_allowagentforwarding: "{{ 'yes' if host.setup.ssh.configuration.allowagentforwarding|default(true) else 'no' }}"
+    ssh_x11forwarding: "{{ 'yes' if host.setup.ssh.configuration.x11forwarding|default(false) else 'no' }}"
+    ssh_permitrootlogin: "{{ host.setup.ssh.configuration.permitrootlogin|default('prohibit-password') }}"
+    ssh_passwordauthentication: "{{ 'yes' if host.setup.ssh.configuration.passwordauthentication|default(false) else 'no' }}"
+    ssh_kbdinteractiveauthentication: "{{ 'yes' if host.setup.ssh.configuration.kbdinteractiveauthentication|default(false) else 'no' }}"
+    ssh_usepam: "{{ 'yes' if host.setup.ssh.configuration.usepam|default(true) else 'no' }}"
+    ssh_printmotd: "{{ 'yes' if host.setup.ssh.configuration.printmotd|default(false) else 'no' }}"
+    ssh_acceptenv: "{{ host.setup.ssh.configuration.acceptenv|default([]) }}"
+    ssh_subsystem: "{{ host.setup.ssh.configuration.subsystem|default(['sftp /usr/lib/openssh/sftp-server']) }}"
+    ssh_gatewayports: "{{ host.setup.ssh.configuration.gatewayports|default('no') }}"
+
+- name: "Update registred configurations ..."
+  set_fact:
+    wyga_ssh_registred_config: "{{ wyga_ssh_registred_config + ['host-policy.conf' ] }}"

@@ -1,0 +1,7 @@
+[Match]
+Type={{ interface.type }}
+
+[Network]
+{% for ip in interface.ip %}
+Address={{ ip }}
+{% endfor %}

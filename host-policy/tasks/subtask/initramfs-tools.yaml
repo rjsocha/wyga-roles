@@ -1,0 +1,34 @@
+- name: "initramfs - managed files ..."
+  set_fact:
+    initramfs_managed: [ 'resume', 'driver-policy' ]
+
+- name: "initramfs - set resume device ..."
+  copy:
+    dest: "/etc/initramfs-tools/conf.d/resume"
+    content: "RESUME={{ host.setup.initramfs.resume | default('none') }}\n"
+  notify: update-initramfs
+  when: host.setup.initramfs.resume|default(true)
+
+- name: "initramfs - set driver policy ..."
+  copy:
+    dest: "/etc/initramfs-tools/conf.d/driver-policy"
+    content: "MODULES={{ host.setup.initramfs.modules | default('dep') }}\n"
+  notify: update-initramfs
+  when: host.setup.initramfs.driverpolicy|default(true)
+
+- name: "initramfs - looking for unmanaged files in /etc/initramfs-tools/conf.d directory ..."
+  find:
+    paths: "/etc/initramfs-tools/conf.d"
+    file_type: file
+    excludes: "{{ initramfs_managed }}"
+  register: initramfs_cleanup
+
+- name: "initramfs - delete unmanaged files form /etc/initramfs-tools/conf.d ..."
+  file:
+    path: "{{ cleanup.path }}"
+    state: absent
+  loop: "{{ initramfs_cleanup.files }}"
+  loop_control:
+    label: "{{ cleanup.path }}"
+    loop_var: cleanup
+  notify: update-initramfs

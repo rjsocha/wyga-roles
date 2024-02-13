@@ -1,0 +1,35 @@
+---
+- block:
+  - name: "Check if SSH_HOST_CA_PATH is defined ..."
+    fail:
+      msg: "Missing SSH_HOST_CA_PATH ..."
+    when: SSH_HOST_CA_PATH is not defined
+
+- block:
+  - name: "Check if SSH_HOST_CA_PATH {{ SSH_HOST_CA_PATH }} exists..."
+    delegate_to: localhost
+    stat:
+      path: "{{ SSH_HOST_CA_PATH }}"
+    register: ssh_ca_path_exist
+
+  - name: "SSH_HOST_CA_PATH {{ SSH_HOST_CA_PATH }} not exists..."
+    delegate_to: localhost
+    fail:
+      msg: "SSH_HOST_CA_PATH {{ SSH_HOST_CA_PATH }} not exists..."
+    when: not ssh_ca_path_exist.stat.exists
+
+  - name: "SSH_HOST_CA_PATH {{ SSH_HOST_CA_PATH }} is not a directory..."
+    delegate_to: localhost
+    fail:
+      msg: "SSH_HOST_CA_PATH {{ SSH_HOST_CA_PATH }} is not a directory or link..."
+    when: not (ssh_ca_path_exist.stat.isdir or ssh_ca_path_exist.stat.islnk)
+
+  - name: "Canonical path for SSH_HOST_CA_PATH..."
+    set_fact:
+      SSH_HOST_CA_PATH: "{{ SSH_HOST_CA_PATH | regex_replace('\\/+$', '') }}"
+
+  - name: "Set host_ca_key based on ssh_ca_group..."
+    set_fact:
+      host_ca_key: "{{ SSH_HOST_CA_PATH }}/{{ ssh_ca_group }}/host-ca"
+    when: SSH_HOST_CA_PATH is defined
+  when: ssh_ca_group is defined

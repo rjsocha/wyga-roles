@@ -1,0 +1,12 @@
+---
+- block:
+  - name: "Rebooting - Please wait ..."
+    debug:
+      msg:
+        - "Rebooting ... please wait a minute or two ..."
+
+  - name: "Reboot ..."
+    reboot:
+      msg: "Rebooting server ..."
+      post_reboot_delay: 5
+      test_command: uname -r

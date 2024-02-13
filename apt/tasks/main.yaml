@@ -1,0 +1,17 @@
+---
+# Policy template
+# policy (host):
+#   setup:
+#     apt:
+#       mirror: "pl"
+#       sources:
+#         universe: true        # ubuntu
+#         multiverse: true      # ubuntu
+#         contrib: true         # debian
+#         nonfree: true         # debian
+#         nonfreefirmware: true #debian
+#         backports: false      # debian, ubuntu
+#
+- name: "APT / Configuration ..."
+  include_tasks: "subtask/apt.yaml"
+  when: host.setup.apt is defined

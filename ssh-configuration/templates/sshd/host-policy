@@ -1,0 +1,31 @@
+{% if ssh_port != "none" %}
+Port {{ ssh_port }}
+{% endif %}
+AddressFamily {{ ssh_addressfamily }}
+ListenAddress {{ ssh_listenaddress }}
+{% if ssh_forcei18n != "none" %}
+SetEnv LC_ADDRESS={{ ssh_forcei18n }} LC_NAME={{ ssh_forcei18n }} LC_MONETARY={{ ssh_forcei18n }} LC_PAPER={{ ssh_forcei18n }} LC_IDENTIFICATION={{ ssh_forcei18n }} LC_TELEPHONE={{ ssh_forcei18n }} LC_MEASUREMENT={{ ssh_forcei18n }} LC_TIME={{ ssh_forcei18n }} LC_NUMERIC={{ ssh_forcei18n }} LC_ALL={{ ssh_forcei18n }} LANG={{ ssh_forcei18n }}
+{% endif %}
+AllowTCPForwarding {{ ssh_allowtcpforwarding }}
+AllowAgentForwarding {{ ssh_allowagentforwarding }}
+X11Forwarding {{ ssh_x11forwarding }}
+{% if ssh_permitrootlogin | type_debug == 'bool' %}
+PermitRootLogin {{ 'yes' if ssh_permitrootlogin else 'no' }}
+{% else %}
+PermitRootLogin {{ ssh_permitrootlogin }}
+{% endif %}
+PasswordAuthentication {{ ssh_passwordauthentication }}
+KbdInteractiveAuthentication {{ ssh_kbdinteractiveauthentication }}
+UsePAM {{ ssh_usepam }}
+PrintMotd {{ ssh_printmotd }}
+{% for aenv in ssh_acceptenv %}
+AcceptEnv {{ aenv }}
+{% endfor %}
+{% for subsys in ssh_subsystem %}
+Subsystem {{ subsys }}
+{% endfor %}
+{% if ssh_gatewayports | type_debug == 'bool' %}
+GatewayPorts {{ 'yes' if ssh_gatewayports else 'no' }}
+{% else %}
+GatewayPorts {{ ssh_gatewayports }}
+{% endif %}

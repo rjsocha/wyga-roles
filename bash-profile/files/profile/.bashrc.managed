@@ -1,0 +1,138 @@
+# This file is managed by ansible - use .bashrc.local for local changes
+
+# Some support functions
+mc() {
+local _pwd _ncd
+  _pwd="${TMPDIR-/tmp}/mc-${USER}/mc.pwd.$$"
+  env LANG=en_US.UTF-8 /usr/bin/mc -P "$_pwd" "$@"
+  if [[ -r ${_pwd} ]]
+  then
+    _ncd="$(<${_pwd})"
+    if [[ -n ${_ncd} ]] && [[ -d ${_ncd} ]]
+    then
+      cd "${_ncd}"
+    fi
+  fi
+  rm -f "$_pwd" &>/dev/null
+}
+
+# Following functions allow to save exexuted commands to the history file instantly
+# By default history is written at the end of session
+#
+# Append to the history file and reload for every open session
+__history_reload__() {
+  {
+    declare -i lock_fd
+    mkdir -p -m 0700 "/dev/shm/.bash.lock.${USER}"
+    exec {lock_fd}<>"/dev/shm/.bash.lock.${USER}/.history"
+    if flock -w 1 ${lock_fd}
+    then
+      history -a
+      history -c
+      history -r
+    fi
+    exec {lock_fd}>&-
+  } || true
+}
+
+# Append only to the history file
+__history_append__() {
+  {
+    declare -i lock_fd
+    mkdir -p -m 0700 "/dev/shm/.bash.lock.${USER}"
+    exec {lock_fd}<>"/dev/shm/.bash.lock.${USER}/.history"
+    if flock -w 1 ${lock_fd}
+    then
+      history -a
+    fi
+    exec {lock_fd}>&-
+  } || true
+}
+
+# Default .bashrc (+/-)
+
+# don't put duplicate lines or lines starting with space in the history.
+HISTCONTROL=ignorespace:ignoredups
+
+# append to the history file, don't overwrite it
+shopt -s histappend
+
+# for setting history length see HISTSIZE and HISTFILESIZE in bash(1)
+HISTSIZE=5000
+HISTFILESIZE=50000
+
+# check the window size after each command and, if necessary,
+# update the values of LINES and COLUMNS.
+shopt -s checkwinsize
+
+# If set, the pattern "**" used in a pathname expansion context will
+# match all files and zero or more directories and subdirectories.
+#shopt -s globstar
+
+# make less more friendly for non-text input files, see lesspipe(1)
+[ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
+
+# enable color support of ls and also add handy aliases
+if [ -x /usr/bin/dircolors ]; then
+    test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
+    alias ls='ls --color=auto'
+    #alias dir='dir --color=auto'
+    #alias vdir='vdir --color=auto'
+
+    alias grep='grep --color=auto'
+    alias fgrep='fgrep --color=auto'
+    alias egrep='egrep --color=auto'
+fi
+
+# colored GCC warnings and errors
+export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
+
+# some more ls aliases
+alias ll='ls -alF'
+alias la='ls -A'
+alias l='ls -CF'
+
+# Add an "alert" alias for long running commands.  Use like so:
+#   sleep 10; alert
+#alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
+
+[[ -f ~/.bash_aliases ]] && source ~/.bash_aliases || true
+
+# enable programmable completion features (you don't need to enable
+# this, if it's already enabled in /etc/bash.bashrc and /etc/profile
+# sources /etc/bash.bashrc).
+if ! shopt -oq posix; then
+  if [ -f /usr/share/bash-completion/bash_completion ]; then
+    . /usr/share/bash-completion/bash_completion
+  elif [ -f /etc/bash_completion ]; then
+    . /etc/bash_completion
+  fi
+fi
+
+# Custom setup
+
+export VISUAL=vim
+export EDITOR=vim
+
+alias qssh="ssh -4 -o LogLevel=QUIET -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+alias qrssh="ssh -4 -o LogLevel=QUIET -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -l root"
+alias rssh="ssh -4 -o LogLevel=QUIET -l root"
+alias qscp="scp -o LogLevel=QUIET -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+alias apt-full-upgrade="sudo apt-get update && sudo apt-get -o APT::Get::Always-Include-Phased-Updates=true dist-upgrade -y"
+alias ..="cd .."
+alias ...="cd ../.."
+alias ....="cd ../../.."
+
+# Show auto-completion list automatically, without double tab
+bind "set show-all-if-ambiguous on"
+
+# Exclude some commands from history
+HISTIGNORE="&:ls:echo:pwd:exit:mount:clear:alias:ll:history"
+
+# This is used as the number of trailing directory components to retain when  exapanding working directory
+PROMPT_DIRTRIM=3
+
+PS1='\[\e]0;\u@\H \w\a\]\[\e[0;92m\]\u\[\e[0;1;38;5;87m\]@\[\e[0;1;38;5;214m\]\H \[\e[0;1;38;5;231m\]\w \[\e[0;93m\][\[\e[0;92m\]$?\[\e[0;93m\]]\[\e[0;1;91m\]\$ \[\e[0m\]'
+
+unset PROMPT_COMMAND
+PROMPT_COMMAND="__history_append__"

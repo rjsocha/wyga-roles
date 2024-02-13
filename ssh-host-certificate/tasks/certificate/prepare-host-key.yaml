@@ -1,0 +1,40 @@
+---
+- name: "Check if host {{ item }} private key exists"
+  ansible.builtin.stat:
+    path: "/etc/ssh/ssh_host_{{ item }}_key"
+  register: privkey_exist
+
+- name: "Check if host {{ item }} public key exists"
+  ansible.builtin.stat:
+    path: "/etc/ssh/ssh_host_{{ item }}_key.pub"
+  register: pubkey_exist
+
+- name: "Copy or generate...?"
+  set_fact:
+    _copy_keys: "{{ privkey_exist.stat.exists and pubkey_exist.stat.exists }}"
+
+- name: "Prepare host private {{ item }} key"
+  ansible.builtin.copy:
+    src: "/etc/ssh/ssh_host_{{ item }}_key"
+    dest: "{{ _tmp.path }}/ssh_host_{{ item }}_key"
+    remote_src: yes
+    force: yes
+    mode: "0600"
+    owner: "root"
+    group: "root"
+  when: _copy_keys == True
+
+- name: "Prepare host public {{ item }} key"
+  ansible.builtin.copy:
+    src: "/etc/ssh/ssh_host_{{ item }}_key.pub"
+    dest: "{{ _tmp.path }}/ssh_host_{{ item }}_key.pub"
+    remote_src: yes
+    force: yes
+    mode: "0644"
+    owner: "root"
+    group: "root"
+  when: _copy_keys == True
+
+- name: "Generate missing {{ item }} key"
+  include: "generate-new-host-key.yaml"
+  when: _copy_keys == False

@@ -1,0 +1,123 @@
+---
+- name: "Hostname setup ..."
+  include_tasks: "hostname.yaml"
+  when: skip_hostname is not defined
+
+- name: "Initramfs configuration ..."
+  include_tasks: "initramfs-tools.yaml"
+  when: host.setup.initramfs.setup|default(true)
+
+- name: "Network configuration (systemd) ..."
+  block:
+    - include_role: 
+        name: wyga/system-network
+
+    - debug:
+        msg:
+          - "Reboot required ..."
+      when: wyga_system_network.changed
+
+    - meta: end_host
+      when: wyga_system_network.changed and network_follow_anyway is not defined
+  when: skip_network is not defined and host.network.skip is not defined and host.network.interface is defined
+
+- name: "Trigger any pending reboots ..."
+  meta: flush_handlers
+
+- name: "GRUB Configuration ..."
+  include_role: 
+    name: wyga/grub
+  when: host.setup.grub is defined
+
+- name: "APT Configuration ..."
+  include_role: 
+    name: wyga/apt
+  when: host.setup.apt is defined
+
+- name: "Process packages ..."
+  include_role: 
+    name: wyga/install-package
+  vars:
+    install_packages: "{{ host.package.packages }}"
+  when: host.package.packages is defined and skip_packages is not defined and not host.package.skip|default(false)
+
+- name: "SSH Configuration ..."
+  include_role: 
+    name: wyga/ssh-configuration
+  when: skip_ssh_configuration is not defined
+
+- name: "SSH Host Certificate ..."
+  include_role:
+    name: wyga/ssh-host-certificate
+  when: host.setup.ssh.host.certificate|default(true) and host.setup.ssh.host.group is defined and skip_ssh_certificate is not defined
+
+- name: "BASH profile ..."
+  include_role:
+    name: wyga/bash-profile
+  when: host.setup.bash.profile|default(true) and skip_bash_profile is not defined
+
+- name: "Canonicalization of group configuation ..."
+  include_tasks: "normalize-group.yaml"
+  loop: "{{ host.group }}"
+  loop_control:
+    loop_var: wum_target
+    label: "group"
+  when: host.group is defined 
+
+- name: "Canonicalization of users configuation ..."
+  include_tasks: "normalize-user.yaml"
+  loop: "{{ host.user }}"
+  loop_control:
+    loop_var: wum_target
+    label: "user"
+
+- block:
+  - name: "Load user CA certificate ..."
+    include_tasks: "load-user-cert.yaml"
+
+  - name: "Fail if there is no user_cert defined ..."
+    fail:
+      msg: "the 'user_cert' is not defined"
+    delegate_to: localhost
+    when: user_cert is not defined
+  when: host.setup.ssh.user.certificate | default(true)
+
+- name: "Enumerate groups ..."
+  include_tasks: "enumerate-groups.yaml"
+
+- name: "Group management ..."
+  include_tasks: "group.yaml"
+
+- name: "Enumerate users ..."
+  include_tasks: "enumerate-users.yaml"
+
+- name: "User management ..."
+  include_tasks: "user.yaml"
+
+- include_tasks: "create-dir.yaml"
+  with_items:
+    - "{{ ca_ssh_ca_dir }}"
+    - "{{ ca_ssh_role_dir }}"
+    - "{{ ssh_pool_dir }}"
+
+- include_tasks: "update-ca-cert.yaml"
+  when: host.setup.ssh.user.certificate | default(true)
+
+- name: "Update roles ..."
+  include_tasks: "update-roles.yaml"
+  loop: "{{ wum_users | dict2items }}"
+  loop_control:
+    loop_var: target
+    label: "{{ target.key }}"
+
+- name: "Remove orphaned roles ..."
+  include_tasks: "remove-roles.yaml"
+
+- name: "Manage ssh authorized keys ..."
+  include_tasks: "authorized.yaml"
+
+- name: "Configure /etc/ssh/sshd_config"
+  include_tasks: "update-ssh.yaml"
+
+- name: "Policy marker ..."
+  include_tasks: "mark-policy.yaml"

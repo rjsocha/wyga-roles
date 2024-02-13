@@ -1,0 +1,20 @@
+---
+- name: "Generate role for {{target.value.name}}"
+  set_fact:
+    _content: "{{ target.value.role | join('\n') }}"
+
+- name: "Update role for user {{target.value.name}}"
+  copy:
+    content: "{{ _content }}"
+    dest: "{{ ca_ssh_role_dir }}/{{ target.value.name }}"
+    owner: "root"
+    group: "root"
+    mode: "0644"
+    force: yes
+  when: _content | length > 0
+
+- name: "Remove empty role for user {{target.value.name}}"
+  file:
+    path: "{{ ca_ssh_role_dir }}/{{ target.value.name }}"
+    state: absent
+  when: _content | length == 0

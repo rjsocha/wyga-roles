@@ -1,0 +1,3 @@
+wyga_grub_registred_config:
+  - "init-select.cfg"
+  - "host-policy.cfg"

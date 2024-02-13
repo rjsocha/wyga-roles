@@ -1,0 +1,82 @@
+---
+- name: "Key name ..."
+  set_fact:
+    display_keyname: "{{ keyname }}"
+
+- name: "Key name (base64) ..."
+  set_fact:
+    display_keyname: "{inline}"
+  when: keyname.startswith('BASE64:')
+
+- name: "Key name (save) ..."
+  set_fact:
+    save_keyname: "{{ keyname }}"
+
+- name: "Key name (save/base64) ..."
+  set_fact:
+    save_keyname: "~inline.keys"
+  when: keyname.startswith('BASE64:')
+
+- name: "Create empty options for key {{ display_keyname }} / {{ pool.key }}"
+  set_fact:
+    user_options: []
+
+- name: "Append defaults options if present for key {{ display_keyname }} / {{ pool.key }}"
+  set_fact:
+    user_options: "{{ user_options + pool.value.options.defaults }}"
+  when: pool.value.options.defaults is defined
+
+- name: "Create empty per user options variable for {{ display_keyname }} / {{ pool.key }}"
+  set_fact:
+    per_user_options: []
+
+- name: "Append per user options for {{ display_keyname }} / {{ pool.key }}"
+  set_fact:
+    per_user_options: "{{ pool.value.options[keyname] }}"
+  when: pool.value.options is defined and keyname in pool.value.options
+
+- name: "Append default options for {{ display_keyname }} / {{ pool.key }}"
+  set_fact:
+    user_options: "{{ user_options + per_user_options }}"
+
+- name: "Concatenate options for {{ display_keyname }} / {{ pool.key }}"
+  set_fact:
+    user_options: "{{ user_options | join(',') }}"
+
+- name: "Dump concatenated options for {{ display_keyname }} / {{ pool.key }}"
+  debug:
+    msg: "Final options for {{display_keyname}}: {{ user_options }}"
+  when: user_options|length > 0
+
+- name: "Load public key for {{ display_keyname }} / {{ pool.key }}"
+  set_fact:
+    key_file: "{{ playbook_dir }}/{{ user_ssh_keys }}/{{ keyname }}"
+  when: not keyname.startswith('BASE64:')
+
+- name: "Prepare for joining options for {{ display_keyname }} / {{ pool.key }}"
+  set_fact:
+    user_key: []
+
+- name: "Join options with user key ..."
+  set_fact:
+    user_key: "{{ user_key + [ user_options + ' ' + item ] }}"
+  loop: "{{lookup('file',key_file).splitlines() }}"
+  when: user_options|length > 0 and not keyname.startswith('BASE64:')
+
+- name: "Set user key variable for {{ display_keyname }} / {{ pool.key }}"
+  set_fact:
+    user_key: "{{ [ lookup('file',key_file) ] }}"
+  when: user_options|length == 0 and not keyname.startswith('BASE64:')
+
+- name: "Use BASE64 inline key ..."
+  set_fact:
+    user_key: "{{ [ keyname | replace('BASE64:','') | b64decode | trim ] }}"
+  when: keyname.startswith('BASE64:')
+
+- name: "Save user key to assembly directory for {{ display_keyname }} / {{ pool.key }}"
+  lineinfile:
+    path: "{{ user_keys_directory.path }}/{{ save_keyname }}"
+    line: "{{ user_key | join('\n') }}"
+    create: yes
+    insertbefore: BOF
+  changed_when: false

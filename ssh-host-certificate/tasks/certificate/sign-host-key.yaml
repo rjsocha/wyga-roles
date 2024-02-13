@@ -1,0 +1,10 @@
+---
+- name: "Sign host {{ item }} key"
+  command: ssh-keygen -s "{{_ca_private_file}}" -I "{{ host.hostname | default(ansible_fqdn) }}" -z "{{ _date_serial }}" -h "{{ _ltmp.path }}/ssh_host_{{ item }}_key"
+  when: use_ssh_agent | bool == False
+  delegate_to: localhost
+  
+- name: "Sign host {{ item }} key via ssh-agent"
+  command: ssh-keygen -Us "{{_ca_public_file}}" -I "{{ host.hostname | default(ansible_fqdn) }}" -z "{{ _date_serial }}" -h "{{ _ltmp.path }}/ssh_host_{{ item }}_key"
+  delegate_to: localhost
+  when: use_ssh_agent | bool == True

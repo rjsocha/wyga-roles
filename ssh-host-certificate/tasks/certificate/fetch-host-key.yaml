@@ -1,0 +1,6 @@
+---
+- name: "Fetching host public {{ item }} key"
+  ansible.builtin.fetch:
+    src:  "{{ _tmp.path }}/ssh_host_{{ item }}_key.pub"
+    dest: "{{ _ltmp.path }}/ssh_host_{{ item }}_key.pub"
+    flat: yes

@@ -1,0 +1,15 @@
+---
+
+- include_tasks: "is-public-key-exist.yaml"
+  loop: "{{wum_users | dict2items}}"
+  loop_control:
+    loop_var: pool
+    label: "{{ pool.key }}"
+
+- include_tasks: "update-pool.yaml"
+  loop: "{{wum_users | dict2items}}"
+  loop_control:
+    loop_var: pool
+    label: "{{ pool.key }}"
+
+- include_tasks: "remove-keys.yaml"

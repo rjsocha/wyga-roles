@@ -1,0 +1,7 @@
+[Match]
+PermanentMACAddress={{ interface.mac }}
+
+[Link]
+Name={{ interface.name }}
+WakeOnLan=off
+MTUBytes={{ interface.mtu | default(1500) | int }}

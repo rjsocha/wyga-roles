@@ -1,0 +1,19 @@
+---
+- name: apt-get dist-upgrade
+  apt:
+    upgrade: dist
+    autoremove: yes
+    purge: yes
+    autoclean: yes
+    update_cache: yes
+  register: _action
+  retries: 25
+  until: _action is success or ('Failed to lock apt for exclusive operation' not in _action.msg and '/var/lib/dpkg/lock' not in _action.msg)
+
+- name: apt-get autoremove
+  apt:
+    autoremove: yes
+    purge: yes
+  register: _action
+  retries: 25
+  until: _action is success or ('Failed to lock apt for exclusive operation' not in _action.msg and '/var/lib/dpkg/lock' not in _action.msg)

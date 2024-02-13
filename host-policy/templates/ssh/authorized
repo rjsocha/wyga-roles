@@ -1,0 +1,5 @@
+{% if ssh_user_cert %}
+AuthorizedPrincipalsFile {{ ca_ssh_role_dir }}/%u
+TrustedUserCAKeys {{ ca_ssh_ca_dir }}/user-ca.pub
+{% endif %}
+AuthorizedKeysFile {{ ssh_pool_dir}}/%u

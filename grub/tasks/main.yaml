@@ -1,0 +1,111 @@
+---
+# Policy template
+# policy (host):
+#   setup:
+#     grub:
+#       # Restore /etc/default/grub from /usr/share/grub/default/grub
+#       restore_default: false
+#       timeout: 5
+#       recovery: false
+#       submenu: false
+#       osprober: false
+#       cmdline:
+#         - quiet
+#       # The order of terminals definied below is important!
+#       # the last one will be used by the kernel as /dev/console
+#       terminal:
+#         - serial
+#         - console
+#       # Used only when gfxterm is enabled
+#       display: 640x480
+#
+- name: "Check if Distribution is supported ..."
+  assert:
+    that:
+      - target_distribution in ['ubuntu','debian']
+    fail_msg: "Unsupported distribution: {{ target_distribution }} {{ target_distribution_version }}"
+    quiet: true
+
+- name: "GRUB / Make sure /etc/default/grub.d exists ..."
+  file:
+    path: "/etc/default/grub.d"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+
+- name: "GRUB / Restore /etc/default/grub ..."
+  copy:
+    src: "/usr/share/grub/default/grub"
+    dest: "/etc/default/grub"
+    remote_src: true
+  notify:
+    - update-grub
+  when: host.setup.grub.default | default(false)
+
+- name: "GRUB / Configuration ..."
+  template:
+    src: "grub/host-policy"
+    dest: "/etc/default/grub.d/host-policy.cfg"
+    group: root
+    owner: root
+    mode: 0644
+  vars:
+    grub_timeout: "{{ host.setup.grub.timeout | default(5) }}"
+    grub_recovery: "{{ 'false' if host.setup.grub.recovery|default(false) else 'true' }}"
+    grub_submenu: "{{ 'false' if host.setup.grub.submenu|default(false) else 'true' }}"
+    grub_os_prober: "{{ 'false' if host.setup.grub.osprober|default(false) else 'true' }}"
+    grub_terminal: "{{ host.setup.grub.terminal | default(['serial', 'console']) }}"
+    grub_display: "{{ host.setup.grub.display | default('640x480') }}"
+    grub_cmdline: "{{ host.setup.grub.cmdline | default(['quiet','gfxpayload=text']) }}"
+  notify:
+    - update-grub
+
+- name: "GRUB / Default theme ...."
+  set_fact:
+    grub_theme: "green"
+
+- name: "GRUB / Selected theme ..."
+  set_fact:
+    grub_theme: "{{ host.setup.grub.theme }}"
+  when: host.setup.grub.theme is defined
+
+- name: "GRUB / Configuration (custom theme) ..."
+  template:
+    src: "grub/custom-{{ grub_theme }}.cfg"
+    dest: "/boot/grub/custom.cfg"
+    group: root
+    owner: root
+    mode: 0644
+  vars:
+    grub_terminal: "{{ host.setup.grub.terminal | default(['serial', 'console']) }}"
+  when: grub_theme is in [ 'blue', 'green', 'black' ]
+
+- name: "GRUB / Configuration (custom theme) / absent ..."
+  file:
+    path: "/boot/grub/custom.cfg"
+    state: absent
+  when: grub_theme is not in [ 'blue', 'green', 'black' ]
+
+# Final cleanup ...
+- name: "GRUB / Normalize registred grub configs ..."
+  set_fact:
+    wyga_grub_registred_config: "{{ wyga_grub_registred_config | unique }}"
+
+- name: "GRUB / Looking for unmanaged files in /etc/default/grub.d directory ..."
+  find:
+    paths: "/etc/default/grub.d"
+    file_type: file
+    excludes: "{{ wyga_grub_registred_config }}"
+  register: grub_cleanup
+
+- name: "GRUB / Delete unmanaged files form /etc/default/grub.d ..."
+  file:
+    path: "{{ cleanup.path }}"
+    state: absent
+  loop: "{{ grub_cleanup.files }}"
+  loop_control:
+    label: "{{ cleanup.path }}"
+    loop_var: cleanup
+  notify:
+    - update-grub

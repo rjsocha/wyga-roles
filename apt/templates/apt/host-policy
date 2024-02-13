@@ -1,0 +1,19 @@
+# HOST-POLICY IN USE - DO NOT EDIT BY HAND
+APT::Get::Always-Include-Phased-Updates "{{ host.setup.apt.includephasedupdates|default(true)|string | lower }}";
+{% if not host.setup.apt.acquirelanguages|default(false) %}
+Acquire::Languages "none";
+{% endif %}
+APT::Install-Recommends "{{ host.setup.apt.installrecommends|default(false) | string | lower }}";
+APT::Install-Suggests "{{ host.setup.apt.installsuggests|default(false) | string | lower }}";
+Acquire::GzipIndexes  "{{ host.setup.apt.acquiregzipindexes|default(true) | string | lower }}";
+APT::Keep-Downloaded-Packages "{{ host.setup.apt.keepdownloadedpackages|default(false) | string | lower }}";
+{% if host.setup.apt.disablesrcpkgcache|default(true) %}
+Dir::Cache::srcpkgcache "";
+{% endif %}
+{% if host.setup.apt.disablepkgcache|default(false) %}
+Dir::Cache::pkgcache "";
+{% endif %}
+{% if host.setup.apt.forceipv4|default(true) %}
+Acquire::ForceIPv4 "true";
+{% endif %}
+# HOST-POLICY

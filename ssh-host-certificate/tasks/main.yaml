@@ -1,0 +1,98 @@
+---
+- name: "Include config.ssh-host-ca.yaml if exists ..."
+  include_vars: '{{ item }}'
+  with_first_found:
+    - files:
+        - "config.ssh-host-ca.yaml"
+      skip: true
+
+- name: "Setup task ..."
+  set_fact:
+    ssh_ca_group: "{{ host.setup.ssh.host.group }}"
+
+- name: "Sign SSH host keys..."
+  block:
+    - name: "Check ssh_ca_group is present..."
+      include_tasks: "certificate/check-ssh-ca-group.yaml"
+
+    - name: "Check CA key..."
+      include_tasks: "certificate/check-ca-key.yaml"
+
+    - name: "Check host certificates..."
+      include_tasks: "certificate/check-host-cert.yaml"
+      with_items: "{{ wyga_ssh_host_keys }}"
+
+    - name: "Parse 'generate' option..."
+      include_tasks: "certificate/parse-generate.yaml"
+
+    - name: "Cleanup generation list..."
+      set_fact:
+        wyga_generate_certs: "{{ wyga_generate_certs | sort | unique | list }}"
+
+    - name: "Dump configuration list..."
+      debug:
+        msg: "{{ wyga_generate_certs }}"
+
+    - name: "Make sure CA key is present in the ssh-agent..."
+      include_tasks: "certificate/prepare-ssh-agent.yaml"
+
+    - name: "Prepare temporary directories..."
+      include_tasks: "certificate/prepare-temp-dirs.yaml"
+
+    - name: "Generate serial number..."
+      shell: "date +%y%m%d%H%M%S"
+      register: _date_serial_out
+      changed_when: false
+
+    - name: "Set serial number fact..."
+      set_fact:
+        _date_serial: "{{ _date_serial_out.stdout }}"
+
+    - name: "Generate new host keys"
+      include_tasks: "certificate/generate-new-host-key.yaml"
+      when: sign_existing | bool == False
+      with_items: "{{ wyga_generate_certs }}"
+
+    - name: "Prepare existing host keys"
+      include_tasks: "certificate/prepare-host-key.yaml"
+      when: sign_existing | bool == True
+      with_items: "{{ wyga_generate_certs }}"
+
+    - name: "Fetch host public keys..."
+      include_tasks: "certificate/fetch-host-key.yaml"
+      with_items: "{{ wyga_generate_certs }}"
+
+    - name: "Localy sign host keys..."
+      include_tasks: "certificate/sign-host-key.yaml"
+      with_items: "{{ wyga_generate_certs }}"
+
+    - name: "Transfer certificates to remote host..."
+      include_tasks: "certificate/transfer-host-certificate.yaml"
+      with_items: "{{ wyga_generate_certs }}"
+
+    - name: "Copy keys to /etc/ssh"
+      include_tasks: "certificate/copy-host-key.yaml"
+      with_items: "{{ wyga_generate_certs }}"
+
+    - name: "Prepare generation list for /etc/ssh/sshd_config"
+      block:
+        - name: "Join generation list..."
+          set_fact:
+            wyga_generate_certs: "{{ wyga_ssh_host_keys + wyga_generate_certs }}"
+
+        - name: "Cleanup generation list..."
+          set_fact:
+            wyga_generate_certs: "{{ wyga_generate_certs | sort | unique | list }}"
+
+    - name: "Cleanup unwanted keys ..."
+      include_tasks: "certificate/ssh-remove-keys.yaml"
+
+    - name: "Preapre /etc/sshd_config"
+      include_tasks: "certificate/ssh-prepare.yaml"
+
+    - name: "Configure /etc/sshd_config"
+      include_tasks: "certificate/ssh-configure.yaml"
+      with_items: "{{ wyga_generate_certs }}"
+
+    - name: "Cleanup..."
+      include_tasks: "certificate/cleanup-temp-dirs.yaml"

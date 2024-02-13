@@ -1,0 +1,39 @@
+---
+- name: "Check if 'host_ca_key' is defined"
+  fail:
+    msg: "missing 'host_ca_key'..."
+  when: host_ca_key is not defined
+
+- name: "Check if {{host_ca_key}}.pub exists..."
+  stat:
+    path: "{{host_ca_key}}.pub"
+  register: _public_host_ca_exists
+  delegate_to: localhost
+
+- name: "Stop: missing CA public key..."
+  fail:
+    msg: "Missing public CA key..."
+  when: _public_host_ca_exists.stat.exists == False
+  delegate_to: localhost
+
+- name: "Set CA public key fact..."
+  set_fact:
+    _ca_public_file: "{{_public_host_ca_exists.stat.path}}"
+
+- block:
+    - name: "Check if {{host_ca_key}} exists..."
+      stat:
+        path: "{{host_ca_key}}"
+      register: _private_host_ca_exists
+      delegate_to: localhost
+
+    - name: "Stop: missing CA private key..."
+      fail:
+        msg: "Missing private CA key..."
+      when: _private_host_ca_exists.stat.exists == False
+      delegate_to: localhost
+
+    - name: "Set CA private key fact..."
+      set_fact:
+        _ca_private_file: "{{_private_host_ca_exists.stat.path}}"
+  when: not use_ssh_agent

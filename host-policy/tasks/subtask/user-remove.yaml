@@ -1,0 +1,36 @@
+---
+- name: "Remove user ..."
+  set_fact:
+    remove_users: []
+
+- name: "Find removed users ..."
+  find:
+    path: "{{ wum_user_managed }}"
+    file_type: file
+    excludes: "{{ my_users }}"
+  register: removed_users
+
+- name: "Collect names of removed users ..."
+  set_fact:
+    remove_users: "{{ remove_users + [ item.path | basename ] }}"
+  with_items: "{{ removed_users['files'] }}"
+
+- name: "List removed users ..."
+  debug:
+    msg: "{{ item }}"
+    verbosity: 1
+  loop: "{{ remove_users }}"
+
+- name: "Remove user {{ item }} ..."
+  ansible.builtin.user:
+    name: "{{ item }}"
+    state: absent
+    force: true
+    remove: true
+  loop: "{{ remove_users }}"
+
+- name: "Remove marker for user {{ item }} ..."
+  file:
+    path: "{{wum_user_managed }}/{{item}}"
+    state: absent
+  loop: "{{ remove_users }}"

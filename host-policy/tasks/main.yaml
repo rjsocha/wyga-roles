@@ -1,0 +1,62 @@
+- name: "Prepare search list (file) ..."
+  set_fact:
+    search_list:
+      - "{{ policy_file }}"
+  delegate_to: localhost
+  when: policy_file is defined
+
+- name: "Prepare search list (default) ..."
+  set_fact:
+    search_list:
+      - "{{ playbook_dir }}/policy/{{ select_policy | default('.nonexistent.host.policy.') }}"
+      - "{{ playbook_dir }}/policy/{{ inventory_hostname }}"
+      - "{{ playbook_dir }}/policy/missing"
+  delegate_to: localhost
+  when: policy_file is not defined
+
+- name: "Load policy for {{ inventory_hostname }} ..."
+  include_vars:
+    file: "{{ item }}"
+    name: policy
+  with_first_found: "{{ search_list }}"
+
+- name: "Load policy for {{ inventory_hostname }} ..."
+  include_vars:
+    file: "{{ policy_file }}"
+    name: policy
+  when: policy_file is defined
+
+- name: "No policy for host {{ inventory_hostname }} ..."
+  fail:
+    msg:
+      - "No policy for host {{ inventory_hostname }} found ..."
+  when: policy is not defined or policy | length == 0
+
+- name: "Host policy ..."
+  set_fact:
+    host: "{{ policy.policy | first }}"
+
+- name: "Verify whether the policy has been applied to the host ..."
+  slurp:
+    src: "{{ host_policy_dir }}/policy"
+  register: policy_on_host
+  ignore_errors: yes
+  no_log: true
+
+- name: "Verify used policy ..."
+  block:
+    - name: "Policy mismatch ..."
+      debug:
+        msg:
+          - "Policy mismtach ..."
+          - " use -eforece_policy=1 to force ..."
+    - fail:
+        msg: "POLICY MISMTACH"
+  when: policy_on_host is not failed and force_policy is not defined and policy_on_host.content | b64decode != host.hostname
+
+- name: "Create empty group list ..."
+  set_fact:
+    wum_groups: {}
+
+- include_tasks: "subtask/execute.yaml"
+  when: host is defined

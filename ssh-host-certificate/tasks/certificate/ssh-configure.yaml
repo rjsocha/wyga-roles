@@ -1,0 +1,13 @@
+---
+- name: "Configure /etc/ssh/sshd_config.d/host-certificate.conf ..."
+  template:
+    src: "host-certificate"
+    dest: "/etc/ssh/sshd_config.d/host-certificate.conf"
+    group: root
+    owner: root
+    mode: 0644
+  notify: restart-ssh
+
+- name: "Update registred configurations ..."
+  set_fact:
+    wyga_ssh_registred_config: "{{ wyga_ssh_registred_config + ['host-certificate.conf' ] }}"

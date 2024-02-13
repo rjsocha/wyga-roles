@@ -1,0 +1,10 @@
+- name: "Install Prerequisites ..."
+  apt:
+    name: "{{ prerequisite_list }}"
+    state: latest
+    install_recommends: no
+    autoclean: yes
+    update_cache: yes
+  register: _action
+  retries: 25
+  until: _action is success or ('Failed to lock apt for exclusive operation' not in _action.msg and '/var/lib/dpkg/lock' not in _action.msg)

@@ -1,0 +1,37 @@
+{% set console = [] %}
+{% set terminal_input = [] %}
+{% set terminal_output = [] %}
+{% for terminal in grub_terminal %}
+{% if terminal == 'console' %}
+{% set _ = console.append('console=tty0') %}
+{% set _ = terminal_input.append('console') %}
+{% set _ = terminal_output.append('console') %}
+{% endif %}
+{% if terminal == 'gfxterm' %}
+{% set _ = console.append('console=tty0') %}
+{% set _ = terminal_input.append('console') %}
+{% set _ = terminal_output.append('gfxterm') %}
+{% endif %}
+{% if terminal == 'serial' %}
+{% set _ = console.append('console=ttyS0,115200n8') %}
+{% set _ = terminal_input.append('serial') %}
+{% set _ = terminal_output.append('serial') %}
+{% endif %}
+{% endfor %}
+GRUB_TIMEOUT="{{ grub_timeout }}"
+GRUB_RECORDFAIL_TIMEOUT="{{ grub_timeout }}"
+GRUB_TIMEOUT_STYLE="menu"
+GRUB_CMDLINE_LINUX=""
+GRUB_CMDLINE_LINUX_DEFAULT="{{ grub_cmdline|join(" ") }}{{ ' ' ~ (console | join(" ")) if console else '' }}"
+GRUB_DISABLE_SUBMENU="{{ grub_submenu }}"
+GRUB_DISABLE_RECOVERY="{{ grub_recovery }}"
+GRUB_DISABLE_OS_PROBER="{{ grub_os_prober }}"
+GRUB_TERMINAL=""
+GRUB_TERMINAL_OUTPUT="{{ terminal_output | join(" ") }}"
+GRUB_TERMINAL_INPUT="{{ terminal_input | join(" ") }}"
+{% if 'serial' in grub_terminal %}
+GRUB_SERIAL_COMMAND="serial --speed=115200"
+{% endif %}
+{% if 'gfxterm' in grub_terminal %}
+GRUB_GFXMODE="{{ grub_display }}"
+{% endif %}

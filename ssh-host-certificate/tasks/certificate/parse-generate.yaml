@@ -1,0 +1,15 @@
+---
+- name: "Check if 'generate' variable is provided..."
+  set_fact:
+    _generate: "{{generate}}"
+  when: generate is defined
+
+- name: "Parse 'all' option for generate..."
+  set_fact:
+    _generate: "{{ wyga_ssh_host_keys | join(',') }}"
+  when: _generate is defined and _generate == 'all'
+
+- name: "Parse 'generate' option..."
+  set_fact:
+    wyga_generate_certs: "{{ _generate.split(',') | list }}"
+  when: _generate is defined
