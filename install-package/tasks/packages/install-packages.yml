@@ -10,9 +10,7 @@
   until: _action is success or ('Failed to lock apt for exclusive operation' not in _action.msg and '/var/lib/dpkg/lock' not in _action.msg)
 
 - name: "Cleanup ..." 
-  shell: apt-get clean all
-  args:
-    warn: false
+  shell: apt-get clean
   register: _action
   retries: 25
   changed_when: false
