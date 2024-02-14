@@ -4,4 +4,4 @@
   when: repository_name is not defined
 
 - name: "Install repository ..."
-  include_tasks: "site/tasks/repository/{{ target_distribution }}/{{ target_distribution_version }}/{{ repository_name }}.yml"
+  include_tasks: "local/tasks/repository/{{ target_distribution }}/{{ target_distribution_version }}/{{ repository_name }}.yml"
