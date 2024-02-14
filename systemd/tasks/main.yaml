@@ -1,0 +1,11 @@
+---
+#	host:
+#		setup:
+#    systemd:
+#      journal:
+#        storage: volatile
+#        maxuse: 60M
+#
+- name: "SYSTEMD / journal"
+  include_tasks: "task/journal.yaml"
+  when: host.setup.systemd.journal is defined

@@ -1,0 +1,30 @@
+---
+- name: "Check if OS is supported ..."
+  assert:
+    that:
+      - target_distribution in [ 'ubuntu', 'debian' ]
+      - target_distribution_major_version in [ "20", "22", "12" ]
+    fail_msg: "Unsupported distribution: {{ target_distribution }} {{ target_distribution_version }}"
+    quiet: true
+
+- name: "..."
+  fail:
+    msg: "missing firstboot variable ..."
+  when: firstboot is not defined
+
+- name: "Preparation ..."
+  set_fact:
+    purge_list: []
+
+- name: "Slurp packages list ..."
+  set_fact:
+    packages: "{{ firstboot.profile }}"
+
+- name: "Check if {{ host_policy_dir }}/firstboot is present ..."
+  stat:
+    path: "{{ host_policy_dir }}/firstboot"
+  register: firstboot_setup
+
+- name: "Execute firstboot process ..."
+  include_tasks: "firstboot.yaml"
+  when: not firstboot_setup.stat.exists or firstboot_do_it_anyway is defined

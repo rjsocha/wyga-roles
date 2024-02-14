@@ -1,0 +1,82 @@
+---
+- name: "Stop services ..."
+  shell: "systemctl stop {{ stop_service }} || true"
+  loop:
+    - polkit
+    - unattended-upgrades
+    - packagekit
+  loop_control:
+    loop_var: stop_service
+    label: "stop {{ stop_service }} service"
+  ignore_errors: yes
+  changed_when: false
+
+- name: "Prepare packages list ..."
+  set_fact:
+    package_list: []
+
+- name: "Prepare packages list ..."
+  set_fact:
+     package_list: "{{ package_list + [ { 'name': package, 'manifest': playbook_dir + '/local/firstboot/' + target_distribution + '/' + target_distribution_version + '/' + package } ] + [ { 'name': package, 'manifest': role_path + '/files/firstboot/' + target_distribution + '/' + target_distribution_version + '/' + package } ] }}"
+  loop: "{{ packages }}"
+  loop_control:
+    loop_var: package
+    label: "{{ package }}"
+
+- name: "Process purge list ..."
+  include_tasks: "packages/process-purge.yml"
+  vars:
+    process_require: true
+  loop: "{{ package_list }}"
+  when: "package.manifest is exists"
+  loop_control:
+    loop_var: package
+    label: "{{ package.name }}"
+
+- name: "Normalize purge list ..."
+  set_fact:
+    purge_list: "{{ purge_list | unique }}"
+
+- name: "Information ..."
+  debug:
+    msg:
+      - "TARGET:        {{ target_distribution | capitalize }} {{ target_distribution_version }}"
+      - "PROFILES:      {{ packages }}"
+      - "PURGE:         {{ purge_list }}"
+
+- name: "."
+  debug:
+    msg: "Purge packages ..."
+
+- name: "Purge packages ..."
+  include_tasks: "packages/purge-packages.yml"
+  when: purge_list | length > 0
+
+# on Ubuntu 22.04 services stay running after package purge (bug?)
+- name: "Firstboot cleanup ..."
+  block:
+    - name: "Stop services (again)..."
+      shell: "systemctl stop {{ stop_service }} || true"
+      loop:
+        - polkit
+        - unattended-upgrades
+        - packagekit
+      loop_control:
+        loop_var: stop_service
+        label: "stop {{ stop_service }} service"
+      ignore_errors: yes
+      changed_when: false
+
+- name: "Create {{ host_policy_dir }}/firstboot ..."
+  block:
+    - name: "Create {{ host_policy_dir }} directory ..."
+      file:
+        path: "{{ host_policy_dir }}"
+        state: directory
+    - name: "Create firstboot marker ..."
+      copy:
+        content: '# Do not remove this file...'
+        dest: "{{ host_policy_dir }}/firstboot"
+        mode: "0600"
+        owner: "root"
+        group: "root"

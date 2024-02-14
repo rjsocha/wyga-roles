@@ -6,7 +6,7 @@
     owner: root
     mode: 0644
   vars:
-    ssh_user_cert: "{{ host.setup.ssh.user.certificate | default(true) }}"
+    ssh_user_cert: "{{ host.setup.ssh.user.certificate | default(false) }}"
   notify: restart-ssh
 
 - name: "Update registred configurations ..."

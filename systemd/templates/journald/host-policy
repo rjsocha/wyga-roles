@@ -1,0 +1,9 @@
+[Journal]
+{% if systemd_journal_storage in [ 'auto', 'persistent', 'volatile', 'none' ] %}
+Storage={{ systemd_journal_storage }}
+{% endif %}
+{% if systemd_journal_maxuse != 'default' %}
+RuntimeMaxUse={{ systemd_journal_maxuse }}
+{% elif systemd_journal_storage == 'volatile' %}
+RuntimeMaxUse=60M
+{% endif %}

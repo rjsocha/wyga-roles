@@ -36,12 +36,18 @@
   set_fact:
     host: "{{ policy.policy | first }}"
 
-- name: "Verify whether the policy has been applied to the host ..."
+- name: "Verify whether the policy has been applied to the host (1) ..."
+  stat:
+    path: "{{ host_policy_dir }}/policy"
+  register: policy_on_host_file
+
+- name: "Verify whether the policy has been applied to the host (2) ..."
   slurp:
     src: "{{ host_policy_dir }}/policy"
   register: policy_on_host
   ignore_errors: yes
   no_log: true
+  when: policy_on_host_file.stat.exists
 
 - name: "Verify used policy ..."
   block:
@@ -49,10 +55,10 @@
       debug:
         msg:
           - "Policy mismtach ..."
-          - " use -eforece_policy=1 to force ..."
+          - " use -eforce_policy=1 to force ..."
     - fail:
         msg: "POLICY MISMTACH"
-  when: policy_on_host is not failed and force_policy is not defined and policy_on_host.content | b64decode != host.hostname
+  when: policy_on_host_file.stat.exists and policy_on_host is not failed and force_policy is not defined and policy_on_host.content | b64decode != host.hostname
 
 - name: "Create empty group list ..."
   set_fact:

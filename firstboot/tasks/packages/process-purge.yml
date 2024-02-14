@@ -1,0 +1,10 @@
+---
+- name: "Load manifest for {{ package.name }} ..."
+  include_vars:
+    file: "{{ package.manifest }}"
+    name: loaded_manifest
+
+- name: "Append purged packages ..."
+  set_fact:
+    purge_list: "{{ purge_list + loaded_manifest.purge }}"
+  when: loaded_manifest.purge is defined

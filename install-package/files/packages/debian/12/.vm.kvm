@@ -1,2 +1,3 @@
 require:
+  - linux-image-cloud-amd64
   - qemu-guest-agent

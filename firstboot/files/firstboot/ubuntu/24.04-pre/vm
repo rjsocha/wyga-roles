@@ -1,35 +1,20 @@
-prerequisite:
-  - sudo
-  - linux-image-virtual
-  - lsb-release
-  - apt-utils
-  - python3-apt
-  - python-apt-common
-require:
-  - tmux
-  - tcpdump
-  - mc
-  - haveged
-  - wget
-  - curl
-  - zstd
-  - openssh-client
-  - openssh-sftp-server
-  - less
 purge:
-  - linux-headers-*
   - accountsservice
-  - alsa-topology-conf
-  - alsa-ucm-conf
+  - acct
+  - acpid
   - amd64-microcode
   - apport
   - apport-symptoms
+  - appstream
   - at
   - bc
   - bcache-tools
   - bind9-dnsutils
   - bind9-host
   - bind9-libs
+  - binutils
+  - binutils-common
+  - binutils-x86-64-linux-gnu
   - bolt
   - btrfs-progs
   - byobu
@@ -37,37 +22,45 @@ purge:
   - cloud-init
   - cloud-initramfs-copymods
   - cloud-initramfs-dyn-netconf
+  - command-not-found
   - console-setup
   - console-setup-linux
-  - crda
   - cryptsetup
   - cryptsetup-bin
   - cryptsetup-initramfs
-  - cryptsetup-run
   - dbus-user-session
   - dconf-gsettings-backend
-  - dconf-service
   - debconf-i18n
+  - dictionaries-common
   - dirmngr
   - distro-info
+  - dmidecode
+  - dnsmasq-base
+  - dns-root-data
   - dosfstools
+  - dracut-install
+  - e2fsprogs-l10n
   - eatmydata
+  - ebtables
   - ed
   - eject
+  - emacsen-common
+  - etckeeper
   - ethtool
   - finalrd
   - fonts-ubuntu-console
   - friendly-recovery
   - ftp
   - fuse
+  - fuse3
+  - fwupd
+  - fwupd-signed
   - gdisk
+  - geoip-database
   - gir1.2-glib-2.0
   - gir1.2-packagekitglib-1.0
   - git
   - git-man
-  - glib-networking
-  - glib-networking-common
-  - glib-networking-services
   - gnupg
   - gnupg-l10n
   - gnupg-utils
@@ -78,55 +71,63 @@ purge:
   - gpg-wks-client
   - gpg-wks-server
   - groff-base
-  - gsettings-desktop-schemas
   - hdparm
   - htop
+  - inetutils-telnet
   - info
+  - initramfs-tools
+  - initramfs-tools-bin
+  - initramfs-tools-core
+  - installation-report
   - install-info
   - intel-microcode
+  - irqbalance
   - isc-dhcp-client
   - isc-dhcp-common
   - iso-codes
   - iucode-tool
-  - iw
+  - jq
   - kbd
   - keyboard-configuration
+  - klibc-utils
   - kpartx
   - krb5-locales
   - landscape-common
-  - language-selector-common
+  - language-pack-en
+  - laptop-detect
   - libaccountsservice0
   - libappstream4
   - libarchive13
-  - libasound2
-  - libasound2-data
   - libassuan0
   - libatasmart4
   - libatm1
-  - libblockdev2
-  - libblockdev-crypto
-  - libblockdev-fs2
-  - libblockdev-loop2
-  - libblockdev-part2
-  - libblockdev-part-err2
-  - libblockdev-swap2
-  - libblockdev-utils2
-  - libcanberra0
+  - libbinutils
+  - libblockdev3
+  - libblockdev-crypto3
+  - libblockdev-fs3
+  - libblockdev-loop3
+  - libblockdev-mdraid3
+  - libblockdev-nvme3
+  - libblockdev-part3
+  - libblockdev-swap3
+  - libblockdev-utils3
+  - libbytesize1
+  - libbytesize-common
+  - libctf0
+  - libctf-nobfd0
   - libcurl3-gnutls
   - libdbus-glib-1-2
-  - libdconf1
-  - libdns-export1109
-  - libdrm2
-  - libdrm-common
+  - libduktape207
+  - libdw1
   - libeatmydata1
   - liberror-perl
   - libevdev2
-  - libfl2
+  - libflashrom1
   - libfribidi0
+  - libftdi1-2
   - libfwupd2
-  - libfwupdplugin1
-  - libfwupdplugin5
   - libgcab-1.0-0
+  - libgdbm6
   - libgdbm-compat4
   - libgirepository-1.0-1
   - libglib2.0-bin
@@ -135,93 +136,115 @@ purge:
   - libgstreamer1.0-0
   - libgudev-1.0-0
   - libgusb2
-  - libicu66
   - libimobiledevice6
-  - libisc-export1105
+  - libinih1
+  - libintl-perl
+  - libintl-xs-perl
   - libisns0
   - libjcat1
+  - libjq1
   - libjson-glib-1.0-0
   - libjson-glib-1.0-common
+  - libklibc
   - libksba8
+  - libldap-common
   - liblmdb0
   - liblocale-gettext-perl
-  - libltdl7
+  - liblxc1
+  - liblxc-common
   - liblzo2-2
   - libmaxminddb0
   - libmbim-glib4
   - libmbim-proxy
+  - libmbim-utils
   - libmm-glib0
-  - libmspack0
+  - libmodule-find-perl
+  - libmodule-scandeps-perl
+  - libnih1
   - libnl-3-200
   - libnl-genl-3-200
   - libnpth0
   - libnspr4
   - libnss3
   - libnss-systemd
-  - libntfs-3g883
-  - libogg0
+  - libntfs-3g89
+  - libnvme1
+  - libonig5
+  - libopeniscsiusr
   - libpackagekit-glib2-18
-  - libparted2
-  - libparted-fs-resize0
   - libpci3
-  - libperl5.30
+  - libperl5.36
   - libpipeline1
   - libplist3
-  - libplymouth5
   - libpolkit-agent-1-0
   - libpolkit-gobject-1-0
-  - libproxy1v5
-  - libpython3.8
+  - libproc-processtable-perl
+  - libprotobuf-c1
+  - libpython3.10
+  - libpython3.11
   - libqmi-glib5
   - libqmi-proxy
+  - libqmi-utils
   - libsasl2-modules
-  - libsgutils2-2
+  - libsgutils2-1.46-2
   - libsmbios-c2
   - libsodium23
-  - libsoup2.4-1
+  - libsort-naturally-perl
   - libstemmer0d
-  - libtdb1
+  - libtcl8.6
+  - libterm-readkey-perl
   - libtext-charwidth-perl
   - libtext-iconv-perl
   - libtext-wrapi18n-perl
-  - libtss2-esys0
+  - libtss2-esys-3.0.2-0
+  - libtss2-mu0
+  - libtss2-sys1
+  - libtss2-tcti-cmd0
+  - libtss2-tcti-device0
+  - libtss2-tcti-mssim0
+  - libtss2-tcti-swtpm0
   - libuchardet0
   - libudisks2-0
   - libunwind8
   - libupower-glib3
-  - liburcu6
+  - liburcu8
   - libusb-1.0-0
   - libusbmuxd6
   - libuv1
   - libvolume-key1
-  - libvorbis0a
-  - libvorbisfile3
   - libx11-6
   - libx11-data
   - libxau6
   - libxcb1
   - libxdmcp6
   - libxext6
-  - libxml2
-  - libxmlb1
   - libxmlb2
-  - libxmlsec1
-  - libxmlsec1-openssl
   - libxmuu1
-  - libxslt1.1
   - linux-firmware
-  - linux-generic
-  - linux-headers-generic
+  - linux-headers-*
   - linux-image-generic
+  - linux-modules-extra-*
   - lshw
+  - lsof
+  - ltrace
+  - lxcfs
+  - lxd
   - lxd-agent-loader
+  - lxd-client
+  - make
   - man-db
   - manpages
   - mdadm
+  - mlocate
   - modemmanager
   - motd-news-config
+  - mtr-tiny
   - multipath-tools
+  - nano
+  - ncal
+  - needrestart
   - networkd-dispatcher
+  - nplan
   - ntfs-3g
   - open-iscsi
   - open-vm-tools
@@ -235,127 +258,116 @@ purge:
   - pci.ids
   - pciutils
   - perl
-  - perl-modules-5.30
+  - perl-modules-5.36
   - pinentry-curses
   - plymouth
   - plymouth-theme-ubuntu-text
   - policykit-1
+  - polkitd
   - pollinate
   - popularity-contest
+  - postfix
   - powermgmt-base
   - publicsuffix
   - python3-apport
   - python3-attr
   - python3-automat
+  - python3-babel
+  - python3-bcrypt
   - python3-blinker
   - python3-certifi
   - python3-cffi-backend
   - python3-chardet
-  - python3-click
-  - python3-colorama
+  - python3-commandnotfound
   - python3-configobj
   - python3-constantly
-  - python3-cryptography
-  - python3-dbus
-  - python3-debconf
-  - python3-debian
   - python3-distro
   - python3-distro-info
   - python3-distupgrade
   - python3-distutils
-  - python3-entrypoints
+  - python3-gdbm
   - python3-gi
   - python3-hamcrest
-  - python3-httplib2
   - python3-hyperlink
   - python3-idna
-  - python3-importlib-metadata
   - python3-incremental
   - python3-jinja2
   - python3-jsonpatch
   - python3-json-pointer
   - python3-jsonschema
   - python3-jwt
-  - python3-keyring
-  - python3-launchpadlib
-  - python3-lazr.restfulclient
-  - python3-lazr.uri
   - python3-lib2to3
   - python3-markupsafe
-  - python3-more-itertools
-  - python3-nacl
   - python3-newt
-  - python3-oauthlib
   - python3-openssl
-  - python3-pexpect
   - python3-pkg-resources
   - python3-problem-report
-  - python3-ptyprocess
   - python3-pyasn1
   - python3-pyasn1-modules
-  - python3-pymacaroons
   - python3-pyrsistent
   - python3-requests
-  - python3-requests-unixsocket
-  - python3-secretstorage
   - python3-serial
   - python3-service-identity
-  - python3-setuptools
-  - python3-simplejson
   - python3-six
   - python3-software-properties
   - python3-systemd
   - python3-twisted
-  - python3-twisted-bin
+  - python3-tz
   - python3-update-manager
   - python3-urllib3
-  - python3-wadllib
-  - python3-zipp
   - python3-zope.interface
+  - python-babel-localedata
   - run-one
+  - screen
   - sg3-utils
   - sg3-utils-udev
+  - sgml-base
   - shared-mime-info
+  - s-nail
   - snapd
   - software-properties-common
   - sosreport
-  - sound-theme-freedesktop
   - squashfs-tools
-  - ssh-import-id
   - strace
+  - tasksel
+  - tasksel-data
+  - tcl
+  - tcl8.6
   - telnet
   - thermald
   - thin-provisioning-tools
+  - tnftp
   - tpm-udev
-  - ubuntu-advantage-tools
+  - tree
+  - ubuntu-minimal
   - ubuntu-release-upgrader-core
   - udisks2
+  - uidmap
   - unattended-upgrades
   - update-manager-core
   - update-notifier-common
   - upower
+  - ureadahead
   - usb.ids
   - usb-modeswitch
   - usb-modeswitch-data
   - usbmuxd
   - usbutils
+  - usrmerge
   - uuid-runtime
   - vim
   - vim-common
   - vim-runtime
   - vim-tiny
+  - wamerican
+  - wbritish
   - wireless-regdb
   - xauth
+  - xdelta3
   - xdg-user-dirs
   - xfsprogs
   - xkb-data
+  - xml-core
   - xxd
   - zerofree
-  - command-not-found
-  - python3-commandnotfound
-  - python3-gdbm
-  - netplan.io
-  - python3-netifaces
-  - python3-yaml
-  - make
-  - patch
+  - tzdata-icu

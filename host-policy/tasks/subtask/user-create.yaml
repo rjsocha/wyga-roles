@@ -18,7 +18,7 @@
     home: "{{ target.value.home | default(omit) }}"
     uid: "{{ target.value.uid | default(omit) }}"
     password: "{{ target.value.password }}"
-    update_password: on_create
+    update_password: "{{ target.value.update_password | default('on_create') }}"
     state: present
   when: target.value.password | length > 0
 

@@ -4,7 +4,6 @@
   loop_control:
     loop_var: target
     label: "{{ target.key }}"
-  when: target.key != 'root'
 
 - name: "Cleanup users ..."
   include_tasks: "user-remove.yaml"

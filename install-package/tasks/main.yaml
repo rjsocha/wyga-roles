@@ -2,8 +2,8 @@
 - name: "Check if OS is supported ..."
   assert:
     that:
-      - target_distribution in ['ubuntu','debian']
-      - target_distribution_version in ["22.04","20.04","23.10","12"]
+      - target_distribution in [ 'ubuntu', 'debian' ]
+      - target_distribution_major_version in [ "20", "22", "12" ]
     fail_msg: "Unsupported distribution: {{ target_distribution }} {{ target_distribution_version }}"
     quiet: true
 
@@ -24,47 +24,9 @@
   set_fact:
     packages: "{{ install_packages }}"
 
-- block:
-    - name: "Check if {{ host_policy_dir }}/firstboot is present ..."
-      stat:
-        path: "{{ host_policy_dir }}/firstboot"
-      register: initial_setup
-
-    - fail:
-        msg: "Refusing ... firstboot process was already executed on the host ..."
-      when: initial_setup.stat.exists and firstboot_do_it_anyway is not defined and firstboot_auto is not defined
-
-    - name: "Firstboot cleanups marker ..."
-      set_fact:
-        _firstboot_cleanups: true
-      when: not initial_setup.stat.exists or firstboot_do_it_anyway is defined
-
-    - name: "Select packages to purge (firstboot setup) ..."
-      set_fact:
-        firstboot_purge: "{{ packages | select('regex', '^\\^') | map('regex_replace', '^\\^', '.') | list }}"
-
-    - name: "Append packages to purge (firstboot setup) ..."
-      set_fact:
-        packages: "{{ packages + firstboot_purge }}"
-      when: not initial_setup.stat.exists or firstboot_do_it_anyway is defined
-  when: firstboot is defined or firstboot_packages is defined or firstboot_auto is defined
-
 - name: "Remove any firstboot packages ..."
   set_fact:
     packages: "{{ packages | reject('regex', '^\\^') | list }}"
-
-- name: "Stop services ..."
-  service:
-    name: "{{ stop_service }}"
-    state: stopped
-  loop:
-    - polkit
-    - unattended-upgrades
-    - packagekit
-  loop_control:
-    loop_var: stop_service
-  ignore_errors: yes
-  when: _firstboot_cleanups is defined
 
 - name: "Select packages to purge ..."
   set_fact:
@@ -73,7 +35,7 @@
 
 - name: "Prepare packages list ..."
   set_fact:
-     package_list: "{{ package_list + [ { 'name': package, 'manifest': playbook_dir + '/site/packages/' + target_distribution + '/' + target_distribution_version + '/' + package } ] + [ { 'name': package, 'manifest': role_path + '/files/packages/' + target_distribution + '/' + target_distribution_version + '/' + package } ] }}"
+     package_list: "{{ package_list + [ { 'name': package, 'manifest': playbook_dir + '/local/packages/' + target_distribution + '/' + target_distribution_version + '/' + package } ] + [ { 'name': package, 'manifest': role_path + '/files/packages/' + target_distribution + '/' + target_distribution_version + '/' + package } ] }}"
   loop: "{{ packages }}"
   loop_control:
     loop_var: package
@@ -174,34 +136,3 @@
 
 - name: "Install packages ..."
   include_tasks: "packages/install-packages.yml"
-
-
-# on Ubuntu 22.04 services stay running after package purge (bug?)
-- name: "Firstboot cleanup ..."
-  block:
-    - name: "Cleanup /var/lib/apt/lists ..."
-      shell: "find /var/lib/apt/lists /var/cache/apt -type f -delete && apt-get clean && apt-get update -qq"
-    - name: "Stop services ..."
-      command: "systemctl stop {{ stop_service }}"
-      loop:
-        - polkit
-        - unattended-upgrades
-        - packagekit
-      loop_control:
-        loop_var: stop_service
-      ignore_errors: yes
-  when: _firstboot_cleanups is defined
-
-- name: "Create {{ host_policy_dir }}/firstboot ..."
-  block:
-    - name: "Create {{ host_policy_dir }} directory ..."
-      file:
-        path: "{{ host_policy_dir }}"
-        state: directory
-    - name: "Create firstboot marker ..."
-      copy:
-        content: '# Do not remove this file...'
-        dest: "{{ host_policy_dir }}/firstboot"
-        mode: "0600"
-        owner: "root"
-        group: "root"

@@ -1,10 +1,9 @@
-- name: "Install packages ..." 
+- name: "Purge packages ..."
   apt:
-    name: "{{ packages }}"
-    state: latest
-    install_recommends: no
-    autoclean: yes
-    update_cache: yes
+    name: "{{ purge_list }}"
+    state: absent
+    autoremove: yes
+    purge: yes
   register: _action
   retries: 25
   until: _action is success or ('Failed to lock apt for exclusive operation' not in _action.msg and '/var/lib/dpkg/lock' not in _action.msg)
