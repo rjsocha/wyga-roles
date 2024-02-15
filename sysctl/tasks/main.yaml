@@ -1,0 +1,10 @@
+---
+# host:
+#   setup:
+#     sysctl:
+#       - sysctlentry1 = value
+#       - sysctlentry2 = value
+#
+- name: "SYSCTL ..."
+  include_tasks: "task/sysctl.yaml"
+  when: host.setup.sysctl is defined

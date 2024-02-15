@@ -1,3 +1,6 @@
 ---
 - name: systemd-journald
   include_tasks: "handler/journal.yaml"
+
+- name: systemd-service-sysstat
+  include_tasks: "handler/service_sysstat.yaml"

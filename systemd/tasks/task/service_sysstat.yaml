@@ -1,0 +1,18 @@
+---
+- name: "SYSTEMD / Service / sysstat / timer ..."
+  file:
+    path: "/etc/systemd/system/sysstat-collect.timer.d"
+    state: directory
+
+- name: "SYSTEMD / Service / sysstat / timer ..."
+  template:
+    src: "service/sysstat/timer"
+    dest: "/etc/systemd/system/sysstat-collect.timer.d/override.conf"
+    group: root
+    owner: root
+    mode: 0644
+  vars:
+    sysstat_every: "{{ host.setup.systemd.service.sysstat.every | default('10') }}"
+    sysstat_state: "{{ host.setup.systemd.service.sysstat.enable | default(false) }}"
+  notify:
+    - systemd-service-sysstat

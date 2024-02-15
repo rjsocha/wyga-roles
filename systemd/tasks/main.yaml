@@ -6,6 +6,14 @@
 #        storage: volatile
 #        maxuse: 60M
 #
-- name: "SYSTEMD / journal"
+- name: "SYSTEMD / journal ..."
   include_tasks: "task/journal.yaml"
   when: host.setup.systemd.journal is defined
+
+- name: "SYSTEMD / Service / sysstat ..." 
+  include_tasks: "task/service_sysstat.yaml"
+  when: host.setup.systemd.service.sysstat is defined
+
+- name: "SYSTEMD / Service / systemd-networkd-wait-online ..." 
+  include_tasks: "task/service_wait-online.yaml"
+  when: host.setup.systemd.service.wait_online is defined

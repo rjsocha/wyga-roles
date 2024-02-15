@@ -3,15 +3,6 @@
   include_tasks: "hostname.yaml"
   when: skip_hostname is not defined
 
-- name: "Systemd configuration ..."
-  include_role:
-    name: wyga/systemd
-  when: host.setup.systemd is defined
-
-- name: "Initramfs configuration ..."
-  include_tasks: "initramfs-tools.yaml"
-  when: host.setup.initramfs.setup|default(true)
-
 - name: "Network configuration (systemd) ..."
   block:
     - include_role:
@@ -28,10 +19,24 @@
 - name: "Trigger any pending reboots ..."
   meta: flush_handlers
 
+- name: "Systemd configuration ..."
+  include_role:
+    name: wyga/systemd
+  when: host.setup.systemd is defined
+
+- name: "Initramfs configuration ..."
+  include_tasks: "initramfs-tools.yaml"
+  when: host.setup.initramfs.setup|default(true)
+
 - name: "GRUB Configuration ..."
   include_role:
     name: wyga/grub
   when: host.setup.grub is defined
+
+- name: "SYSCTL Configuration ..."
+  include_role:
+    name: wyga/sysctl
+  when: host.setup.sysctl is defined
 
 - name: "APT Configuration ..."
   include_role:
@@ -61,11 +66,6 @@
   include_role:
     name: wyga/ssh-host-certificate
   when: host.setup.ssh.host.certificate|default(false) and host.setup.ssh.host.group is defined
-
-- name: "Systemd configuration ..."
-  include_role:
-    name: wyga/systemd
-  when: host.setup.systemd is defined
 
 - name: "User profile ..."
   include_role:

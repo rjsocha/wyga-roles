@@ -1,0 +1,17 @@
+---
+- name: "SYSCTL / Configuration directory ..."
+  file:
+    path: "/etc/sysctl.d"
+    state: directory
+
+- name: "SYSCTL / Configuration ..."
+  template:
+    src: "sysctl/host-policy"
+    dest: "/etc/sysctl.d/99-host-policy.conf"
+    group: root
+    owner: root
+    mode: 0644
+  vars:
+    sysctl_config: "{{ host.setup.sysctl }}"
+  notify:
+    - sysctl-reload

@@ -1,0 +1,5 @@
+# managed by host-policy
+# STATE: {{ 'enabled' if sysstat_state else 'disabled' }}
+[Timer]
+OnCalendar=
+OnCalendar=*:00/{{ sysstat_every }}

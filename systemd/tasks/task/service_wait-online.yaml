@@ -1,0 +1,15 @@
+---
+- name: "SYSTEMD / Service / systemd-networkd-wait-online ..."
+  file:
+    path: "/etc/systemd/system/systemd-networkd-wait-online.service.d"
+    state: directory
+
+- name: "SYSTEMD / Service / systemd-networkd-wait-online ..."
+  template:
+    src: "service/wait-online/custom"
+    dest: "/etc/systemd/system/systemd-networkd-wait-online.service.d/override.conf"
+    group: root
+    owner: root
+    mode: 0644
+  vars:
+    wait_online: "{{ host.setup.systemd.service.wait_online }}"

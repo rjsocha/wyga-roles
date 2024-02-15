@@ -1,0 +1,4 @@
+# managed by host-policy
+{% for entry in sysctl_config %}
+{{ entry }}
+{% endfor %}
