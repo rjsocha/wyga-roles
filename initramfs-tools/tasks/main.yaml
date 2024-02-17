@@ -17,7 +17,7 @@
 - name: "initramfs - set driver policy ..."
   copy:
     dest: "/etc/initramfs-tools/conf.d/driver-policy"
-    content: "MODULES={{ host.setup.initramfs.modules | default('dep') }}\n"
+    content: "MODULES={{ host.setup.initramfs.modules | default('most') }}\n"
   notify: update-initramfs
   when: host.setup.initramfs.driverpolicy|default(true)
 
