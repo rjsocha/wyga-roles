@@ -121,6 +121,7 @@
     - "{{ ca_ssh_ca_dir }}"
     - "{{ ca_ssh_role_dir }}"
     - "{{ ssh_pool_dir }}"
+  when: host.user is defined
 
 - include_tasks: "update-ca-cert.yaml"
   when: host.setup.ssh.user.certificate | default(false)
