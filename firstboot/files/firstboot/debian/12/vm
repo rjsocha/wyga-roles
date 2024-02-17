@@ -74,3 +74,22 @@ purge:
   - usbutils
   - mailcap
   - mime-support
+# Debian Image on Digital Ocean
+  - cloud-guest-utils
+  - cloud-image-utils
+  - cloud-initramfs-growroot
+  - cloud-utils
+  - gdisk
+  - libaio1
+  - libfuse3-3
+  - libnuma1
+  - liburing2
+  - qemu-utils
+  - polkitd
+  - xml-core
+  - libduktape207
+  - libpolkit-agent-1-0
+  - libpolkit-gobject-1-0
+  - sgml-base
+  - unattended-upgrades
+  - python3-distro-info

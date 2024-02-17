@@ -21,3 +21,4 @@ require:
   - sysstat
   - rsync
   - mtr-tiny
+  - ufw
