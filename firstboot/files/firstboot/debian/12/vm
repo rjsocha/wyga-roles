@@ -15,7 +15,6 @@ purge:
   - python3-debianbts
   - python3-httplib2
   - python3-idna
-  - python3-pkg-resources
   - python3-pycurl
   - python3-pyparsing
   - python3-pysimplesoap
