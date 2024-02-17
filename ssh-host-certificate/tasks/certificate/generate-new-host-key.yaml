@@ -1,4 +1,4 @@
 ---
 # Why new keys are generated? To make sure there are in newest key format and for "general" good (security) practice
 - name: "Generate the new host {{ item }} key"
-  command: ssh-keygen -q -t {{item}} -f "{{ _tmp.path }}/ssh_host_{{ item }}_key" -C "{{ ansible_fqdn }}" -N ""
+  command: ssh-keygen -q -t {{item}} -f "{{ _tmp.path }}/ssh_host_{{ item }}_key" -C "{{ host.setup.ssh.host.id if host.setup.ssh.host.id is defined else ansible_fqdn }}" -N ""

@@ -3,7 +3,7 @@
   set_fact:
     my_users: []
 
-- name: "Append user  to the users list ..."
+- name: "Append user to the users list ..."
   set_fact:
     my_users: "{{ my_users + [ item.key ] }}"
   loop: "{{ wum_users | dict2items }}"

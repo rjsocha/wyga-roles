@@ -38,9 +38,10 @@
     install_packages: "{{ host.package.packages }}"
   when: host.package.packages is defined and not host.package.skip|default(false)
 
-- name: "Initramfs configuration ..."
-  include_tasks: "initramfs-tools.yaml"
-  when: host.setup.initramfs.setup|default(true)
+- name: "INITRAMFS configuration ..."
+  include_role:
+    name: wyga/initramfs-tools
+  when: not host.setup.initramfs.skip|default(false)
 
 - name: "GRUB Configuration ..."
   include_role:
@@ -80,12 +81,17 @@
     label: "group"
   when: host.group is defined
 
+- name: "Prepare users dictonary ..."
+  set_fact:
+    wum_users: {}
+
 - name: "Canonicalization of users configuation ..."
   include_tasks: "normalize-user.yaml"
   loop: "{{ host.user }}"
   loop_control:
     loop_var: wum_target
     label: "user"
+  when: host.user is defined
 
 - block:
   - name: "Load user CA certificate ..."

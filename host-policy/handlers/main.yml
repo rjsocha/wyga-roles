@@ -1,6 +1,3 @@
 ---
 - name: reboot-host
   include_tasks: "reboot/reboot-host.yaml"
-
-- name: update-initramfs
-  command: update-initramfs -k all -u

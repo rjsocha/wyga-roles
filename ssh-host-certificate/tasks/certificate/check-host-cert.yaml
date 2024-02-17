@@ -16,10 +16,15 @@
       changed_when: false
       ignore_errors: true
 
-    - name: "Force certificate regeneration ..."
+    - name: "Force certificate regeneration (hostname) ..."
       set_fact:
         cert_exists: false
-      when: cert_keyid.stdout != host.hostname
+      when: cert_keyid.stdout != host.hostname and host.setup.ssh.host.id is not defined
+
+    - name: "Force certificate regenerationi (id) ..."
+      set_fact:
+        cert_exists: false
+      when: host.setup.ssh.host.id is defined and cert_keyid.stdout != host.setup.ssh.host.id
   when: cert_exists
 
 - name: "Append {{item}} to generation list..."

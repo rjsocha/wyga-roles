@@ -2,6 +2,11 @@
   set_fact:
     initramfs_managed: [ 'resume', 'driver-policy' ]
 
+- name: "initramfs - /etc/initramfs-tools/conf.d ..."
+  file:
+    path: "/etc/initramfs-tools/conf.d"
+    state: directory
+
 - name: "initramfs - set resume device ..."
   copy:
     dest: "/etc/initramfs-tools/conf.d/resume"
