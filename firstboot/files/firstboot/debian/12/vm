@@ -93,3 +93,4 @@ purge:
   - sgml-base
   - unattended-upgrades
   - python3-distro-info
+  - uuid-runtime
