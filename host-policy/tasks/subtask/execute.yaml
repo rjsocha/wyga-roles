@@ -19,25 +19,6 @@
 - name: "Trigger any pending reboots ..."
   meta: flush_handlers
 
-- name: "Systemd configuration ..."
-  include_role:
-    name: wyga/systemd
-  when: host.setup.systemd is defined
-
-- name: "Initramfs configuration ..."
-  include_tasks: "initramfs-tools.yaml"
-  when: host.setup.initramfs.setup|default(true)
-
-- name: "GRUB Configuration ..."
-  include_role:
-    name: wyga/grub
-  when: host.setup.grub is defined
-
-- name: "SYSCTL Configuration ..."
-  include_role:
-    name: wyga/sysctl
-  when: host.setup.sysctl is defined
-
 - name: "APT Configuration ..."
   include_role:
     name: wyga/apt
@@ -56,6 +37,25 @@
   vars:
     install_packages: "{{ host.package.packages }}"
   when: host.package.packages is defined and not host.package.skip|default(false)
+
+- name: "Initramfs configuration ..."
+  include_tasks: "initramfs-tools.yaml"
+  when: host.setup.initramfs.setup|default(true)
+
+- name: "GRUB Configuration ..."
+  include_role:
+    name: wyga/grub
+  when: host.setup.grub is defined
+
+- name: "SYSCTL Configuration ..."
+  include_role:
+    name: wyga/sysctl
+  when: host.setup.sysctl is defined
+
+- name: "Systemd configuration ..."
+  include_role:
+    name: wyga/systemd
+  when: host.setup.systemd is defined
 
 - name: "SSH Configuration ..."
   include_role:
