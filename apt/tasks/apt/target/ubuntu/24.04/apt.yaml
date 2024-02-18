@@ -1,0 +1,29 @@
+---
+- name: "APT / {{ target_distribution | capitalize }} {{ target_distribution_version }} / /etc/apt/sources.list.d ..."
+  file:
+    path: "/etc/apt/sources.list.d"
+    state: directory
+
+- name: "APT / {{ target_distribution | capitalize }} {{ target_distribution_version }} / /etc/apt/sources.list ..."
+  template:
+    src: "apt/{{ target_distribution }}/{{ target_distribution_version }}/sources.list"
+    dest: "/etc/apt/sources.list"
+    group: root
+    owner: root
+    mode: 0644
+  register: apt_sources
+
+- name: "APT / {{ target_distribution | capitalize }} {{ target_distribution_version }} / /etc/apt/sources.list.d/ubuntu.sources ..."
+  template:
+    src: "apt/{{ target_distribution }}/{{ target_distribution_version }}/ubuntu.sources"
+    dest: "/etc/apt/sources.list.d/ubuntu.sources"
+    group: root
+    owner: root
+    mode: 0644
+  vars:
+    mirror: "{{ host.setup.apt.mirror | default('pl') }}"
+    backports: "{{ host.setup.apt.sources.backports | default(true) | bool }}"
+    universe: "{{ host.setup.apt.sources.universe | default(true) | bool }}"
+    multiverse: "{{ host.setup.apt.sources.multiverse | default(true) | bool }}"
+    restricted: "{{ host.setup.apt.sources.restricted | default(true) | bool }}"
+  register: apt_sources

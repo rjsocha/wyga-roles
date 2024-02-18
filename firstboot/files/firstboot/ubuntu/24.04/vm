@@ -38,7 +38,6 @@ purge:
   - dnsmasq-base
   - dns-root-data
   - dosfstools
-  - dracut-install
   - e2fsprogs-l10n
   - eatmydata
   - ebtables
@@ -75,9 +74,6 @@ purge:
   - htop
   - inetutils-telnet
   - info
-  - initramfs-tools
-  - initramfs-tools-bin
-  - initramfs-tools-core
   - installation-report
   - install-info
   - intel-microcode
@@ -89,7 +85,6 @@ purge:
   - jq
   - kbd
   - keyboard-configuration
-  - klibc-utils
   - kpartx
   - krb5-locales
   - landscape-common
@@ -145,7 +140,6 @@ purge:
   - libjq1
   - libjson-glib-1.0-0
   - libjson-glib-1.0-common
-  - libklibc
   - libksba8
   - libldap-common
   - liblmdb0
@@ -276,7 +270,6 @@ purge:
   - python3-bcrypt
   - python3-blinker
   - python3-certifi
-  - python3-cffi-backend
   - python3-chardet
   - python3-commandnotfound
   - python3-configobj
@@ -300,7 +293,6 @@ purge:
   - python3-markupsafe
   - python3-newt
   - python3-openssl
-  - python3-pkg-resources
   - python3-problem-report
   - python3-pyasn1
   - python3-pyasn1-modules

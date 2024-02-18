@@ -29,7 +29,7 @@
   register: ssh_check
  
 - name: "SSHD/Restarting with new configuration ..."
-  service:
-    name: sshd
+  systemd:
+    name: ssh
     state: restarted
   when: ssh_check.rc == 0

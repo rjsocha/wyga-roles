@@ -1,0 +1,17 @@
+---
+- name: "Configure /etc/apt/sources.list ..."
+  template:
+    src: "apt/{{ target_distribution }}/{{ target_distribution_version }}/sources.list"
+    dest: "/etc/apt/sources.list"
+    group: root
+    owner: root
+    mode: 0644
+  vars:
+    mirror: "{{ host.setup.apt.mirror | default('pl') }}"
+    backports: "{{ host.setup.apt.sources.backports | default(false) | bool }}"
+    universe: "{{ host.setup.apt.sources.universe | default(true) | bool }}"
+    multiverse: "{{ host.setup.apt.sources.multiverse | default(false) | bool }}"
+    contrib: "{{ host.setup.apt.sources.contrib | default(true) | bool }}"
+    nonfree: "{{ host.setup.apt.sources.nonfree | default(true) | bool }}"
+    nonfreefirmware: "{{ host.setup.apt.sources.nonfreefirmware | default(true) | bool }}"
+  register: apt_sources

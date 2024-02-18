@@ -80,7 +80,6 @@ purge:
   - cloud-initramfs-growroot
   - cloud-utils
   - gdisk
-  - libaio1
   - libfuse3-3
   - libnuma1
   - liburing2
@@ -94,3 +93,15 @@ purge:
   - unattended-upgrades
   - python3-distro-info
   - uuid-runtime
+  - bind9-libs
+  - libfstrm0
+  - libicu72
+  - libjemalloc2
+  - liblmdb0
+  - libmaxminddb0
+  - libprotobuf-c1
+  - libuv1
+  - libxml2
+  - bind9-dnsutils
+  - bind9-host
+  - publicsuffix

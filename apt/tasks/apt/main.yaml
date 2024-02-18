@@ -1,0 +1,35 @@
+---
+- name: "Check if Distribution is supported ..."
+  assert:
+    that:
+      - target_distribution in ['ubuntu','debian']
+      - target_distribution_version in ['18.04','20.04','22.04','24.04','12']
+    fail_msg: "Unsupported distribution: {{ target_distribution }} {{ target_distribution_version }}"
+    quiet: true
+
+- name: "Configure /etc/apt/apt.conf.d/99-host-policy ..."
+  template:
+    src: "apt/host-policy"
+    dest: "/etc/apt/apt.conf.d/99-host-policy"
+    group: root
+    owner: root
+    mode: 0644
+  register: apt_host_policy
+
+- name: "Process per distribution setup ..."
+  include_tasks:
+    file: "{{ item }}"
+  with_first_found:
+    - files:
+      - "target/{{ target_distribution }}/{{ target_distribution_version }}/apt.yaml"
+      - "target/generic/apt.yaml"
+
+# Digitial Ocean's Debian
+- name: "Cleanup (Debian) ...."
+  file:
+    path: "/etc/apt/sources.list.d/debian.sources"
+    state: absent
+
+- name: "Cleanup apt ..."
+  shell: "find /var/lib/apt/lists /var/cache/apt -type f -delete && apt-get clean"
+  when: apt_host_policy.changed or apt_sources.changed

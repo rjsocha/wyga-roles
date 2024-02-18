@@ -13,5 +13,5 @@
 #         backports: false      # debian, ubuntu
 #
 - name: "APT / Configuration ..."
-  include_tasks: "subtask/apt.yaml"
+  include_tasks: "apt/main.yaml"
   when: host.setup.apt is defined
