@@ -21,8 +21,8 @@
     file: "{{ item }}"
   with_first_found:
     - files:
-      - "target/{{ target_distribution }}/{{ target_distribution_version }}/apt.yaml"
-      - "target/generic/apt.yaml"
+      - "{{ role_path }}/tasks/apt/target/{{ target_distribution }}/{{ target_distribution_version }}/apt.yaml"
+      - "{{ role_path }}/tasks/apt/target/generic/apt.yaml"
 
 # Digitial Ocean's Debian
 - name: "Cleanup (Debian) ...."
