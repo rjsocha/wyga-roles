@@ -22,41 +22,41 @@
 - name: "APT Configuration ..."
   include_role:
     name: wyga/apt
-  when: host.setup.apt is defined
+  when: skip_apt is not defined and host.setup.apt is defined
 
 - name: "Process firstboot setup ..."
   include_role:
     name: wyga/firstboot
   vars:
     firstboot: "{{ host.package.firstboot }}"
-  when: host.package.firstboot.profile is defined and not host.package.firstboot.skip|default(false) and not host.package.skip|default(false)
+  when: skip_firstboot is not defined and host.package.firstboot.profile is defined and not host.package.firstboot.skip|default(false) and not host.package.skip|default(false)
 
 - name: "Process packages ..."
   include_role:
     name: wyga/install-package
   vars:
     install_packages: "{{ host.package.packages }}"
-  when: host.package.packages is defined and not host.package.skip|default(false)
+  when: skip_packages is not defined and host.package.packages is defined and not host.package.skip|default(false)
 
 - name: "INITRAMFS configuration ..."
   include_role:
     name: wyga/initramfs-tools
-  when: not host.setup.initramfs.skip|default(false)
+  when: skip_initramfs is not defined and and not host.setup.initramfs.skip|default(false)
 
 - name: "GRUB Configuration ..."
   include_role:
     name: wyga/grub
-  when: host.setup.grub is defined
+  when: skip_grub is not defined and host.setup.grub is defined
 
 - name: "SYSCTL Configuration ..."
   include_role:
     name: wyga/sysctl
-  when: host.setup.sysctl is defined
+  when: skip_sysctl is not defined and host.setup.sysctl is defined
 
 - name: "Systemd configuration ..."
   include_role:
     name: wyga/systemd
-  when: host.setup.systemd is defined
+  when: skip_systemd is not defined and host.setup.systemd is defined
 
 - name: "SSH Configuration ..."
   include_role:
@@ -66,12 +66,12 @@
 - name: "SSH Host Certificate ..."
   include_role:
     name: wyga/ssh-host-certificate
-  when: host.setup.ssh.host.certificate|default(false) and host.setup.ssh.host.group is defined
+  when: skip_ssh_certificate is not defined and host.setup.ssh.host.certificate|default(false) and host.setup.ssh.host.group is defined
 
 - name: "User profile ..."
   include_role:
     name: wyga/profile
-  when: host.setup.profile|default(true)
+  when: skip_profile is not defined and host.setup.profile|default(true)
 
 - name: "Canonicalization of group configuation ..."
   include_tasks: "normalize-group.yaml"
@@ -79,7 +79,7 @@
   loop_control:
     loop_var: wum_target
     label: "group"
-  when: host.group is defined
+  when: skip_group is not defined and host.group is defined
 
 - name: "Prepare users dictonary ..."
   set_fact:
@@ -91,7 +91,7 @@
   loop_control:
     loop_var: wum_target
     label: "user"
-  when: host.user is defined
+  when: skip_user is not defined and host.user is defined
 
 - block:
   - name: "Load user CA certificate ..."
