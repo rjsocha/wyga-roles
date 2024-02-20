@@ -41,7 +41,7 @@
 - name: "INITRAMFS configuration ..."
   include_role:
     name: wyga/initramfs-tools
-  when: skip_initramfs is not defined and and not host.setup.initramfs.skip|default(false)
+  when: skip_initramfs is not defined and not host.setup.initramfs.skip|default(false)
 
 - name: "GRUB Configuration ..."
   include_role:
