@@ -31,8 +31,8 @@
   notify: restart-ssh
   vars:
     ssh_port: "{{ host.setup.ssh.configuration.port | default('22') }}"
+    ssh_listen: "{{ host.setup.ssh.configuration.listen | default([]) }}"
     ssh_addressfamily: "{{ host.setup.ssh.configuration.addressfamily | default('inet') }}"
-    ssh_listenaddress: "{{ host.setup.ssh.configuration.listenaddress | default('0.0.0.0') }}"
     ssh_forcei18n: "{{ host.setup.ssh.configuration.forcei18n | default('none') }}"
     ssh_allowtcpforwarding: "{{ 'yes' if host.setup.ssh.configuration.allowtcpforwarding|default(true) else 'no' }}"
     ssh_allowagentforwarding: "{{ 'yes' if host.setup.ssh.configuration.allowagentforwarding|default(true) else 'no' }}"

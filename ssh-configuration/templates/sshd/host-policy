@@ -1,8 +1,12 @@
-{% if ssh_port != "none" %}
+#jinja2: trim_blocks: True, lstrip_blocks: True
+{% if ssh_listen | length > 0 %}
+  {% for listen in ssh_listen %}
+ListenAddress {{ listen }}
+  {% endfor %}
+{% else %}
 Port {{ ssh_port }}
 {% endif %}
 AddressFamily {{ ssh_addressfamily }}
-ListenAddress {{ ssh_listenaddress }}
 {% if ssh_forcei18n != "none" %}
 SetEnv LC_ADDRESS={{ ssh_forcei18n }} LC_NAME={{ ssh_forcei18n }} LC_MONETARY={{ ssh_forcei18n }} LC_PAPER={{ ssh_forcei18n }} LC_IDENTIFICATION={{ ssh_forcei18n }} LC_TELEPHONE={{ ssh_forcei18n }} LC_MEASUREMENT={{ ssh_forcei18n }} LC_TIME={{ ssh_forcei18n }} LC_NUMERIC={{ ssh_forcei18n }} LC_ALL={{ ssh_forcei18n }} LANG={{ ssh_forcei18n }}
 {% endif %}
