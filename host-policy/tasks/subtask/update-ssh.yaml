@@ -13,5 +13,5 @@
 
   - name: "Update registred configurations ..."
     set_fact:
-      wyga_ssh_registred_config: "{{ wyga_ssh_registred_config + ['authorized.conf' ] }}"
+      wyga_ssh_registred_config: "{{ wyga_ssh_registred_config | default([]) + ['authorized.conf' ] }}"
   when: wum_users | length > 0
