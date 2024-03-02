@@ -79,7 +79,7 @@
   loop_control:
     loop_var: wum_target
     label: "group"
-  when: skip_group is not defined and host.group is defined
+  when: host.group is defined
 
 - name: "Prepare users dictonary ..."
   set_fact:
@@ -91,7 +91,7 @@
   loop_control:
     loop_var: wum_target
     label: "user"
-  when: skip_user is not defined and host.user is defined
+  when: host.user is defined
 
 - block:
   - name: "Load user CA certificate ..."
