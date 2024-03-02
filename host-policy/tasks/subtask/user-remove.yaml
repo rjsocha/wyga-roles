@@ -12,8 +12,12 @@
 
 - name: "Collect names of removed users ..."
   set_fact:
-    remove_users: "{{ remove_users + [ item.path | basename ] }}"
-  with_items: "{{ removed_users['files'] }}"
+    remove_users: "{{ remove_users + [ rm_user.path | basename ] }}"
+  loop: "{{ removed_users['files'] }}"
+  loop_control:
+    loop_var: rm_user
+    label: "{{ rm_user.path | basename }}"
+  when: rm_user.path | basename != "root"
 
 - name: "List removed users ..."
   debug:
