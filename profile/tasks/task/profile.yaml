@@ -17,6 +17,7 @@
         owner: root
         mode: 0644
         force: yes
+        decrypt: false
       with_items:
         - .hushlogin
         - .tmux.conf

@@ -1,0 +1,11 @@
+require:
+  - qemu-system-x86
+  - libvirt-daemon-system
+  - libvirt-clients
+  - virtinst
+  - ovmf
+  - swtpm-tools
+  - dnsmasq-base
+  - bridge-utils
+  - qemu-utils
+  - jq
