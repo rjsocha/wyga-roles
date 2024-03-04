@@ -7,5 +7,5 @@ user_ca_key:        "key/ca/user/user-ca"
 user_ssh_keys:      "key/user"
 host_policy_dir:    "/var/opt/host-policy"
 
-# eex3DeinieM3giev
+# eex3DeinieM3giev (force password change enforced)
 onboard_password: "$6$PpUuVvg7GhGhS.BF$v6ezEDaxvlK.VX77QVZWUPu2awEnH7Xhw16BcSbq6T2FADilhjphOMS.4l3kkgVqA2xjq.XxK4tfocgDfFxxS."

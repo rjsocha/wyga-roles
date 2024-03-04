@@ -1,0 +1,17 @@
+- name: "Set timezone ..."
+  file:
+    force: true
+    src: "/usr/share/zoneinfo/{{ host.setup.locale.tz }}"
+    dest: "/etc/localtime"
+    state: link
+
+- name: "Check if /etc/timezone file exists ..."
+  stat:
+    path: "/etc/timezone"
+  register: timezone_file
+
+- name: "Update /etc/timezone file ..."
+  copy:
+    dest: "/etc/timezone"
+    content: "{{ host.setup.locale.tz }}\n"
+  when: timezone_file.stat.exists

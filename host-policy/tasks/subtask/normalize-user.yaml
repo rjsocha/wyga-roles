@@ -47,13 +47,8 @@
 
 - name: "Set onboard password for user {{ _wum_target.key }} ..."
   set_fact:
-    _wum_value: "{{ _wum_value | combine({'password': onboard_password }) }}"
+    _wum_value: "{{ _wum_value | combine({'password': onboard_password, 'forceChange': true } ) }}"
   when: _wum_value.password is defined and _wum_value.password == "onboard"
-
-- name: "Make sure password attribute is present for user {{ _wum_target.key }} ..."
-  set_fact:
-    _wum_value: "{{ _wum_value | combine({'password': '' }) }}"
-  when: _wum_value.password is not defined
 
 - name: "Make sure password expiration attribute is present for user {{ _wum_target.key }} ..."
   set_fact:

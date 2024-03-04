@@ -22,3 +22,6 @@ require:
   - rsync
   - mtr-tiny
   - ufw
+  - bash-completion
+  - lsof
+  - xz-utils

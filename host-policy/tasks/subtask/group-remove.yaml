@@ -3,32 +3,40 @@
   set_fact:
     remove_groups: []
 
-- name: "Find removed groups ..."
-  find:
+- name: "Check is path {{ wum_group_managed }} exists ..."
+  stat:
     path: "{{ wum_group_managed }}"
-    file_type: file
-    excludes: "{{ my_groups }}"
-  register: removed_groups
+  register: wumgr
 
-- name: "Collect names of removed groups ..."
-  set_fact:
-    remove_groups: "{{ remove_groups + [ item.path | basename ] }}"
-  with_items: "{{ removed_groups['files'] }}"
+- name: "Process removed groups ..."
+  block:
+    - name: "Find removed groups ..."
+      find:
+        path: "{{ wum_group_managed }}"
+        file_type: file
+        excludes: "{{ my_groups }}"
+      register: removed_groups
 
-- name: "List removed groups ..."
-  debug:
-    msg: "{{ item }}"
-    verbosity: 1
-  loop: "{{ remove_groups }}"
+    - name: "Collect names of removed groups ..."
+      set_fact:
+        remove_groups: "{{ remove_groups + [ item.path | basename ] }}"
+      with_items: "{{ removed_groups['files'] }}"
 
-- name: "Remove group {{ item }} ..."
-  ansible.builtin.group:
-    name: "{{ item }}"
-    state: absent
-  loop: "{{ remove_groups }}"
+    - name: "List removed groups ..."
+      debug:
+        msg: "{{ item }}"
+        verbosity: 1
+      loop: "{{ remove_groups }}"
 
-- name: "Remove marker for group {{ item }} ..."
-  file:
-    path: "{{wum_group_managed }}/{{item}}"
-    state: absent
-  loop: "{{ remove_groups }}"
+    - name: "Remove group {{ item }} ..."
+      ansible.builtin.group:
+        name: "{{ item }}"
+        state: absent
+      loop: "{{ remove_groups }}"
+
+    - name: "Remove marker for group {{ item }} ..."
+      file:
+        path: "{{wum_group_managed }}/{{item}}"
+        state: absent
+      loop: "{{ remove_groups }}"
+  when: wumgr.stat.exists and wumgr.stat.isdir

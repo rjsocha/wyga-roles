@@ -1,0 +1,3 @@
+- name: "Configure locales ..."
+  include_tasks: "locale.yaml"
+  when: host.setup.locale is defined

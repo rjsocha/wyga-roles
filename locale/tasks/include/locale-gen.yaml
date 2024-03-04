@@ -1,0 +1,13 @@
+- name: "Generate /etc/locale.gen ..."
+  template:
+    src: "locale/locale.gen"
+    dest: "/etc/locale.gen"
+    owner: root
+    group: root
+    mode: 0644
+  register: locale_gen_changed
+
+- name: "Regenerate locales ..."
+  command:
+    cmd: "{{ bin_locale_gen }}"
+  when: locale_gen_changed is changed

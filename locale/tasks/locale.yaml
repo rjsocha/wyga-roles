@@ -1,0 +1,11 @@
+- name: "Locale generator ..."
+  ansible.builtin.include_tasks: include/generator.yaml
+  when: host.setup.locale.generate is defined
+
+- name: "Locale configuration ..."
+  ansible.builtin.include_tasks: include/locale-default.yaml
+  when: host.setup.locale.default is defined
+
+- name: "Timezone configuration ..."
+  ansible.builtin.include_tasks: include/timezone.yaml
+  when: host.setup.locale.tz is defined

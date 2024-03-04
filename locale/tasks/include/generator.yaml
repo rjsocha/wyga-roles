@@ -1,0 +1,15 @@
+- name: "Check if locale-gen is available ..."
+  ansible.builtin.raw: which locale-gen
+  check_mode: false
+  changed_when: false
+  failed_when: locale_gen_status.rc > 1
+  register: locale_gen_status
+
+- name: "Generate locales ..."
+  block:
+    - name: "Set locale-gen location ..."
+      set_fact:
+        bin_locale_gen: "{{ locale_gen_status.stdout_lines | first }}"
+    - name: "Generate locales ..."
+      include_tasks: include/locale-gen.yaml
+  when: locale_gen_status.rc == 0

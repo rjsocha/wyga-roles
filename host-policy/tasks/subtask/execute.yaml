@@ -19,6 +19,11 @@
 - name: "Trigger any pending reboots ..."
   meta: flush_handlers
 
+- name: "Locale configuration ..."
+  include_role:
+    name: wyga/locale
+  when: host.setup.locale is defined
+
 - name: "APT Configuration ..."
   include_role:
     name: wyga/apt

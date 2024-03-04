@@ -17,24 +17,9 @@
     create_home: true
     home: "{{ target.value.home | default(omit) }}"
     uid: "{{ target.value.uid | default(omit) }}"
-    password: "{{ target.value.password }}"
+    password: "{{ target.value.password | default('!') }}"
     update_password: "{{ target.value.update_password | default('on_create') }}"
     state: present
-  when: target.value.password | length > 0
-
-- name: "Create/update user {{ target.key }}"
-  ansible.builtin.user:
-    name: "{{ target.key }}"
-    comment: "{{ target.value.gecos | default(omit) }}"
-    groups: "{{ target.value.groups | list }}"
-    shell: "{{target.value.shell}}"
-    create_home: true
-    password_lock: true
-    home: "{{ target.value.home | default(omit) }}"
-    uid: "{{ target.value.uid | default(omit) }}"
-    update_password: on_create
-    state: present
-  when: target.value.password | length == 0 
 
 - name: "Update user primary group {{ target.key }}"
   ansible.builtin.user:
@@ -60,7 +45,7 @@
 
 - name: "Force password change on next login ..."
   command: passwd -e {{ target.key }}
-  when: not is_managed.stat.exists and target.value.password | length > 0 and target.value.forceChange
+  when: not is_managed.stat.exists and target.value.password is defined and target.value.forceChange
 
 - name: "Mark user {{ target.key }} as managed ..."
   copy:

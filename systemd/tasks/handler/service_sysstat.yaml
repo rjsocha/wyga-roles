@@ -2,19 +2,7 @@
 - name: "SYSTEMD / sysstat ..."
   systemd:
     name: sysstat
-    enabled: "{{ 'true' if host.setup.systemd.service.sysstat.enable | default(false) else 'false' }}"
+    enabled: "{{ true if host.setup.systemd.service.sysstat.enable | default(false) else false }}"
     masked: false
     daemon_reload: true
     state: "{{ 'restarted' if host.setup.systemd.service.sysstat.enable | default(false) else 'stopped' }}"
-
-- name: "SYSTEMD / sysstat / disable sysstat-collect.timer ..."
-  systemd:
-    name: sysstat-collect.timer
-    state: stopped
-  when: not host.setup.systemd.service.sysstat.enable | default(false)
-
-- name: "SYSTEMD / sysstat / disable sysstat-summary.timer ..."
-  systemd:
-    name: sysstat-summary.timer
-    state: stopped
-  when: not host.setup.systemd.service.sysstat.enable | default(false)
