@@ -17,7 +17,7 @@
   when: skip_network is not defined and host.network.skip is not defined and host.network.interface is defined
 
 - name: "Trigger any pending reboots ..."
-- meta: flush_handlers
+  meta: flush_handlers
 
 - name: "Locale configuration ..."
   include_role:
