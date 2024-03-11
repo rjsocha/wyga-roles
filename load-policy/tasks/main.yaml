@@ -23,6 +23,7 @@
     params:
       skip: true
       files:
+        - "{{ policy_file | default(omit) }}"
         - "{{ playbook_dir }}/policy/{{ select_policy | default(inventory_hostname) }}"
 
 - name: "No policy for host found ..."
