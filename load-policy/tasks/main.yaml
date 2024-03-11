@@ -34,6 +34,6 @@
 
 - name: "Host policy ..."
   set_fact:
-    host: "{{ host_default.policy | first | default({}) | combine(host_policy.policy | first | default({}), recursive=true) }}"
+    host: "{{ host_default.policy | default({}) | combine(host_policy.policy | default({}), recursive=true) }}"
     host_default:
     host_policy:
