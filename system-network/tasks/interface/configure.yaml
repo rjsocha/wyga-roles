@@ -90,4 +90,4 @@
 
 - name: "Store changed status ..."
   set_fact:
-    ifchanged: "{{ ifchanged | default(false) or dummychange.changed or loopbackchange.changed or ifchange.changed or iflink.changed }}"
+    ifchanged: "{{ ifchanged | default(false) or dummychange.changed or loopbackchange.changed or etherchange.changed or ifchange.changed or iflink.changed }}"

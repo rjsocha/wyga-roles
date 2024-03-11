@@ -5,5 +5,5 @@ Storage={{ systemd_journal_storage }}
 {% if systemd_journal_maxuse != 'default' %}
 RuntimeMaxUse={{ systemd_journal_maxuse }}
 {% elif systemd_journal_storage == 'volatile' %}
-RuntimeMaxUse=60M
+RuntimeMaxUse=128M
 {% endif %}

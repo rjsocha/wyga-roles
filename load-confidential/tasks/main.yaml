@@ -1,0 +1,32 @@
+---
+- name: "Load secrets (host) ..."
+  include_vars:
+    file: "{{ secret_file }}"
+    name: host_confidential
+  loop: "{{ query('first_found', params) }}"
+  loop_control:
+    loop_var: secret_file
+  vars:
+    params:
+      skip: true
+      files:
+        - "{{ playbook_dir }}/.confidential/{{ host.hostname }}"
+
+- name: "Load secrets (global) ..."
+  include_vars:
+    file: "{{ secret_file }}"
+    name: global_confidential
+  loop: "{{ query('first_found', params) }}"
+  loop_control:
+    loop_var: secret_file
+  vars:
+    params:
+      skip: true
+      files:
+        - "{{ playbook_dir }}/.confidential/global"
+
+- name: "Merge secrets ..."
+  set_fact:
+    confidential: "{{ global_confidential.confidential|default({}) | combine(host_confidential.confidential|default({}), recursive=true) }}"
+    global_confidential:
+    host_confidential:

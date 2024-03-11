@@ -1,0 +1,38 @@
+---
+- name: "Load defaults ..."
+  include_vars:
+    file: "{{ policy_default }}"
+    name: host_default
+  loop: "{{ query('first_found', params) }}"
+  loop_control:
+    loop_var: policy_default
+  vars:
+    params:
+      skip: true
+      files:
+        - "{{ playbook_dir }}/policy/default"
+
+- name: "Load host policy ..."
+  include_vars:
+    file: "{{ policy_host }}"
+    name: host_policy
+  loop: "{{ query('first_found', params) }}"
+  loop_control:
+    loop_var: policy_host
+  vars:
+    params:
+      skip: true
+      files:
+        - "{{ playbook_dir }}/policy/{{ select_policy | default(inventory_hostname) }}"
+
+- name: "No policy for host found ..."
+  fail:
+    msg:
+      - "No policy for host {{ inventory_hostname }} found ..."
+  when: host_policy is not defined
+
+- name: "Host policy ..."
+  set_fact:
+    host: "{{ host_default.policy | first | default({}) | combine(host_policy.policy | first | default({}), recursive=true) }}"
+    host_default:
+    host_policy:
