@@ -66,12 +66,12 @@
 - name: "SSH Configuration ..."
   include_role:
     name: wyga/ssh-configuration
-  when: skip_ssh_configuration is not defined
+  when: skip_ssh_configuration is not defined and host.setup.ssh is defined and not host.setup.ssh.skip | default(false)
 
 - name: "SSH Host Certificate ..."
   include_role:
     name: wyga/ssh-host-certificate
-  when: skip_ssh_certificate is not defined and host.setup.ssh.host.certificate|default(false) and host.setup.ssh.host.group is defined
+  when: skip_ssh_certificate is not defined and host.setup.ssh is defined and not host.setup.ssh.skip | default(false) and host.setup.ssh.host.certificate|default(false) and host.setup.ssh.host.group is defined
 
 - name: "Monitoring ..."
   include_role:
