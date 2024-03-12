@@ -1,20 +1,18 @@
 - name: "Check assertions (confidential) ..."
   assert:
     that:
-      - confidential.monitoring is defined
       - host.setup.monitoring.host is defined
       - confidential.monitoring[ host.setup.monitoring.token | default('token') ] is defined
       - confidential.monitoring[ host.setup.monitoring.auth | default('auth') ] is defined
-  when: confidential is defined
+  when: confidential.monitoring is defined
 
 - name: "Check assertions (secret) ..."
   assert:
     that:
-      - secret.monitoring is defined
       - host.setup.monitoring.host is defined
       - secret.monitoring[ host.setup.monitoring.token | default('token') ] is defined
       - secret.monitoring[ host.setup.monitoring.auth | default('auth') ] is defined
-  when: secret is defined
+  when: secret.monitoring is defined
 
 - name: "Prepare configuration (confidential) ..."
   set_fact:
@@ -22,7 +20,7 @@
       host: "{{ host.setup.monitoring.host }}"
       token: "{{ confidential.monitoring[ host.setup.monitoring.token | default('token') ] }}"
       auth: "{{ confidential.monitoring[ host.setup.monitoring.auth | default('auth') ] }}"
-  when: confidential is defined
+  when: confidential.monitoring is defined
 
 - name: "Prepare configuration (secret) ..."
   set_fact:
@@ -30,7 +28,7 @@
       host: "{{ host.setup.monitoring.host }}"
       token: "{{ secret.monitoring[ host.setup.monitoring.token | default('token') ] }}"
       auth: "{{ secret.monitoring[ host.setup.monitoring.auth | default('auth') ] }}"
-  when: secret is defined
+  when: secret.monitoring is defined
 
 - name: "Install check-mk-agent-push ..."
   include_role:
