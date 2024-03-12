@@ -1,0 +1,4 @@
+CMK_AGENT_HOST="{{ monitoring.host }}"
+CMK_AGENT_TOKEN="{{ monitoring.token }}"
+CMK_AGENT_AUTH="{{ monitoring.auth }}"
+CMK_AGENT_URL="https://${CMK_AGENT_AUTH}@${CMK_AGENT_HOST}/push-agent/passive"

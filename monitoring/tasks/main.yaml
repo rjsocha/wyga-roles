@@ -1,0 +1,3 @@
+- name: "Monitoring configuration ..."
+  include_tasks: monitoring.yaml
+  when: host.setup.monitoring is defined and not host.setup.monitoring.skip|default(false)

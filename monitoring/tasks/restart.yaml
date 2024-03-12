@@ -1,0 +1,35 @@
+- name: "Normalize registred configs ..."
+  set_fact:
+    wyga_ssh_registred_config: "{{ wyga_ssh_registred_config | unique }}"
+
+- debug:
+    msg:
+      - "REGISTRED:"
+      - "{{ wyga_ssh_registred_config }}"
+
+- name: "Looking for unmanaged files in /etc/ssh/sshd_config.d directory ..."
+  find:
+    paths: "/etc/ssh/sshd_config.d"
+    file_type: file
+    excludes: "{{ wyga_ssh_registred_config }}"
+  register: sshd_cleanup
+
+- name: "Delete unmanaged files form /etc/ssh/sshd_config.d ..."
+  file:
+    path: "{{ cleanup.path }}"
+    state: absent
+  loop: "{{ sshd_cleanup.files }}"
+  loop_control:
+    label: "{{ cleanup.path }}"
+    loop_var: cleanup
+
+- name: "SSHD/Checking configuration ..."
+  command: sshd -t
+  changed_when: false
+  register: ssh_check
+ 
+- name: "SSHD/Restarting with new configuration ..."
+  systemd:
+    name: ssh
+    state: restarted
+  when: ssh_check.rc == 0

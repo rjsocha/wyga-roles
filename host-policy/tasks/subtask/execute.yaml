@@ -73,6 +73,11 @@
     name: wyga/ssh-host-certificate
   when: skip_ssh_certificate is not defined and host.setup.ssh.host.certificate|default(false) and host.setup.ssh.host.group is defined
 
+- name: "Monitoring ..."
+  include_role:
+    name: wyga/monitoring
+  when: host.setup.monitoring is defined
+
 - name: "User profile ..."
   include_role:
     name: wyga/profile

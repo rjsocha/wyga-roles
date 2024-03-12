@@ -1,0 +1,164 @@
+- name: "Check assertions (confidential) ..."
+  assert:
+    that:
+      - confidential.monitoring is defined
+      - host.setup.monitoring.host is defined
+      - confidential.monitoring[ host.setup.monitoring.token | default('token') ] is defined
+      - confidential.monitoring[ host.setup.monitoring.auth | default('auth') ] is defined
+  when: confidential is defined
+
+- name: "Check assertions (secret) ..."
+  assert:
+    that:
+      - secret.monitoring is defined
+      - host.setup.monitoring.host is defined
+      - secret.monitoring[ host.setup.monitoring.token | default('token') ] is defined
+      - secret.monitoring[ host.setup.monitoring.auth | default('auth') ] is defined
+  when: secret is defined
+
+- name: "Prepare configuration (confidential) ..."
+  set_fact:
+    monitoring:
+      host: "{{ host.setup.monitoring.host }}"
+      token: "{{ confidential.monitoring[ host.setup.monitoring.token | default('token') ] }}"
+      auth: "{{ confidential.monitoring[ host.setup.monitoring.auth | default('auth') ] }}"
+  when: confidential is defined
+
+- name: "Prepare configuration (secret) ..."
+  set_fact:
+    monitoring:
+      host: "{{ host.setup.monitoring.host }}"
+      token: "{{ secret.monitoring[ host.setup.monitoring.token | default('token') ] }}"
+      auth: "{{ secret.monitoring[ host.setup.monitoring.auth | default('auth') ] }}"
+  when: secret is defined
+
+- name: "Install check-mk-agent-push ..."
+  include_role:
+    name: wyga/install-package
+  vars:
+    install_packages:
+      - check-mk-agent-push
+
+- name: "Generate configuration ..."
+  template:
+    src: "monitoring/config"
+    dest: "/etc/check_mk/check-mk-agent-push"
+    owner: root
+    group: root
+    mode: 0400
+
+- name: "Cleanup ..."
+  set_fact:
+    monitoring:
+
+- name: "Looking for check modules in /usr/lib/check_mk_agent/depot.d/check directory ..."
+  find:
+    paths: "/usr/lib/check_mk_agent/depot.d/check"
+    file_type: file
+  register: check_mk_checks_files
+
+- name: "Looking for plugins in /usr/lib/check_mk_agent/depot.d/plugin directory ..."
+  find:
+    paths: "/usr/lib/check_mk_agent/depot.d/plugin"
+    file_type: file
+  register: check_mk_plugins_files
+
+- name: "Prepare list of checks and plugins ..."
+  set_fact:
+    check_mk_checks: []
+    enabled_check_mk_checks: []
+    check_mk_plugins: []
+    enabled_check_mk_plugins: []
+
+- name: "Enumerate checks ..."
+  set_fact:
+    check_mk_checks: "{{ check_mk_checks + [ check.path | basename ] }}"
+  loop: "{{ check_mk_checks_files.files }}"
+  loop_control:
+    loop_var: check
+    label: "{{ check.path | basename }}"
+
+- name: "Enumerate plugins ..."
+  set_fact:
+    check_mk_plugins: "{{ check_mk_plugins + [ plugin.path | basename ] }}"
+  loop: "{{ check_mk_plugins_files.files }}"
+  loop_control:
+    loop_var: plugin
+    label: "{{ plugin.path | basename }}"
+
+- name: "Enumerate enabled checksd ..."
+  set_fact:
+    enabled_check_mk_checks: "{{ enabled_check_mk_checks + [ check ] }}"
+  loop: "{{ host.setup.monitoring.checks }}"
+  loop_control:
+    loop_var: check
+    label: "{{ check }}"
+  when: host.setup.monitoring.checks is defined and check in check_mk_checks
+
+- name: "Enable checks ..."
+  file:
+    src: "/usr/lib/check_mk_agent/depot.d/check/{{ check }}"
+    dest: "/usr/lib/check_mk_agent/local/{{ check }}"
+    state: link
+    force: true
+  loop: "{{ enabled_check_mk_checks }}"
+  loop_control:
+    loop_var: check
+    label: "{{ check }}"
+
+- name: "Looking for unmanaged checks in /usr/lib/check_mk_agent/local directory ..."
+  find:
+    paths: "/usr/lib/check_mk_agent/local"
+    file_type: any
+    excludes: "{{ omit if enabled_check_mk_checks | length == 0 else enabled_check_mk_checks }}"
+  register: cleanup_check_mk_checks
+
+- name: "Delete unmanaged checks form /usr/lib/check_mk_agent/local ..."
+  file:
+    path: "{{ cleanup.path }}"
+    state: absent
+  loop: "{{ cleanup_check_mk_checks.files }}"
+  loop_control:
+    loop_var: cleanup
+    label: "{{ cleanup.path | basename }}"
+
+- name: "Enumerate enabled plugins ..."
+  set_fact:
+    enabled_check_mk_plugins: "{{ enabled_check_mk_plugins + [ plugin ] }}"
+  loop: "{{ host.setup.monitoring.plugins }}"
+  loop_control:
+    loop_var: plugin
+    label: "{{ plugin }}"
+  when: host.setup.monitoring.plugins is defined and plugin in check_mk_plugins
+
+- name: "Enable plugins ..."
+  file:
+    src: "/usr/lib/check_mk_agent/depot.d/plugin/{{ plugin }}"
+    dest: "/usr/lib/check_mk_agent/plugins/{{ plugin }}"
+    state: link
+    force: true
+  loop: "{{ enabled_check_mk_plugins }}"
+  loop_control:
+    loop_var: plugin
+    label: "{{ plugin }}"
+
+- name: "Looking for unmanaged plugins in /usr/lib/check_mk_agent/plugins directory ..."
+  find:
+    paths: "/usr/lib/check_mk_agent/plugins"
+    file_type: any
+    excludes: "{{ omit if enabled_check_mk_plugins | length == 0 else enabled_check_mk_plugins }}"
+  register: cleanup_check_mk_plugins
+
+- name: "Delete unmanaged plugins form /usr/lib/check_mk_agent/plugins ..."
+  file:
+    path: "{{ cleanup.path }}"
+    state: absent
+  loop: "{{ cleanup_check_mk_plugins.files }}"
+  loop_control:
+    loop_var: cleanup
+    label: "{{ cleanup.path | basename }}"
+
+- name: "Cleanup old configuration file ..."
+  file:
+    path: "/etc/check_mk/check-mk-passive-agent"
+    state: absent
