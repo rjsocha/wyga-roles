@@ -82,7 +82,7 @@
   include_role:
     name: wyga/swap-file
   vars:
-    swap_file_size: host.setup.swap.size
+    swap_file_size: "{{ host.setup.swap.size }}"
   when: host.setup.swap.size is defined
 
 - name: "User profile ..."
