@@ -3,7 +3,6 @@ purge:
   - acct
   - acpid
   - apport
-  - amd64-microcode
   - apport-core-dump-handler
   - apport-symptoms
   - appstream
@@ -39,7 +38,6 @@ purge:
   - e2fsprogs-l10n
   - eatmydata
   - ed
-  - ethtool
   - finalrd
   - fonts-ubuntu-console
   - friendly-recovery
@@ -49,6 +47,8 @@ purge:
   - gir1.2-girepository-2.0
   - gir1.2-glib-2.0
   - gir1.2-packagekitglib-1.0
+  - git
+  - git-man
   - gnupg
   - gnupg-l10n
   - gnupg-utils
@@ -64,11 +64,9 @@ purge:
   - ibverbs-providers
   - inetutils-telnet
   - info
-  - intel-microcode
   - iwd
   - install-info
   - iso-codes
-  - iucode-tool
   - jq
   - kbd
   - keyboard-configuration
@@ -294,7 +292,6 @@ purge:
   - usb-modeswitch
   - usb-modeswitch-data
   - usbmuxd
-  - usbutils
   - uuid-runtime
   - vim-tiny
   - xkb-data
