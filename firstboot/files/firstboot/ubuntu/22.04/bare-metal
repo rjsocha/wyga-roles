@@ -3,7 +3,6 @@ purge:
   - accountsservice
   - acct
   - acpid
-  - amd64-microcode
   - apport
   - at
   - bc
@@ -12,7 +11,6 @@ purge:
   - binutils-common
   - binutils-x86-64-linux-gnu
   - bolt
-  - btrfs-progs
   - byobu
   - cloud-guest-utils
   - cloud-init
@@ -29,14 +27,12 @@ purge:
   - dmidecode
   - dnsmasq-base
   - dns-root-data
-  - dosfstools
   - eatmydata
   - ebtables
   - ed
   - eject
   - emacsen-common
   - etckeeper
-  - ethtool
   - finalrd
   - fonts-ubuntu-console
   - friendly-recovery
@@ -56,12 +52,10 @@ purge:
   - info
   - installation-report
   - install-info
-  - intel-microcode
   - irqbalance
   - isc-dhcp-client
   - isc-dhcp-common
   - iso-codes
-  - iucode-tool
   - keyboard-configuration
   - krb5-locales
   - landscape-common
@@ -108,9 +102,7 @@ purge:
   - libunwind8
   - libusb-1.0-0
   - libuv1
-  - linux-firmware
   - linux-headers-*
-  - linux-image-generic
   - lshw
   - lsof
   - ltrace
@@ -121,7 +113,6 @@ purge:
   - make
   - man-db
   - manpages
-  - mdadm
   - mlocate
   - motd-news-config
   - mtr-tiny
@@ -138,8 +129,6 @@ purge:
   - parted
   - pastebinit
   - patch
-  - pci.ids
-  - pciutils
   - perl
   - perl-modules-5.34
   - plymouth
@@ -200,7 +189,6 @@ purge:
   - usb-modeswitch
   - usb-modeswitch-data
   - usbmuxd
-  - usbutils
   - usrmerge
   - uuid-runtime
   - vim
@@ -209,11 +197,9 @@ purge:
   - vim-tiny
   - wamerican
   - wbritish
-  - wireless-regdb
   - xauth
   - xdelta3
   - xdg-user-dirs
-  - xfsprogs
   - xkb-data
   - xxd
   - zerofree
@@ -226,8 +212,4 @@ purge:
   - polkitd
   - software-properties-common
   - python3-software-properties
-  - netplan.io
-  - python3-netifaces
-  - python3-yaml
-  - python3-dbus
   - make

@@ -308,7 +308,6 @@ purge:
   - telnet
   - thermald
   - thin-provisioning-tools
-  - tpm-udev
   - ubuntu-advantage-tools
   - ubuntu-release-upgrader-core
   - udisks2

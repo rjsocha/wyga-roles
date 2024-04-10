@@ -188,7 +188,6 @@ purge:
   - thermald
   - thin-provisioning-tools
   - tnftp
-  - tpm-udev
   - tree
   - ubuntu-release-upgrader-core
   - uidmap

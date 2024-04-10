@@ -24,9 +24,13 @@
   set_fact:
     packages: "{{ install_packages }}"
 
-- name: "Remove any firstboot packages ..."
+- name: "Remove packages not intended for the {{ target_distribution }} distribution ..."
   set_fact:
-    packages: "{{ packages | reject('regex', '^\\^') | list }}"
+    packages: "{{ packages | reject('regex','^.+@(?!' ~ target_distribution ~ ').+$') | list }}"
+
+- name: "Strip target distribution suffix ..."
+  set_fact:
+    packages: "{{ packages | map('regex_replace', '@' ~ target_distribution ~ '$', '') | list }}"
 
 - name: "Select packages to purge ..."
   set_fact:

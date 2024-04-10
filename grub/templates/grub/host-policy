@@ -34,4 +34,5 @@ GRUB_SERIAL_COMMAND="serial --speed=115200"
 {% endif %}
 {% if 'gfxterm' in grub_terminal %}
 GRUB_GFXMODE="{{ grub_display }}"
+GRUB_GFXPAYLOAD_LINUX=keep
 {% endif %}
