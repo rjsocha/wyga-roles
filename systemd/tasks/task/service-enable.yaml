@@ -1,0 +1,12 @@
+---
+- name: "SYSTEMD / Service / Enable ..."
+  systemd:
+    name: "{{ service }}"
+    enabled: true
+    masked: false
+    daemon_reload: true
+    state: started
+  loop: "{{ host.setup.systemd.service.enable }}"
+  loop_control:
+    loop_var: service
+    label: "{{ service }}"

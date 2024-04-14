@@ -17,3 +17,11 @@
 - name: "SYSTEMD / Service / systemd-networkd-wait-online ..." 
   include_tasks: "task/service_wait-online.yaml"
   when: host.setup.systemd.service.wait_online is defined
+
+- name: "SYSTEMD / Service / Disable ..."
+  include_tasks: "task/service-disable.yaml"
+  when: host.setup.systemd.service.disable is defined
+
+- name: "SYSTEMD / Service / Enable ..."
+  include_tasks: "task/service-enable.yaml"
+  when: host.setup.systemd.service.enable is defined
