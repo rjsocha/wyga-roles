@@ -1,11 +1,12 @@
 # Weird issue with cache update - manual refresh
-- name: "Update packages cache ..."
-  command: apt-get update -qq
-  changed_when: false
-
 #- name: "Update packages cache ..."
-#  apt:
-#    update_cache: true
+#  command: apt-get update -qq
+#  changed_when: false
+
+- name: "Update packages cache ..."
+  apt:
+    update_cache: true
+    cache_valid_time: 60
 
 - name: "Install packages ..."
   apt:
