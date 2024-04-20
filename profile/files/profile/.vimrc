@@ -12,7 +12,6 @@ set undofile
 set directory=$HOME/.vim/swap//
 set backupdir=$HOME/.vim/backup//
 set undodir=$HOME/.vim/undo//
-set hlsearch
 cnoreabbrev X x
 filetype plugin indent on
 try
