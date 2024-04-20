@@ -138,4 +138,4 @@ unset PROMPT_COMMAND
 PROMPT_COMMAND="__history_append__"
 
 # Hide kernel threads
-LIBPROC_HIDE_KERNEL=TRUE
+export LIBPROC_HIDE_KERNEL=TRUE
