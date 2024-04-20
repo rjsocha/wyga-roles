@@ -119,6 +119,8 @@ alias qrssh="ssh -4 -o LogLevel=QUIET -o StrictHostKeyChecking=no -o UserKnownHo
 alias rssh="ssh -4 -o LogLevel=QUIET -l root"
 alias qscp="scp -o LogLevel=QUIET -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
 alias apt-full-upgrade="sudo apt-get update && sudo apt-get -o APT::Get::Always-Include-Phased-Updates=true dist-upgrade -y"
+alias ps-full="env -u LIBPROC_HIDE_KERNEL ps"
+alias top-full="env -u LIBPROC_HIDE_KERNEL top"
 alias ..="cd .."
 alias ...="cd ../.."
 alias ....="cd ../../.."
