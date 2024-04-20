@@ -2,7 +2,6 @@
 - name: "Update packages cache ..."
   command: apt-get update -qq
   changed_when: false
-  warn: false
 
 #- name: "Update packages cache ..."
 #  apt:
