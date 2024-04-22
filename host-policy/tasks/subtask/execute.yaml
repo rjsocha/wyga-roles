@@ -90,6 +90,11 @@
     name: wyga/profile
   when: skip_profile is not defined and host.setup.profile|default(true)
 
+- name: "VPN ..."
+  include_role:
+    name: wyga/nebula-vpn
+  when: host.setup.vpn is defined
+
 - name: "Canonicalization of group configuation ..."
   include_tasks: "normalize-group.yaml"
   loop: "{{ host.group }}"
