@@ -1,0 +1,22 @@
+---
+- name: "Generate sign script ..."
+  template:
+    src: "vpn/nebula/sign-certificate"
+    dest: "{{ playbook_dir }}/vpn/inbox/{{ instance.name }}-{{ host.hostname }}-sign"
+    mode: 0755
+  vars:
+    ip: "{{ instance.ip }}"
+    name: "{{ instance.name }}"
+    hostname: "{{ host.hostname }}"
+    subnets: "{{ node_subnets | sort }}"
+  delegate_to: localhost
+
+- name: "Waiting for vpn/inbox/{{ instance.name }}-{{ host.hostname }}.crt ..."
+  debug: msg="..."
+
+- name: "Waiting for host.crt"
+  wait_for:
+    path: "{{ playbook_dir }}/vpn/inbox/{{ instance.name }}-{{ host.hostname }}.crt"
+    state: present
+    timeout: 300
+  delegate_to: localhost

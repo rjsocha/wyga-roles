@@ -1,0 +1,3 @@
+- name: "VPN Setup ..."
+  include_tasks: vpn.yaml
+  when: host.setup.vpn is defined

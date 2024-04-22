@@ -1,0 +1,146 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+pki:
+  ca: /etc/site/vpn/{{ name }}/ca.crt
+  cert: /etc/site/vpn/{{ name }}/host.crt
+  key: /etc/site/vpn/{{ name }}/host.key
+  disconnect_invalid: true
+{% if vpn.blocklist is defined %}
+  blocklist:
+{% for block in vpn.blocklist %}
+    - {{ block }}
+{% endfor %}
+{% endif %}
+
+static_host_map:
+{% for host in vpn.lighthouse.hosts.keys() %}
+  "{{ host }}":
+  {% for map in vpn.lighthouse.hosts[host] %}
+    - "{{ map }}"
+  {% endfor %}
+{% endfor %}
+
+static_map:
+  cadence: 300s
+  network: ip4
+  lookup_timeout: 250ms
+
+lighthouse:
+  am_lighthouse: {{ 'true' if am_lighthouse else 'false' }}
+  {% if am_lighthouse and vpn.lighthouse.dns.enable | default(true) %}
+  serve_dns: true
+  dns:
+    host: {{ ip }}
+    port: 53
+  {% endif %}
+  interval: 60
+  hosts:
+    {% if not am_lighthouse %}
+    {% for host in vpn.lighthouse.hosts.keys() %}
+    - {{ host }}
+    {% endfor %}
+    {% endif %}
+
+  # local_allow_list allows you to filter which local IP addresses we advertise
+  # to the lighthouses. This uses the same logic as `remote_allow_list`, but
+  # additionally, you can specify an `interfaces` map of regular expressions
+  # to match against interface names. The regexp must match the entire name.
+  # All interface rules must be either true or false (and the default will be
+  # the inverse). CIDR rules are matched after interface name rules.
+  # Default is all local IP addresses.
+  #local_allow_list:
+    # Example to block tun0 and all docker interfaces.
+    #interfaces:
+      #tun0: false
+      #'docker.*': false
+    # Example to only advertise this subnet to the lighthouse.
+    #"10.0.0.0/8": true
+
+listen:
+  host: 0.0.0.0
+  {% if am_lighthouse %}
+  port: 4242
+  {% endif %}
+
+#routines: 1
+
+punchy:
+  punch: true
+  respond: true
+  delay: 1s
+  respond_delay: 5s
+
+cipher: {{ vpn.cipher }}
+
+{% if adjacent | length > 0 %}
+preferred_ranges:
+{% for neig in adjacent %}
+  - "{{ neig }}"
+{% endfor %}
+{% endif %}
+
+#sshd:
+  # Toggles the feature
+  #enabled: true
+  # Host and port to listen on, port 22 is not allowed for your safety
+  #listen: 127.0.0.1:2222
+  # A file containing the ssh host private key to use
+  # A decent way to generate one: ssh-keygen -t ed25519 -f ssh_host_ed25519_key -N "" < /dev/null
+  #host_key: ./ssh_host_ed25519_key
+  # A file containing a list of authorized public keys
+  #authorized_users:
+    #- user: steeeeve
+      # keys can be an array of strings or single string
+      #keys:
+        #- "ssh public key string"
+
+relay:
+  {% if not am_lighthouse %}
+  relays:
+  {% for relay in vpn.lighthouse.hosts.keys() %}
+    - "{{ relay }}"
+  {% endfor %}
+  {% endif %}
+  am_relay: {{ 'true' if am_lighthouse else 'false' }}
+  use_relays: true
+
+tun:
+  disabled: false
+  dev: {{ vpn.tun.dev | default('overlay0') }}
+  drop_local_broadcast: true
+  drop_multicast: true
+  tx_queue: 500
+  mtu: 1300
+  unsafe_routes:
+    {% for via in vpn.routing.keys() if not via == ip %}
+    {% for route in vpn.routing[via] %}
+    - route: {{ route.to }}
+      via: {{ via }}
+      metric: {{ route.metric | default(1000) }}
+      install: true
+    {% endfor %}
+    {% endfor %}
+  use_system_route_table: true
+
+logging:
+  level: info
+  format: text
+  disable_timestamp: true
+
+firewall:
+  outbound_action: reject
+  inbound_action: reject
+
+  conntrack:
+    tcp_timeout: 12m
+    udp_timeout: 3m
+    default_timeout: 10m
+
+  outbound:
+    - port: any
+      proto: any
+      host: any
+
+  inbound:
+    - port: any
+      proto: any
+      host: any

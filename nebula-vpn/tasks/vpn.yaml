@@ -1,0 +1,27 @@
+- name: "Verify VPN configuration ..."
+  assert:
+    that:
+      - instance.name is defined
+      - instance.ip is defined
+  loop: "{{ host.setup.vpn }}"
+  loop_control:
+    loop_var: instance
+    label: "{{ instance.name if instance.name is defined else 'MISSING' }}"
+
+- name: "Service list ..."
+  set_fact:
+    nebula_services: []
+
+- name: "Install nebula-vpn ..."
+  include_role:
+    name: wyga/install-package
+  vars:
+    packages:
+      - nebula-vpn
+
+- name: "Setup VPN instance ..."
+  include_tasks: "nebula.yaml"
+  loop: "{{ host.setup.vpn }}"
+  loop_control:
+    loop_var: instance
+    label: "{{ instance.name }}"

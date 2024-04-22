@@ -1,0 +1,5 @@
+---
+- name: nebula-vpn-restart
+  systemd:
+    name: nebula-vpn
+    state: restarted

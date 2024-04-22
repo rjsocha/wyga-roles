@@ -1,0 +1,20 @@
+---
+- name: "Get Nebula CA path ..."
+  set_fact:
+    ca_path: "{{ lookup('env', instance.name | upper ~ '_NEBULA_CA') }}"
+
+- name: "{{ instance.name | upper }}_NEBULA_CA not set ..."
+  fail:
+    msg: "missing env {{ instance.name | upper }}_NEBULA_CA ..."
+  when: ca_path | length == 0
+
+- name: "Sign host certicate ..."
+  command: >
+    nebula-cert sign  -ca-crt {{ ca_path }}/ca.crt
+                      -ca-key {{ ca_path }}/ca.key
+                      -in-pub {{ playbook_dir }}/vpn/inbox/{{ instance.name }}-{{ host.hostname }}.pub
+                      -out-crt {{ playbook_dir }}/vpn/inbox/{{ instance.name }}-{{ host.hostname }}.crt
+                      -name {{ host.hostname }}.vpn
+                      -subnets "{{ ','.join(node_subnets) }}"
+                      -ip {{ instance.ip }}
+  delegate_to: localhost 

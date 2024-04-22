@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+set -eufo pipefail
+IFS=$'\t\n'
+
+if [[ -z ${{ '{' }}{{ name | upper }}_NEBULA_CA:-} ]]
+then
+  printf -- "ERROR: {{ name | upper }}_NEBULA_CA not set ..."
+  exit 10
+fi
+
+nebula-cert sign \
+            -ca-crt "${{ '{' }}{{ name | upper }}_NEBULA_CA}/ca.crt" \
+            -ca-key "${{ '{' }}{{ name | upper }}_NEBULA_CA}/ca.key" \
+            -in-pub "{{ playbook_dir }}/vpn/inbox/{{ name }}-{{ hostname }}.pub" \
+            -out-crt "{{ playbook_dir }}/vpn/inbox/{{ name }}-{{ hostname }}.crt" \
+            -name "{{ hostname }}.vpn" \
+{% if subnets | length > 0 %}
+            -subnets "{{ ','.join(subnets) }}" \
+{% endif %}
+            -ip "{{ ip }}"
