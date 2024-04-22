@@ -180,5 +180,3 @@
     name: "nebula-vpn@{{ instance.name }}.service"
     state: restarted
   when: restart_me
-
-- debug: var=restart_me

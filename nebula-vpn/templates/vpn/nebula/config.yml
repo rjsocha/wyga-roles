@@ -20,7 +20,7 @@ static_host_map:
 {% endfor %}
 
 static_map:
-  cadence: 300s
+  cadence: 60s
   network: ip4
   lookup_timeout: 250ms
 
@@ -57,9 +57,7 @@ lighthouse:
 
 listen:
   host: 0.0.0.0
-  {% if am_lighthouse %}
   port: 4242
-  {% endif %}
 
 #routines: 1
 

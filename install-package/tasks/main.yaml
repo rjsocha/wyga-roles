@@ -15,6 +15,11 @@
     require_list: []
     purge_list: []
 
+- name: "Use packages parameter ..."
+  set_fact:
+    install_packages: "{{ packages }}"
+  when: packages is defined
+
 - name: "..."
   fail:
     msg: "missing install_packages ..."

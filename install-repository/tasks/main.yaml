@@ -1,3 +1,8 @@
+- name: "Use repository parameter ..."
+  set_fact:
+    repository_name: "{{ repository }}"
+  when: repository is defined
+
 - name: "Check required vars ..."
   fail:
     msg: "Missing repository_name variable ..."
