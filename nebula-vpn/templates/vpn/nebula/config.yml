@@ -67,7 +67,7 @@ punchy:
   delay: 1s
   respond_delay: 5s
 
-cipher: {{ vpn.cipher }}
+cipher: {{ vpn.cipher | default('aes') }}
 
 {% if adjacent | length > 0 %}
 preferred_ranges:
