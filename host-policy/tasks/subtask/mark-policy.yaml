@@ -12,3 +12,15 @@
         mode: "0600"
         owner: "root"
         group: "root"
+      register: first_run
+
+    - name: "Trigger any pending handlers ..."
+      meta: flush_handlers
+
+    - name: "Trigger reboot ..."
+      debug:
+        msg: "."
+      changed_when: true
+      notify:
+        - reboot-host
+      when: first_run.changed

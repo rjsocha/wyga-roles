@@ -173,10 +173,5 @@
     name: "nebula-vpn@{{ instance.name }}.service"
     enabled: true
     daemon_reload: true
+    state: started
     masked: no
-
-- name: "Restart nebula-vpn@{{ instance.name }}.service ..."
-  systemd:
-    name: "nebula-vpn@{{ instance.name }}.service"
-    state: restarted
-  when: restart_me
