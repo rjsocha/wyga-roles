@@ -120,7 +120,7 @@ tun:
   use_system_route_table: true
 
 logging:
-  level: info
+  level: fatal
   format: text
   disable_timestamp: true
 
