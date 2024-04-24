@@ -9,6 +9,7 @@
     name: "{{ instance.name }}"
     hostname: "{{ host.hostname }}"
     subnets: "{{ node_subnets | sort }}"
+    domain: "{{ vpn.domain | default('vpn') }}"
   delegate_to: localhost
 
 - name: "Waiting for vpn/inbox/{{ instance.name }}-{{ host.hostname }}.crt ..."

@@ -1,5 +1,5 @@
 #jinja2: trim_blocks: True, lstrip_blocks: True
-name: {{ name }}.vpn
+name: {{ name }}.{{ domain }}
 ip: {{ ip }}
 subnets:
 {% for route in subnets %}

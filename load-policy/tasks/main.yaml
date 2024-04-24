@@ -1,36 +1,55 @@
 ---
+- name: "Select policy ..."
+  set_fact:
+    select_policy: "{{ inventory_hostname }}"
+  when: select_policy is not defined
+
+# refrain from coding in YAML ...
+# refrain from coding in YAML ...
+# refrain from coding in YAML ... etc
+# Include vars to generated variable for reuse in loops
 - name: "Load defaults ..."
   include_vars:
     file: "{{ policy_default }}"
-    name: host_default
+    name: "{{ storage }}"
   loop: "{{ query('first_found', params) }}"
   loop_control:
     loop_var: policy_default
   vars:
+    storage: "host_policy_default_{{ select_policy | md5 }}"
     params:
       skip: true
       files:
         - "{{ playbook_dir }}/policy/default"
 
+- name: "Defaults ..."
+  set_fact:
+    host_default: "{{ lookup('vars', 'host_policy_default_' ~ select_policy | md5, default={}) }}"
+
 - name: "Load host policy ..."
   include_vars:
     file: "{{ policy_host }}"
-    name: host_policy
+    name: "{{ storage }}"
   loop: "{{ query('first_found', params) }}"
   loop_control:
     loop_var: policy_host
   vars:
+    storage: "host_policy_{{ select_policy | md5 }}"
     params:
       skip: true
       files:
         - "{{ policy_file | default(omit) }}"
-        - "{{ playbook_dir }}/policy/{{ select_policy | default(inventory_hostname) }}"
+        - "{{ playbook_dir }}/policy/{{ select_policy }}"
+
+- name: "Get host policy ..."
+  set_fact:
+    host_policy: "{{ lookup('vars', 'host_policy_' ~ select_policy | md5, default={}) }}"
 
 - name: "No policy for host found ..."
   fail:
     msg:
-      - "No policy for host {{ inventory_hostname }} found ..."
-  when: host_policy is not defined
+      - "No policy for host {{ select_policy }} found ..."
+  when: host_policy.policy is not defined
 
 - name: "Host policy ..."
   set_fact:

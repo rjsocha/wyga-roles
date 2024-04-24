@@ -14,7 +14,7 @@
                       -ca-key {{ ca_path }}/ca.key
                       -in-pub {{ playbook_dir }}/vpn/inbox/{{ instance.name }}-{{ host.hostname }}.pub
                       -out-crt {{ playbook_dir }}/vpn/inbox/{{ instance.name }}-{{ host.hostname }}.crt
-                      -name {{ host.hostname }}.vpn
+                      -name {{ host.hostname }}.{{ vpn.domain | default('vpn') }}
                       -subnets "{{ ','.join(node_subnets) }}"
                       -ip {{ instance.ip }}
   delegate_to: localhost 

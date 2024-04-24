@@ -13,7 +13,7 @@ nebula-cert sign \
             -ca-key "${{ '{' }}{{ name | upper }}_NEBULA_CA}/ca.key" \
             -in-pub "{{ playbook_dir }}/vpn/inbox/{{ name }}-{{ hostname }}.pub" \
             -out-crt "{{ playbook_dir }}/vpn/inbox/{{ name }}-{{ hostname }}.crt" \
-            -name "{{ hostname }}.vpn" \
+            -name "{{ hostname }}.{{ domain }}" \
 {% if subnets | length > 0 %}
             -subnets "{{ ','.join(subnets) }}" \
 {% endif %}

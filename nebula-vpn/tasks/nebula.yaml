@@ -37,6 +37,7 @@
     ip: "{{ instance.ip }}"
     name: "{{ host.hostname }}"
     subnets: "{{ node_subnets | sort }}"
+    domain: "{{ vpn.domain | default('vpn') }}"
   check_mode: true
   register: certificate_changed
 
@@ -127,6 +128,7 @@
     ip: "{{ instance.ip }}"
     name: "{{ host.hostname }}"
     subnets: "{{ node_subnets | sort }}"
+    domain: "{{ vpn.domain | default('vpn') }}"
   register: state_changed
   notify:
     - nebula-vpn-restart
