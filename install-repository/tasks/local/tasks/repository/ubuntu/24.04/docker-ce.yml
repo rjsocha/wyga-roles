@@ -1,7 +1,7 @@
 - name: "Install docker-ce apt repository ..."
   copy:
-    src: "repository/docker-ce/ubuntu/23.10/{{ item.src }}"
-    dest: "{{ item.dst }}"
+    src: "repository/docker-ce/ubuntu/24.04/{{ repo_file.src }}"
+    dest: "{{ repo_file.dst }}"
     group: root
     owner: root
     mode: 0644
@@ -9,3 +9,6 @@
   loop:
     - { 'src': 'docker.list', 'dst': '/etc/apt/sources.list.d/docker.list' }
     - { 'src': 'docker.gpg',  'dst': '/usr/share/keyrings/docker.gpg' }
+  loop_control:
+    loop_var: repo_file
+    label: "{{ repo_file }}"

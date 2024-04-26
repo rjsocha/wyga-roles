@@ -1,6 +1,6 @@
 - name: "Install hashicorp apt repository ..."
   copy:
-    src: "repository/hashicorp/ubuntu/20.04/{{ repo_file.src }}"
+    src: "repository/hashicorp/ubuntu/24.04/{{ repo_file.src }}"
     dest: "{{ repo_file.dst }}"
     group: root
     owner: root
