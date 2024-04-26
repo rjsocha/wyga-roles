@@ -27,23 +27,34 @@
     host_default: "{{ lookup('vars', 'host_policy_default_' ~ select_policy | md5, default={}) }}"
 
 - name: "Load host policy ..."
-  include_vars:
-    file: "{{ policy_host }}"
-    name: "{{ storage }}"
-  loop: "{{ query('first_found', params) }}"
-  loop_control:
-    loop_var: policy_host
-  vars:
-    storage: "host_policy_{{ select_policy | md5 }}"
-    params:
-      skip: true
-      files:
-        - "{{ policy_file | default(omit) }}"
-        - "{{ playbook_dir }}/policy/{{ select_policy }}"
+  block:
+    - name: "Load host policy ..."
+      include_vars:
+        file: "{{ policy_host }}"
+        name: "{{ storage }}"
+      loop: "{{ query('first_found', params) }}"
+      loop_control:
+        loop_var: policy_host
+        label: "{{ policy_host }}"
+      vars:
+        storage: "host_policy_{{ select_policy | md5 }}"
+        params:
+          skip: true
+          files:
+            - "{{ policy_file | default(omit) }}"
+            - "{{ playbook_dir }}/policy/{{ select_policy }}"
 
-- name: "Get host policy ..."
-  set_fact:
-    host_policy: "{{ lookup('vars', 'host_policy_' ~ select_policy | md5, default={}) }}"
+    - name: "Get host policy ..."
+      set_fact:
+        host_policy: "{{ lookup('vars', 'host_policy_' ~ select_policy | md5, default={}) }}"
+  when: site.inline.policy is not defined
+
+- name: "Inject site host policy ..."
+  block:
+    - name: "Incject site host policy ..."
+      set_fact:
+        host_policy: "{{ site.inline }}"
+  when: site.inline.policy is defined
 
 - name: "No policy for host found ..."
   fail:
