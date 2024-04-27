@@ -36,5 +36,9 @@
   set_fact:
     wum_groups: {}
 
+- name: "Check if host is defined ..."
+  assert:
+    that:
+      - host is defined
+
 - include_tasks: "subtask/execute.yaml"
-  when: host is defined
