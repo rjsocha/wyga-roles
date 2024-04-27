@@ -122,7 +122,6 @@
   - name: "Fail if there is no user_cert defined ..."
     fail:
       msg: "the 'user_cert' is not defined"
-    delegate_to: localhost
     when: user_cert is not defined
   when: host.setup.ssh.user.certificate | default(false)
 
