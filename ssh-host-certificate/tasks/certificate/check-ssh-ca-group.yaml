@@ -7,19 +7,17 @@
 
 - block:
   - name: "Check if SSH_HOST_CA_PATH {{ SSH_HOST_CA_PATH }} exists..."
-    delegate_to: localhost
+    connection: local
     stat:
       path: "{{ SSH_HOST_CA_PATH }}"
     register: ssh_ca_path_exist
 
   - name: "SSH_HOST_CA_PATH {{ SSH_HOST_CA_PATH }} not exists..."
-    delegate_to: localhost
     fail:
       msg: "SSH_HOST_CA_PATH {{ SSH_HOST_CA_PATH }} not exists..."
     when: not ssh_ca_path_exist.stat.exists
 
   - name: "SSH_HOST_CA_PATH {{ SSH_HOST_CA_PATH }} is not a directory..."
-    delegate_to: localhost
     fail:
       msg: "SSH_HOST_CA_PATH {{ SSH_HOST_CA_PATH }} is not a directory or link..."
     when: not (ssh_ca_path_exist.stat.isdir or ssh_ca_path_exist.stat.islnk)

@@ -12,4 +12,4 @@
     suffix: "-sign-ca-host-keys"
   register: _ltmp
   changed_when: false
-  delegate_to: localhost
+  connection: local

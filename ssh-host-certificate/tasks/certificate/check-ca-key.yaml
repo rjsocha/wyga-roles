@@ -8,13 +8,12 @@
   stat:
     path: "{{host_ca_key}}.pub"
   register: _public_host_ca_exists
-  delegate_to: localhost
+  connection: local
 
 - name: "Stop: missing CA public key..."
   fail:
     msg: "Missing public CA key..."
   when: _public_host_ca_exists.stat.exists == False
-  delegate_to: localhost
 
 - name: "Set CA public key fact..."
   set_fact:
@@ -25,13 +24,12 @@
       stat:
         path: "{{host_ca_key}}"
       register: _private_host_ca_exists
-      delegate_to: localhost
+      connection: local
 
     - name: "Stop: missing CA private key..."
       fail:
         msg: "Missing private CA key..."
       when: _private_host_ca_exists.stat.exists == False
-      delegate_to: localhost
 
     - name: "Set CA private key fact..."
       set_fact:
