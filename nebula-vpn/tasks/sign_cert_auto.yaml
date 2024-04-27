@@ -17,4 +17,4 @@
                       -name {{ host.hostname }}.{{ vpn.domain | default('vpn') }}
                       -subnets "{{ ','.join(node_subnets) }}"
                       -ip {{ instance.ip }}
-  delegate_to: localhost 
+  connection: local
