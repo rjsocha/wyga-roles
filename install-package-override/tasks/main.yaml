@@ -1,0 +1,9 @@
+- name: "Process packages ..."
+  include_role:
+    name: wyga/install-package
+  when: install_package_role_override is not defined
+
+- name: "Process packages (override role) ..."
+  include_role:
+    name: "{{ install_package_role_override }}"
+  when: install_package_role_override is defined

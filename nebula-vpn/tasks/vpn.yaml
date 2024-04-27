@@ -14,7 +14,7 @@
 
 - name: "Install nebula-vpn ..."
   include_role:
-    name: wyga/install-package
+    name: wyga/install-package-override
   vars:
     packages:
       - nebula-vpn

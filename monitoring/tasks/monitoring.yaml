@@ -32,7 +32,7 @@
 
 - name: "Install check-mk-agent-push ..."
   include_role:
-    name: wyga/install-package
+    name: wyga/install-package-override
   vars:
     install_packages:
       - check-mk-agent-push
