@@ -177,14 +177,14 @@
         name: "nebula-vpn-dns.service"
         enabled: false
         daemon_reload: true
-        state: stoped
+        state: stopped
         masked: yes
     - name: "Disable nebula.service ..."
       systemd:
         name: "nebula.service"
         enabled: false
         daemon_reload: true
-        state: stoped
+        state: stopped
         masked: yes
   when: nebula_stop_old_instance is defined
 
