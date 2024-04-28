@@ -22,9 +22,9 @@
   include_tasks: subnets.yaml
   loop: "{{ vpn.routing | dict2items }}"
   loop_control:
-    loop_var: routes
-    label: "{{ routes.key }}"
-  when: instance.ip | ipaddr('address') == routes.key
+    loop_var: nebula_routes
+    label: "{{ nebula_routes.key }}"
+  when: instance.ip | ipaddr('address') == nebula_routes.key
   
 - name: "Certificate marker (test) ..."
   template:
@@ -169,6 +169,24 @@
 - name: "Update change state ..."
   set_fact:
     restart_me: "{{ restart_me or state_changed.changed }}" 
+
+- name: "Stop old instance ..."
+  block:
+    - name: "Disable nebula-vpn-dns.service ..."
+      systemd:
+        name: "nebula-vpn-dns.service"
+        enabled: false
+        daemon_reload: true
+        state: stoped
+        masked: yes
+    - name: "Disable nebula.service ..."
+      systemd:
+        name: "nebula.service"
+        enabled: false
+        daemon_reload: true
+        state: stoped
+        masked: yes
+  when: nebula_stop_old_instance is defined
 
 - name: "Enable nebula-vpn@{{ instance.name }}.service ..."
   systemd:

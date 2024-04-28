@@ -1,7 +1,7 @@
 - name: "Subnets append ..."
   set_fact:
     node_subnets: "{{ node_subnets + [ route.to ] }}"
-  loop: "{{ routes.value }}"
+  loop: "{{ nebula_routes.value }}"
   loop_control:
     loop_var: route
     label: "{{ route.to }}"
