@@ -186,6 +186,9 @@
         daemon_reload: true
         state: stopped
         masked: yes
+  rescue:
+    - name: "Continue ..."
+      debug: msg="Continue ..."
   when: nebula_stop_old_instance is defined
 
 - name: "Enable nebula-vpn@{{ instance.name }}.service ..."
