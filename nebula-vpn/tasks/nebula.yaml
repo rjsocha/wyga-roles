@@ -172,6 +172,15 @@
 
 - name: "Stop old instance ..."
   block:
+    - name: "Enable nebula-vpn@{{ instance.name }}.service ..."
+      systemd:
+        name: "nebula-vpn@{{ instance.name }}.service"
+        enabled: true
+        daemon_reload: true
+        state: started
+        masked: no
+        no_block: true
+
     - name: "Disable nebula-vpn-dns.service ..."
       systemd:
         name: "nebula-vpn-dns.service"
