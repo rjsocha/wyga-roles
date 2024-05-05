@@ -1,0 +1,5 @@
+- name: "Configure kexec-tools ..."
+  include_tasks: package/kexec-tools.yaml
+  vars:
+    pkg_config: "{{ host.package.configure['kexec-tools'] }}"
+  when: host.package.configure['kexec-tools'] is defined

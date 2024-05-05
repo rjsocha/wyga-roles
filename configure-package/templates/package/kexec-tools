@@ -1,0 +1,18 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+{% set load_kexec = pkg_config['load-kexec'] | default(false) %}
+{% set use_grub_config = pkg_config['use-grub-config'] | default(false) %}
+# Defaults for kexec initscript
+# sourced by /etc/init.d/kexec and /etc/init.d/kexec-load
+
+# Load a kexec kernel (true/false)
+LOAD_KEXEC={{ 'true' if load_kexec else 'false' }}
+
+# Kernel and initrd image
+KERNEL_IMAGE="/vmlinuz"
+INITRD="/initrd.img"
+
+# If empty, use current /proc/cmdline
+APPEND=""
+
+# Load the default kernel from grub config (true/false)
+USE_GRUB_CONFIG={{ 'true' if use_grub_config else 'false' }}

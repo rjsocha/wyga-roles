@@ -1,0 +1,31 @@
+- name: "Docker Configuration ..."
+  block:
+    - name: "Docker Configuration ..."
+      template:
+        src: "docker/daemon.json"
+        dest: "/etc/docker/daemon.json"
+        group: root
+        owner: root
+        mode: 0600
+      vars:
+        config: "{{ host.setup.docker }}"
+      register: docker_updated
+
+    - name: "Restart docker service ..."
+      systemd:
+        name: docker
+        enabled: true
+        daemon_reload: true
+        state: restarted
+        masked: no
+      when: docker_updated.changed
+
+    - set_fact:
+        helloworld: "{{ host.setup.docker['live-restore'] }}"
+
+    - debug: var=helloworld
+    - debug: var=xxx
+      vars:
+        xxx: "{{ host.setup.docker }}"
+
+  when: host.setup.docker is defined

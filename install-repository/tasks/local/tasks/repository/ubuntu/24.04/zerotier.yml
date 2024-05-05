@@ -1,0 +1,14 @@
+- name: "Install zerotier apt repository ..."
+  copy:
+    src: "repository/zerotier/ubuntu/24.04/{{ repo_file.src }}"
+    dest: "{{ repo_file.dst }}"
+    group: root
+    owner: root
+    mode: 0644
+    force: yes
+  loop:
+    - { 'src': 'zerotier.list', 'dst': '/etc/apt/sources.list.d/zerotier.list' }
+    - { 'src': 'zerotier.gpg',  'dst': '/usr/share/keyrings/zerotier.gpg' }
+  loop_control:
+    loop_var: repo_file
+    label: "{{ repo_file }}"

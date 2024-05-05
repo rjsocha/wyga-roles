@@ -1,0 +1,1 @@
+deb [signed-by=/usr/share/keyrings/zerotier.gpg] http://download.zerotier.com/debian/bookworm bookworm main

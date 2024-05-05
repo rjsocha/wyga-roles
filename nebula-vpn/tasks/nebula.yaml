@@ -161,6 +161,7 @@
     name: "{{ instance.name }}"
     adjacent: "{{ instance.adjacents | default([]) }}"
     am_lighthouse: "{{ am_lighthouse }}"
+    use_relays: "{{ instance.relay | default(false) }}"
     vpn: "{{ vpn }}"
   register: state_changed
   notify:

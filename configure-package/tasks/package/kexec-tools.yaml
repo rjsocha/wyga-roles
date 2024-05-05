@@ -1,0 +1,9 @@
+- name: "Package configuration / kexec-tools ..."
+  template:
+    src: "package/kexec-tools"
+    dest: "/etc/default/kexec"
+    group: root
+    owner: root
+    mode: 0644
+  vars:
+    pkg_config: "{{ pkg_config }}"

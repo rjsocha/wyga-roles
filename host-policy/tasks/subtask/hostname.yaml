@@ -33,9 +33,9 @@
         - { backrefs: no,  regexp: '(?i)^127\.0\.1\.1', line: '', insertafter: '', state: 'absent' }
         - { backrefs: no,  regexp: '(?i)^127\.0\.1\.1 {{ my_hostname}}.{{ my_domain}} {{ my_hostname}}$', line: '127.0.1.1 {{ my_hostname}}.{{ my_domain}} {{ my_hostname}}', insertafter: '^127\..+localhost$', state: 'present' }
 
-    - name: "Schedule reboot ..."
-      debug:
-        msg: "Schedule reboot ..."
-      notify: reboot-host
-      changed_when: true
+#    - name: "Schedule reboot ..."
+#      debug:
+#        msg: "Schedule reboot ..."
+#      notify: reboot-host
+#      changed_when: true
   when: hostname_changed is defined and hostname_changed.changed

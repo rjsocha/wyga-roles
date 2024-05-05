@@ -99,7 +99,7 @@ relay:
   {% endfor %}
   {% endif %}
   am_relay: {{ 'true' if am_lighthouse else 'false' }}
-  use_relays: true
+  use_relays: {{ 'true' if use_relays else 'false' }}
 
 tun:
   disabled: false

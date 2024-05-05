@@ -1,0 +1,45 @@
+- name: "Facts ..."
+  include_role:
+    name: wyga/minimal-facts
+
+- name: "Connected user ..."
+  set_fact:
+    connected_user: "{{ ansible_facts.user_id }}"
+
+- name: "Select become method as su ..."
+  set_fact:
+    method: "su"
+  when: target_distribution == "debian"
+
+- name: "Select become method as sudo ..."
+  set_fact:
+    method: "sudo"
+  when: target_distribution == "ubuntu"
+
+- name: "Set authorized key ..."
+  ansible.posix.authorized_key:
+    user: root
+    state: present
+    key: "{{ lookup('file', playbook_dir ~ '/key/user/' ~ user_key) }}"
+  become: true
+  become_method: "{{ method | default('sudo') }}"
+  become_user: root
+
+- meta: reset_connection
+
+- name: "Remove user ..."
+  block:
+    - name: "Switch to root ..."
+      set_fact:
+        ansible_ssh_user: root
+
+    - name: "Remove {{ connected_user }} ..."
+      ansible.builtin.user:
+        name: "{{ connected_user }}"
+        state: absent
+        remove: yes
+      when: connected_user != "root"
+      register: user_purge
+      retries: 25
+      until: user_purge is success
+  when: skip_user_purge is not defined

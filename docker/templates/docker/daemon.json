@@ -1,0 +1,2 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+{{ config | to_json(indent=2, sort_keys=True) }}

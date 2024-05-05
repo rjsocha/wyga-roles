@@ -43,6 +43,11 @@
     install_packages: "{{ host.package.packages }}"
   when: skip_packages is not defined and host.package.packages is defined and not host.package.skip|default(false)
 
+- name: "Configure packages ..."
+  include_role:
+    name: wyga/configure-package
+  when: skip_packages is not defined and host.package.packages is defined and not host.package.skip|default(false)
+
 - name: "INITRAMFS configuration ..."
   include_role:
     name: wyga/initramfs-tools
@@ -94,6 +99,11 @@
   include_role:
     name: wyga/nebula-vpn
   when: host.setup.vpn is defined
+
+- name: "Docker ..."
+  include_role:
+    name: wyga/docker
+  when: host.setup.docker is defined
 
 - name: "Canonicalization of group configuation ..."
   include_tasks: "normalize-group.yaml"
