@@ -26,6 +26,19 @@
     fail_msg: "Unsupported distribution: {{ target_distribution }} {{ target_distribution_version }}"
     quiet: true
 
+- name: "GRUB / Site directory ..."
+  file:
+    path: "/etc/site/grub"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+
+- name: "GRUB / Dectect system firmware ..."
+  stat:
+    path: "/sys/firmware/efi/efivars"
+  register: grub_sys_firmware
+
 - name: "GRUB / Make sure /etc/default/grub.d exists ..."
   file:
     path: "/etc/default/grub.d"
@@ -58,6 +71,18 @@
     grub_terminal: "{{ host.setup.grub.terminal | default(['serial', 'console']) }}"
     grub_display: "{{ host.setup.grub.display | default('640x480') }}"
     grub_cmdline: "{{ host.setup.grub.cmdline | default(['quiet']) }}"
+  notify:
+    - update-grub
+
+- name: "GRUB / Site configuration (firmware) ..."
+  template:
+    src: "grub/site"
+    dest: "/etc/site/grub/firmware"
+    group: root
+    owner: root
+    mode: 0644
+  vars:
+    sys_firmware: "{{ 'UEFI' if grub_sys_firmware.stat.exists else 'BIOS' }}"
   notify:
     - update-grub
 
