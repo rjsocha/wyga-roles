@@ -57,7 +57,7 @@
     grub_os_prober: "{{ 'false' if host.setup.grub.osprober|default(false) else 'true' }}"
     grub_terminal: "{{ host.setup.grub.terminal | default(['serial', 'console']) }}"
     grub_display: "{{ host.setup.grub.display | default('640x480') }}"
-    grub_cmdline: "{{ host.setup.grub.cmdline | default(['quiet','gfxpayload=text']) }}"
+    grub_cmdline: "{{ host.setup.grub.cmdline | default(['quiet']) }}"
   notify:
     - update-grub
 
