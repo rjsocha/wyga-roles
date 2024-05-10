@@ -1,4 +1,9 @@
-CMK_AGENT_HOST="{{ monitoring.host }}"
-CMK_AGENT_TOKEN="{{ monitoring.token }}"
-CMK_AGENT_AUTH="{{ monitoring.auth }}"
-CMK_AGENT_URL="https://${CMK_AGENT_AUTH}@${CMK_AGENT_HOST}/push-agent/passive"
+#jinja2: trim_blocks: True, lstrip_blocks: True
+declare -a CMK_AGENT_HOST=()
+declare -A CMK_AGENT_TOKEN=()
+declare -A CMK_AGENT_URL=()
+{% for agent in agents %}
+CMK_AGENT_HOST+=( "{{ agent }}" )
+CMK_AGENT_TOKEN['{{ agent }}']="{{ access[agent].token }}"
+CMK_AGENT_URL['{{ agent }}']="https://{{ access[agent].auth }}@{{ agent }}/push-agent/passive"
+{% endfor %}

@@ -1,34 +1,31 @@
-- name: "Check assertions (confidential) ..."
+- name: "Check configuration ..."
   assert:
     that:
-      - host.setup.monitoring.host is defined
-      - confidential.monitoring[ host.setup.monitoring.token | default('token') ] is defined
-      - confidential.monitoring[ host.setup.monitoring.auth | default('auth') ] is defined
+      - host.setup.monitoring.host is defined and host.setup.monitoring.host | type_debug == 'list'
+      - confidential.monitoring is defined or secret.monitoring is defined
+
+- name: "Load monitoring secrets ..."
+  set_fact:
+    msecrets: "{{ secret.monitoring }}"
+    msecrets_source: "secret"
+  when: secret.monitoring is defined
+
+- name: "Load monitoring secrets ..."
+  set_fact:
+    msecrets: "{{ confidential.monitoring }}"
+    msecrets_source: "confidential"
   when: confidential.monitoring is defined
 
-- name: "Check assertions (secret) ..."
+- name: "Check monitoring secrects ..."
   assert:
     that:
-      - host.setup.monitoring.host is defined
-      - secret.monitoring[ host.setup.monitoring.token | default('token') ] is defined
-      - secret.monitoring[ host.setup.monitoring.auth | default('auth') ] is defined
-  when: secret.monitoring is defined
-
-- name: "Prepare configuration (confidential) ..."
-  set_fact:
-    monitoring:
-      host: "{{ host.setup.monitoring.host }}"
-      token: "{{ confidential.monitoring[ host.setup.monitoring.token | default('token') ] }}"
-      auth: "{{ confidential.monitoring[ host.setup.monitoring.auth | default('auth') ] }}"
-  when: confidential.monitoring is defined
-
-- name: "Prepare configuration (secret) ..."
-  set_fact:
-    monitoring:
-      host: "{{ host.setup.monitoring.host }}"
-      token: "{{ secret.monitoring[ host.setup.monitoring.token | default('token') ] }}"
-      auth: "{{ secret.monitoring[ host.setup.monitoring.auth | default('auth') ] }}"
-  when: secret.monitoring is defined
+      - msecrets[agent] is defined
+      - msecrets[agent].auth is defined
+      - msecrets[agent].token is defined
+  loop: "{{ host.setup.monitoring.host }}"
+  loop_control:
+    loop_var: agent
+    label: "{{ agent }}"
 
 - name: "Install check-mk-agent-push ..."
   include_role:
@@ -44,6 +41,9 @@
     owner: root
     group: root
     mode: 0400
+  vars:
+    agents: "{{ host.setup.monitoring.host }}"
+    access: "{{ msecrets }}"
 
 - name: "Cleanup ..."
   set_fact:
