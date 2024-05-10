@@ -6,6 +6,8 @@
       ignore_errors: yes
       changed_when: false
       connection: local
+      retries: 25
+      until: _ca_key_is_present is success
 
     - name: "Host CA key not loaded ..."
       fail: 
