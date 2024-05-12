@@ -10,6 +10,10 @@
   include_tasks: "task/journal.yaml"
   when: host.setup.systemd.journal is defined
 
+- name: "SYSTEMD / resolved ..."
+  include_tasks: "task/resolved.yaml"
+  when: host.setup.systemd is defined
+
 - name: "SYSTEMD / Service / sysstat ..." 
   include_tasks: "task/service_sysstat.yaml"
   when: host.setup.systemd.service.sysstat is defined

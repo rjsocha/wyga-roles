@@ -1,2 +1,4 @@
 wyga_journal_registred_config:
   - "host-policy.conf"
+wyga_resolved_registred_config:
+  - "host-policy.conf"

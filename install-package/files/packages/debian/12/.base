@@ -24,3 +24,4 @@ require:
   - bash-completion
   - lsof
   - xz-utils
+  - systemd-resolved

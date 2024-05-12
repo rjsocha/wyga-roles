@@ -1,0 +1,39 @@
+---
+- name: "SYSTEMD / Resolved ..."
+  file:
+    path: "/etc/systemd/resolved.conf.d"
+    state: directory
+
+- name: "SYSTEMD / Resolved ..."
+  template:
+    src: "resolved/host-policy"
+    dest: "/etc/systemd/resolved.conf.d/host-policy.conf"
+    group: root
+    owner: root
+    mode: 0644
+  vars:
+    systemd_resolved: "{{ host.setup.systemd.resolved | default({}) }}"
+  notify:
+    - systemd-resolved
+
+- name: "SYSTEMD / Resolved / Cleanup ..."
+  set_fact:
+    wyga_resolved_registred_config: "{{ wyga_resolved_registred_config | unique }}"
+
+- name: "SYSTEMD / Resolved / Looking for unmanaged files in /etc/systemd/resolved.conf.d directory ..."
+  find:
+    paths: "/etc/systemd/resolved.conf.d"
+    file_type: file
+    excludes: "{{ wyga_resolved_registred_config }}"
+  register: resolved_cleanup
+
+- name: "SYSTEMD / Resolved / Purge unmanaged files form /etc/systemd/resolved.conf.d ..."
+  file:
+    path: "{{ cleanup.path }}"
+    state: absent
+  loop: "{{ resolved_cleanup.files }}"
+  loop_control:
+    label: "{{ cleanup.path }}"
+    loop_var: cleanup
+  notify:
+    - systemd-resolved

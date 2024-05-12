@@ -1,0 +1,4 @@
+[Resolve]
+LLMNR={{ 'yes' if systemd_resolved.llmnr | default(false) else 'no' }}
+MulticastDNS={{ 'yes' if systemd_resolved.mdns | default(false) else 'no' }}
+Cache=no-negative

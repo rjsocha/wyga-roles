@@ -4,3 +4,6 @@
 
 - name: systemd-service-sysstat
   include_tasks: "handler/service_sysstat.yaml"
+
+- name: systemd-resolved
+  include_tasks: "handler/resolved.yaml"
