@@ -1,0 +1,21 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+[Match]
+PermanentMACAddress={{ link.match.mac }}
+
+[Link]
+{% if link.name is defined %}
+Name={{ link.name }}
+{% endif %}
+{% if link.wol is defined %}
+WakeOnLan={{ 'yes' if link.wol | default(false) else 'no' }}
+{% endif %}
+{% if link.mtu is defined %}
+MTUBytes={{ link.mtu | default(1500) | int }}
+{% endif %}
+{% if link.namepolicy is defined %}
+NamePolicy={{ ' '.join(link.namepolicy) }}
+{% endif %}
+{% if link.mac is defined %}
+MACAddressPolicy=none
+MACAddress={{ link.mac }}
+{% endif %}

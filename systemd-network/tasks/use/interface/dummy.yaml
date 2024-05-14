@@ -1,0 +1,8 @@
+- name: "Apply dummy template ..."
+  set_fact:
+    interface:
+      match:
+        type: dummy
+      name: "{{ if_name }}"
+      method: static
+      ip: "{{ interface_entry.ip }}"

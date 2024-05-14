@@ -27,25 +27,25 @@
 
 - name: "Slurp packages list ..."
   set_fact:
-    packages: "{{ install_packages }}"
+    __packages: "{{ install_packages }}"
 
 - name: "Remove packages not intended for the {{ target_distribution }} distribution ..."
   set_fact:
-    packages: "{{ packages | reject('regex','^.+@(?!(' ~ target_distribution ~ '|' ~ target_distribution ~ '-' ~ target_distribution_version ~ ')$).+$') | list }}"
+    __packages: "{{ __packages | reject('regex','^.+@(?!(' ~ target_distribution ~ '|' ~ target_distribution ~ '-' ~ target_distribution_version ~ ')$).+$') | list }}"
 
 - name: "Strip target distribution suffix ..."
   set_fact:
-    packages: "{{ packages | map('regex_replace', '@(' ~ target_distribution ~ '|' ~ target_distribution ~ '-' ~ target_distribution_version ~ ')$', '') | list }}"
+    __packages: "{{ __packages | map('regex_replace', '@(' ~ target_distribution ~ '|' ~ target_distribution ~ '-' ~ target_distribution_version ~ ')$', '') | list }}"
 
 - name: "Select packages to purge ..."
   set_fact:
-    purge_list: "{{ packages | select('regex', '^-') | map('regex_replace', '^-', '') | list }}"
-    packages: "{{ packages | reject('regex', '^-') | list }}"
+    purge_list: "{{ __packages | select('regex', '^-') | map('regex_replace', '^-', '') | list }}"
+    __packages: "{{ __packages | reject('regex', '^-') | list }}"
 
 - name: "Prepare packages list ..."
   set_fact:
      package_list: "{{ package_list + [ { 'name': package, 'manifest': playbook_dir + '/local/packages/' + target_distribution + '/' + target_distribution_version + '/' + package } ] + [ { 'name': package, 'manifest': role_path + '/files/packages/' + target_distribution + '/' + target_distribution_version + '/' + package } ] }}"
-  loop: "{{ packages }}"
+  loop: "{{ __packages }}"
   loop_control:
     loop_var: package
     label: "{{ package }}"
@@ -73,11 +73,11 @@
     - name: "Prepare package list (require) ..."
       set_fact:
         package_list: "{{ package_list + [ { 'name': package, 'manifest': playbook_dir + '/site/packages/' + target_distribution + '/' + target_distribution_version + '/' + package } ] + [ { 'name': package, 'manifest': role_path + '/files/packages/' + target_distribution + '/' + target_distribution_version + '/' + package } ] }}"
-        packages: "{{ packages + [ package ] }}"
+        __packages: "{{ __packages + [ package ] }}"
       loop: "{{ require_list }}"
       loop_control:
         loop_var: package
-      when: package not in packages
+      when: package not in __packages
 
     - name: "Process packages ... (PASS 2) ..."
       include_tasks: "packages/process-package.yml"
@@ -100,21 +100,21 @@
 
 - name: "Normalize purge list ..."
   set_fact:
-    purge_list: "{{ purge_list | difference(packages) | difference(prerequisite_list) | unique }}"
+    purge_list: "{{ purge_list | difference(__packages) | difference(prerequisite_list) | unique }}"
 
 - name: "Normalize packages list ..."
   set_fact:
-    packages: "{{ packages | unique }}"
+    __packages: "{{ __packages | unique }}"
 
 - name: "Remove meta packages from list ..."
   set_fact:
-    packages: "{{ packages | reject('regex', '^\\.') | list }}"
+    __packages: "{{ __packages | reject('regex', '^\\.') | list }}"
 
 - name: "Information ..."
   debug:
     msg:
       - "TARGET:        {{ target_distribution | capitalize }} {{ target_distribution_version }}"
-      - "PACKAGES:      {{ packages }}"
+      - "PACKAGES:      {{ __packages }}"
       - "REPOSITORIES:  {{ repository_list }}"
       - "PREREQUISITES: {{ prerequisite_list }}"
       - "PURGE:         {{ purge_list }}"

@@ -1,3 +1,4 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
 [Journal]
 {% if systemd_journal_storage in [ 'auto', 'persistent', 'volatile', 'none' ] %}
 Storage={{ systemd_journal_storage }}

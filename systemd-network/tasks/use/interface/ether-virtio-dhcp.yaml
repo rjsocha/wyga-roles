@@ -1,0 +1,7 @@
+- name: "Apply ether/virtio/dhcp template ..."
+  set_fact:
+    interface:
+      match:
+        type: ether
+        driver: virtio_net
+      method: dhcp

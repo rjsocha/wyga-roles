@@ -1,0 +1,9 @@
+- name: "Apply clone template ..."
+  set_fact:
+    bridge:
+      name: "{{ bridge_entry.name | default('host0') }}"
+      mac: "clone"
+      slave:
+        - "{{ br_slave }}"
+      stp: false
+      forward: 0

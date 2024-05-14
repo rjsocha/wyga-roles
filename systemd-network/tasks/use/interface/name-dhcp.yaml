@@ -1,0 +1,6 @@
+- name: "Apply dhcp/{{ if_name }} template ..."
+  set_fact:
+    interface:
+      match:
+        name: "{{ if_name }}"
+      method: dhcp

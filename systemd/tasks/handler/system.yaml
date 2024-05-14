@@ -1,0 +1,4 @@
+---
+- name: "SYSTEMD / system ..."
+  systemd:
+    daemon_reload: true

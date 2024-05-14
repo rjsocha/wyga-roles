@@ -1,0 +1,34 @@
+---
+- name: "Load template for loopback ..."
+  include_tasks: "use/interface/loopback.yaml"
+  when: interface_entry.use == 'loopback'
+
+- name: "Load template for dummy ..."
+  include_tasks: "use/interface/dummy.yaml"
+  vars:
+    if_name: "{{ interface_entry.use[6:] }}"
+  when: interface_entry.use is regex('^dummy/')
+
+- name: "Load template for {{ interface_entry.use }} ..."
+  include_tasks: "use/interface/name-dhcp.yaml"
+  vars:
+    if_name: "{{ interface_entry.use[5:] }}"
+  when: interface_entry.use is regex('^dhcp/')
+
+- name: "Load template for {{ interface_entry.use }} ..."
+  include_tasks: "use/interface/name-static.yaml"
+  vars:
+    if_name: "{{ interface_entry.use[7:] }}"
+  when: interface_entry.use is regex('^static/')
+
+- name: "Load template for ether/dhcp ..."
+  include_tasks: "use/interface/ether-dhcp.yaml"
+  when: interface_entry.use == 'ether/dhcp'
+
+- name: "Load template for ether/virtio/dhcp ..."
+  include_tasks: "use/interface/ether-virtio-dhcp.yaml"
+  when: interface_entry.use == 'ether/virtio/dhcp'
+
+- name: "Load template for wlan/dhcp ..."
+  include_tasks: "use/interface/wlan-dhcp.yaml"
+  when: interface_entry.use == 'wlan/dhcp'

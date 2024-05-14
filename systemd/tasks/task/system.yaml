@@ -1,0 +1,37 @@
+---
+- name: "SYSTEMD / System ..."
+  file:
+    path: "/etc/systemd/system.conf.d"
+    state: directory
+
+- name: "SYSTEMD / System ..."
+  template:
+    src: "system/host-policy"
+    dest: "/etc/systemd/system.conf.d/host-policy.conf"
+    group: root
+    owner: root
+    mode: 0644
+  notify:
+    - systemd-system
+
+- name: "SYSTEMD / System / Cleanup ..."
+  set_fact:
+    wyga_system_registred_config: "{{ wyga_system_registred_config | unique }}"
+
+- name: "SYSTEMD / System / Looking for unmanaged files in /etc/systemd/system.conf.d directory ..."
+  find:
+    paths: "/etc/systemd/system.conf.d"
+    file_type: file
+    excludes: "{{ wyga_system_registred_config }}"
+  register: system_cleanup
+
+- name: "SYSTEMD / System / Purge unmanaged files form /etc/systemd/system.conf.d ..."
+  file:
+    path: "{{ cleanup.path }}"
+    state: absent
+  loop: "{{ system_cleanup.files }}"
+  loop_control:
+    label: "{{ cleanup.path }}"
+    loop_var: cleanup
+  notify:
+    - systemd-system

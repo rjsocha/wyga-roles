@@ -8,10 +8,13 @@
     update_cache: true
     cache_valid_time: 1
   changed_when: false
+  register: _action
+  retries: 10
+  until: _action is success
 
 - name: "Install packages ..."
   apt:
-    name: "{{ packages }}"
+    name: "{{ __packages }}"
     state: latest
     install_recommends: no
     autoclean: yes

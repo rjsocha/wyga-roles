@@ -6,7 +6,7 @@
 - name: "Network configuration (systemd) ..."
   block:
     - include_role:
-        name: wyga/system-network
+        name: wyga/systemd-network
     - debug:
         msg:
           - "Reboot required ..."

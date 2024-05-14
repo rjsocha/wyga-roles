@@ -1,0 +1,59 @@
+---
+- name: "Check if slave is an interface name or a MAC address ..."
+  set_fact:
+    is_mac: "{{ true if slave is regex('^([a-fA-F0-9]{2}:){5}[a-fA-F0-9]{2}$') else false }}"
+
+- name: "Preapre interface name ..."
+  set_fact:
+    ifname: "{{ slave | replace(':','-') | lower if is_mac else slave }}"
+
+- name: "Enslave interface ..."
+  template:
+    src: "network/bridge/slave"
+    dest: "/etc/systemd/network/10-bridge-slave-{{ ifname }}.network"
+    group: root
+    owner: root
+    mode: 0644
+  register: bridge_change
+- name: "Update bridge changed status ..."
+  set_fact:
+    bridge_changed: "{{ bridge_changed or bridge_change.changed }}"
+- name: "Mark configuration of bridge as managed ..."
+  set_fact:
+    networkd_managed_files: "{{ networkd_managed_files + [ '10-bridge-slave-' ~ ifname ~ '.network' ] }}"
+
+#- name: "Clone MAC for the bridge ..."
+#  block:
+#    - name: "Clone MAC for the bridge ..."
+#      template:
+#        src: "network/bridge/clone"
+#        dest: "/etc/systemd/network/00-bridge-slave-clone.link"
+#        group: root
+#        owner: root
+#        mode: 0644
+#      register: bridge_change
+#    - name: "Update bridge changed status ..."
+#      set_fact:
+#        bridge_changed: "{{ bridge_changed or bridge_change.changed }}"
+#    - name: "Mark configuration of bridge as managed ..."
+#      set_fact:
+#        networkd_managed_files: "{{ networkd_managed_files + [ '00-bridge-slave-clone.link' ] }}"
+#  when: bridge.mac is defined and bridge.mac == 'clone'
+
+- name: "Clone MAC for the bridge ..."
+  block:
+    - name: "Clone MAC for the bridge ..."
+      template:
+        src: "network/bridge/clone-name"
+        dest: "/etc/systemd/network/00-bridge-clone-{{ bridge.name }}.link"
+        group: root
+        owner: root
+        mode: 0644
+      register: bridge_change
+    - name: "Update bridge changed status ..."
+      set_fact:
+        bridge_changed: "{{ bridge_changed or bridge_change.changed }}"
+    - name: "Mark configuration of bridge as managed ..."
+      set_fact:
+        networkd_managed_files: "{{ networkd_managed_files + [ '00-bridge-clone-' ~ bridge.name ~ '.link' ] }}"
+  when: bridge.mac is defined and bridge.mac == 'clone'

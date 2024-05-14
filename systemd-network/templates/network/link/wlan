@@ -1,0 +1,8 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+[Match]
+Type=wlan
+
+[Link]
+{% if link.namepolicy is defined %}
+NamePolicy={{ ' '.join(link.namepolicy) }}
+{% endif %}

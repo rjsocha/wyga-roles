@@ -1,0 +1,52 @@
+---
+- name: "Prepare link changed status variable ..."
+  set_fact:
+    link_changed: "{{ link_changed | default(false) }}"
+
+- name: "Link configuration ..."
+  set_fact:
+    link: "{{ link_entry }}"
+  when: link_entry.use is not defined
+
+- name: "Load template ..."
+  include_tasks: "link/use.yaml"
+  when: link_entry.use is defined
+
+- name: "Configure wlan link ..."
+  block:
+    - name: "Configure wlan link ..."
+      template:
+        src: "network/link/wlan"
+        dest: "/etc/systemd/network/00-{{ link.match.type }}.link"
+        group: root
+        owner: root
+        mode: 0644
+      register: link_change
+    - name: "Update link changed status ..."
+      set_fact:
+        link_changed: "{{ link_changed or link_change.changed }}"
+    - name: "Mark configuration of link as managed ..."
+      set_fact:
+        networkd_managed_files: "{{ networkd_managed_files + [ '00-' ~ link.match.type ~ '.link' ] }}"
+  when: link.match.type is defined and link.match.type  == 'wlan'
+
+- name: "Configure MAC link ..."
+  block:
+    - name: "Set link file suffix ..."
+      set_fact:
+        mac_file: "{{ link.match.mac | replace(':','-' ) | lower }}"
+    - name: "Configure MAC link ..."
+      template:
+        src: "network/link/mac"
+        dest: "/etc/systemd/network/00-mac-{{ mac_file }}.link"
+        group: root
+        owner: root
+        mode: 0644
+      register: link_change
+    - name: "Update link changed status ..."
+      set_fact:
+        link_changed: "{{ link_changed or link_change.changed }}"
+    - name: "Mark configuration of link as managed ..."
+      set_fact:
+        networkd_managed_files: "{{ networkd_managed_files + [ '00-mac-' ~ mac_file ~ '.link' ] }}"
+  when: link.match.mac is defined

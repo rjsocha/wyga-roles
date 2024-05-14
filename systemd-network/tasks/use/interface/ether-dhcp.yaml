@@ -1,0 +1,7 @@
+- name: "Apply ether/dhcp template ..."
+  set_fact:
+    interface:
+      match:
+        type: ether
+        driver: any
+      method: dhcp

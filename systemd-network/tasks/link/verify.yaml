@@ -1,0 +1,40 @@
+---
+- name: "Link configuration ..."
+  set_fact:
+    link: "{{ link_entry }}"
+  when: link_entry.use is not defined
+
+- name: "Verify link configuration (use) ..."
+  block:
+    - name: "Verify used template ..."
+      assert:
+        that:
+          - link_entry.use is in [ 'wlan/keep' ]
+        msg: "Unable to continue, check link configuration ..."
+
+    - name: "Load template ..."
+      include_tasks: "link/use.yaml"
+
+  when: link_entry.use is defined
+
+- name: "Verify link configuration ..."
+  assert:
+    that:
+      - link.match is defined
+      - link.match.type is defined or link.match.mac is defined
+    msg: "Unable to continue, check interface configuration ..."
+
+- name: "Verify link configuration (type) ..."
+  assert:
+    that:
+      - link.match.type in ['wlan']
+    msg: "Unable to continue, check interface configuration ..."
+  when: link.match.type is defined
+
+- name: "Verify configuration for link.type=wlan ..."
+  assert:
+    that:
+      - link.namepolicy is defined
+      - link.namepolicy | type_debug == 'list'
+    msg: "Unable to continue, check interface configuration ..."
+  when: link.match.type is defined and link.match.type == 'wlan'

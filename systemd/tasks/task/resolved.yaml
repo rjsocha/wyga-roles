@@ -37,3 +37,6 @@
     loop_var: cleanup
   notify:
     - systemd-resolved
+
+# systemd-resolved on Debian after installation do not import /etc/resolve.conf's nameservers
+- meta: flush_handlers

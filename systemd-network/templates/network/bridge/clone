@@ -1,0 +1,6 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+[Match]
+Kind=bridge
+
+[Link]
+MACAddressPolicy=none

@@ -1,0 +1,172 @@
+---
+- name: "Prepare interface changed status variable ..."
+  set_fact:
+    if_changed: "{{ if_changed | default(false) }}"
+
+- name: "Interface configuration ..."
+  set_fact:
+    interface: "{{ interface_entry }}"
+  when: interface_entry.use is not defined
+
+- name: "Load template ..."
+  include_tasks: "interface/use.yaml"
+  when: interface_entry.use is defined
+
+- name: "Cast IP as list ..."
+  set_fact:
+    interface: "{{ interface | combine( { 'ip': [ interface.ip ] }, recursive=true) }}"
+  when: interface.ip is defined and interface.ip is string
+
+- name: "Routes ..."
+  set_fact:
+    routes: "{{ interface.route | default([]) }}"
+
+- name: "Append GW to routes ..."
+  set_fact:
+    routes: "{{ [ { 'to': '0.0.0.0/0', 'via': interface.gw } ] + routes }}"
+  when: interface.gw is defined
+
+- name: "Configure loopback interface ..."
+  block:
+    - name: "Configure loopback interface ..."
+      template:
+        src: "network/interface/loopback"
+        dest: "/etc/systemd/network/15-loopback.network"
+        group: root
+        owner: root
+        mode: 0644
+      register: if_change
+    - name: "Update interface changed status ..."
+      set_fact:
+        if_changed: "{{ if_changed or if_change.changed }}"
+    - name: "Mark configuration of loopback as managed ..."
+      set_fact:
+        networkd_managed_files: "{{ networkd_managed_files + [ '15-loopback.network' ] }}"
+  when: interface.match.type is defined and interface.match.type == 'loopback'
+
+- name: "Configure dummy interface ..."
+  block:
+    - name: "Configure dummy device {{ interface.name }} ..."
+      template:
+        src: "network/netdev/dummy"
+        dest: "/etc/systemd/network/05-dummy-{{ interface.name }}.netdev"
+        group: root
+        owner: root
+        mode: 0644
+      register: if_change
+    - name: "Update interface changed status ..."
+      set_fact:
+        if_changed: "{{ if_changed or if_change.changed }}"
+    - name: "Configure interface {{ interface.name }} ..."
+      template:
+        src: "network/interface/dummy"
+        dest: "/etc/systemd/network/15-dummy-{{ interface.name }}.network"
+        group: root
+        owner: root
+        mode: 0644
+      register: if_change
+    - name: "Update interface changed status ..."
+      set_fact:
+        if_changed: "{{ if_changed or if_change.changed }}"
+    - name: "Mark configuration of device {{ interface.name }} as managed ..."
+      set_fact:
+        networkd_managed_files: "{{ networkd_managed_files + [ '05-dummy-' ~ interface.name ~ '.netdev', '15-dummy-' ~  interface.name ~ '.network' ] }}"
+  when: interface.match.type is defined and interface.match.type == 'dummy'
+
+- name: "Configure ether interface ..."
+  block:
+    - name: "Configure ether interface ..."
+      template:
+        src: "network/interface/ether.{{ interface.method }}"
+        dest: "/etc/systemd/network/20-ether-{{ interface.match.driver | replace('_','-') }}-{{ interface.method }}.network"
+        group: root
+        owner: root
+        mode: 0644
+      register: if_change
+    - name: "Update interface changed status ..."
+      set_fact:
+        if_changed: "{{ if_changed or if_change.changed }}"
+    - name: "Mark configuration of ether as managed ..."
+      set_fact:
+        networkd_managed_files: "{{ networkd_managed_files + [ '20-ether-' ~ interface.match.driver | replace('_','-') ~ '-' ~ interface.method ~ '.network' ] }}"
+  when: interface.match.type is defined and interface.match.type == 'ether'
+
+- name: "Configure wlan interface ..."
+  block:
+    - name: "Configure wlan interface ..."
+      template:
+        src: "network/interface/wlan.{{ interface.method }}"
+        dest: "/etc/systemd/network/20-wlan-{{ interface.match.driver | replace('_','-') }}-{{ interface.method }}.network"
+        group: root
+        owner: root
+        mode: 0644
+      register: if_change
+    - name: "Update interface changed status ..."
+      set_fact:
+        if_changed: "{{ if_changed or if_change.changed }}"
+    - name: "Mark configuration of ether as managed ..."
+      set_fact:
+        networkd_managed_files: "{{ networkd_managed_files + [ '20-wlan-' ~ interface.match.driver | replace('_','-') ~ '-' ~ interface.method ~ '.network' ] }}"
+  when: interface.match.type is defined and interface.match.type == 'wlan'
+
+- name: "Configure {{ interface.match.name }} interface ..."
+  block:
+    - name: "Configure {{ interface.match.name }} interface ..."
+      template:
+        src: "network/interface/interface.{{ interface.method }}"
+        dest: "/etc/systemd/network/20-{{ interface.match.name }}-{{ interface.method }}.network"
+        group: root
+        owner: root
+        mode: 0644
+      register: if_change
+    - name: "Update interface changed status ..."
+      set_fact:
+        if_changed: "{{ if_changed or if_change.changed }}"
+    - name: "Mark configuration of {{ interface.match.name }} as managed ..."
+      set_fact:
+        networkd_managed_files: "{{ networkd_managed_files + [ '20-' ~ interface.match.name ~ '-' ~ interface.method ~ '.network' ] }}"
+  when: interface.match.name is defined
+
+- name: "Configure {{ interface.match.mac }} interface ..."
+  block:
+    - name: "Set interface file suffix ..."
+      set_fact:
+        mac_file: "{{ interface.match.mac | replace(':','-' ) | lower }}"
+    - name: "Configure {{ interface.match.mac }} interface ..."
+      template:
+        src: "network/interface/interface.{{ interface.method }}"
+        dest: "/etc/systemd/network/20-mac-{{ mac_file }}-{{ interface.method }}.network"
+        group: root
+        owner: root
+        mode: 0644
+      register: if_change
+    - name: "Update interface changed status ..."
+      set_fact:
+        if_changed: "{{ if_changed or if_change.changed }}"
+    - name: "Mark configuration of {{ interface.match.mac }} as managed ..."
+      set_fact:
+        networkd_managed_files: "{{ networkd_managed_files + [ '20-mac-' ~ mac_file ~ '-' ~ interface.method ~ '.network' ] }}"
+  when: interface.match.mac is defined
+
+- name: "WLAN Power Save ..."
+  block:
+    - name: "Install wlan-disable-power-save service ..."
+      template:
+        src: "wlan/power-save"
+        dest: "/etc/systemd/system/wlan-disable-power-save@.service"
+        group: root
+        owner: root
+        mode: 0644
+      register: wlanpowersave
+
+    - name: "Enable power save ..."
+      systemd:
+        name: "wlan-disable-power-save@{{ wlan_if }}"
+        daemon_reload: true
+        enabled: true
+        masked: false
+      loop: "{{ interface_entry.powersave }}"
+      loop_control:
+        loop_var: wlan_if
+        label: "{{ wlan_if }}"
+  when: interface_entry.powersave is defined

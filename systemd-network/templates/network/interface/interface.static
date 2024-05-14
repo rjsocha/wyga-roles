@@ -1,0 +1,31 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+[Match]
+{% if interface.match.name is defined %}
+Name={{ interface.match.name }}
+{% endif %}
+{% if interface.match.mac is defined %}
+MACAddress={{ interface.match.mac }}
+{% endif %}
+
+[Network]
+IPv6AcceptRA={{ 'yes' if interface.ra | default(false) else 'no' }}
+LinkLocalAddressing={{ interface.lla | default('ipv6') | string }}
+{% for ip in interface.ip %}
+Address={{ ip if '/' in ip else ip ~ '/32' }}
+{% endfor %}
+{% if interface.dns is defined %}
+DNS={{ interface.dns | ipaddr('address') | join(' ') }}
+{% if interface.domains is defined %}
+Domains={{ interface.domains }}
+{% endif %}
+{% endif %}
+LLMNR=no
+{% for route in routes %}
+
+[Route]
+Destination={{ "0.0.0.0/0" if route.to == "default" else route.to }}
+Gateway={{ route.via }}
+  {% if route.onlink | default(false) %}
+GatewayOnLink=yes
+  {% endif %}
+{% endfor %}

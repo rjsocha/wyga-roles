@@ -1,0 +1,11 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+[NetDev]
+Name={{ bridge.name }}
+{% if bridge.mac is defined %}
+MACAddress={{ 'none' if bridge.mac == 'clone' else bridge.mac }}
+{% endif %}
+Kind=bridge
+
+[Bridge]
+ForwardDelaySec={{ bridge.forward | default(0) }}
+STP={{ 'yes' if bridge.stp | default(false) else 'no' }}

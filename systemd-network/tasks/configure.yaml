@@ -1,0 +1,84 @@
+---
+# 50-* is for custom configuration
+- name: "List of configuration files ...."
+  set_fact:
+    networkd_managed_files: [ '50-*' ]
+
+- name: "Links ..."
+  block:
+    - name: "Verify link configuration ..."
+      include_tasks: "link/verify.yaml"
+      loop: "{{ host.network.link }}"
+      loop_control:
+        label: "{{ link_entry.match.type | default('UNKNOWN') }}"
+        loop_var: link_entry
+
+    - name: "Configure links ..."
+      include_tasks: "link/configure.yaml"
+      loop: "{{ host.network.link }}"
+      loop_control:
+        label: "{{ link_entry.match.type | default('UNKNOWN') }}"
+        loop_var: link_entry
+  when: host.network.link is defined
+
+- name: "Bridge ..."
+  block:
+    - name: "Verify bridges configuration ..."
+      include_tasks: "bridge/verify.yaml"
+      loop: "{{ host.network.bridge }}"
+      loop_control:
+        label: "{{ brige_entry.name | default('UNKNOWN') }}"
+        loop_var: bridge_entry
+
+    - name: "Configure bridges ..."
+      include_tasks: "bridge/configure.yaml"
+      loop: "{{ host.network.bridge }}"
+      loop_control:
+        label: "{{ bridge_entry.name | default('UNKNOWN') }}"
+        loop_var: bridge_entry
+  when: host.network.bridge is defined
+
+- name: "Interfaces ..."
+  block:
+    - name: "Verify network interfaces ..."
+      include_tasks: "interface/verify.yaml"
+      loop: "{{ host.network.interface }}"
+      loop_control:
+        label: "{{ interface_entry.match.type | default(interface_entry.match.name) | default(interface_entry.use) | default('UNKNOWN') }}"
+        loop_var: interface_entry
+
+    - name: "Configure network interfaces ..."
+      include_tasks: "interface/configure.yaml"
+      loop: "{{ host.network.interface }}"
+      loop_control:
+        label: "{{ interface_entry.match.type | default(interface_entry.match.name) | default(interface_entry.use) | default('UNKNOWN') }}"
+        loop_var: interface_entry
+  when: host.network.interface is defined
+
+- name: "Looking for unmanaged files in /etc/systemd/network directory ..."
+  find:
+    paths: /etc/systemd/network
+    file_type: file
+    excludes: "{{ networkd_managed_files }}"
+  register: networkd_cleanup
+
+- name: "Delete unmanaged files form /etc/systemd/network ..."
+  file:
+    path: "{{ cleanup.path }}"
+    state: absent
+  loop: "{{ networkd_cleanup.files }}"
+  loop_control:
+    label: "{{ cleanup.path }}"
+    loop_var: cleanup
+  register: ifcleanup
+
+- name: "Migrate current configuration ..."
+  include_tasks: migrate.yaml
+  when: host.network.migrate | default(false)
+
+- name: "Role status ..."
+  set_fact:
+    wyga_systemd_network:
+      changed: "{{ ifchanged | default(false) or ifcleanup.changed | default(false) }}"
+    wyga_system_network:
+      changed: "{{ ifchanged | default(false) or ifcleanup.changed | default(false) }}"

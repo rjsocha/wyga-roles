@@ -1,0 +1,15 @@
+- name: "Check migration status ..."
+  stat:
+    path: /etc/site/network/mode
+  register: net_migration_status
+
+- name: "Migration ..."
+  block:
+    - name: "Detect distribution ..."
+      include_role:
+        name: wyga/minimal-facts
+
+    - name: "Debian network migration ..."
+      include_tasks: migrate/debian.yaml
+      when: target_distribution == 'debian'
+  when: not net_migration_status.stat.exists

@@ -1,0 +1,15 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+[Match]
+Name={{ interface.name }}
+
+[Network]
+{% for ip in interface.ip %}
+Address={{ ip if '/' in ip else ip ~ '/32' }}
+{% endfor %}
+LLMNR=no
+LLDP=no
+IPv6AcceptRA=no
+LinkLocalAddressing={{ 'yes' if interface.lla | default(false) else 'no' }}
+
+[Link]
+RequiredForOnline=no

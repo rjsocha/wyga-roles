@@ -1,0 +1,8 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+[Match]
+Type=loopback
+
+[Network]
+{% for ip in interface.ip %}
+Address={{ ip if '/' in ip else ip ~ '/32' }}
+{% endfor %}

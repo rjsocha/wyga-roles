@@ -1,0 +1,12 @@
+---
+- name: "Load template for wlan/keep ..."
+  include_tasks: "use/bridge/clone.yaml"
+  vars:
+    br_slave: "{{ bridge_entry.use[10:] }}"
+  when: bridge_entry.use is regex('^clone/mac/([a-fA-F0-9]{2}:){5}[a-fA-F0-9]{2}$')
+
+- name: "Load template for wlan/keep ..."
+  include_tasks: "use/bridge/clone.yaml"
+  vars:
+    br_slave: "{{ bridge_entry.use[9:] }}"
+  when: bridge_entry.use is regex('^clone/if/.+')

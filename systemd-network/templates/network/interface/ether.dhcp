@@ -1,0 +1,32 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+[Match]
+Type=ether
+{% if interface.match.driver != 'any' %}
+Driver={{ interface.match.driver }}
+{% endif %}
+
+[Network]
+DHCP=ipv4
+IPv6AcceptRA={{ 'yes' if interface.ra | default(false) else 'no' }}
+LinkLocalAddressing={{ interface.lla | default('ipv6') | string }}
+{% if interface.dns is defined %}
+DNS={{ interface.dns | ipaddr('address') | join(' ') }}
+{% if interface.netowk.domains is defined %}
+Domains={{ interface.domains }}
+{% endif %}
+{% endif %}
+LLMNR=no
+{% for route in routes %}
+
+[Route]
+Destination={{ "0.0.0.0/0" if route.to == "default" else route.to }}
+Gateway={{ route.via }}
+{% if route.onlink | default(false) %}
+GatewayOnLink=yes
+{% endif %}
+{% endfor %}
+
+[DHCP]
+RouteMetric=150
+UseMTU=yes
+UseHostname={{ 'yes' if interface.dhcp.usehostname | default(false) else 'no' }}

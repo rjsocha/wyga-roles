@@ -7,3 +7,6 @@
 
 - name: systemd-resolved
   include_tasks: "handler/resolved.yaml"
+
+- name: systemd-system
+  include_tasks: "handler/system.yaml"

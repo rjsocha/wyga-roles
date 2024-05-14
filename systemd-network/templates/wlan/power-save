@@ -1,0 +1,11 @@
+[Unit]
+Description=Disable Power Save on %i
+ConditionFileIsExecutable=/usr/sbin/iw
+
+[Service]
+ExecStart=/usr/sbin/iw dev %i set power_save off
+ExecStart=/usr/sbin/iw dev %i get power_save
+Type=oneshot
+
+[Install]
+WantedBy=sys-subsystem-net-devices-%i.device

@@ -1,3 +1,4 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
 [Resolve]
 LLMNR={{ 'yes' if systemd_resolved.llmnr | default(false) else 'no' }}
 MulticastDNS={{ 'yes' if systemd_resolved.mdns | default(false) else 'no' }}

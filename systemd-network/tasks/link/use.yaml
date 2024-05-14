@@ -1,0 +1,4 @@
+---
+- name: "Load template for wlan/keep ..."
+  include_tasks: "use/link/wlan-keep.yaml"
+  when: link_entry.use == 'wlan/keep'

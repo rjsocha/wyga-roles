@@ -1,0 +1,171 @@
+---
+- name: "Interface configuration ..."
+  set_fact:
+    interface: "{{ interface_entry }}"
+  when: interface_entry.use is not defined
+
+- name: "Verify configuration ..."
+  block:
+    - name: "Verify used template ..."
+      assert:
+        that:
+          - >
+            interface_entry.use in [ 'loopback', 'ether/dhcp', 'ether/virtio/dhcp', 'wlan/dhcp' ]
+            or interface_entry.use is regex('^dummy/.+')
+            or interface_entry.use is regex('^dhcp/.+')
+            or interface_entry.use is regex('^static/.+')
+        msg: "Unable to continue, check interface configuration ..."
+
+    - name: "Verify loopback template ..."
+      assert:
+        that:
+          - interface_entry.ip is defined
+          - interface_entry.ip | type_debug == 'list' or interface_entry.ip is string
+        msg: "Unable to continue, check interface configuration ..."
+      when: interface_entry.use == 'loopback'
+
+    - name: "Verify dummy template ..."
+      assert:
+        that:
+          - interface_entry.ip is defined
+          - interface_entry.ip | type_debug == 'list' or interface_entry.ip is string
+        msg: "Unable to continue, check interface configuration ..."
+      when: interface_entry.use is regex('^dummy/')
+    - name: "Verify static template ..."
+      assert:
+        that:
+          - interface_entry.ip is defined
+          - interface_entry.ip | type_debug == 'list' or interface_entry.ip is string
+        msg: "Unable to continue, check interface configuration ..."
+      when: interface_entry.use is regex('^static/')
+
+    - name: "Load template ..."
+      include_tasks: "interface/use.yaml"
+
+  when: interface_entry.use is defined
+
+- name: "Verify configuration ..."
+  assert:
+    that:
+      - >
+        interface.match.name is defined
+        or interface.match.type is defined
+        or interface.match.mac is defined
+      - interface.method is defined
+      - interface.method in ['static', 'dhcp']
+    msg: "Unable to continue, check interface configuration ..."
+
+- name: "Verify configuration for interface.match.type ..."
+  assert:
+    that:
+      - interface.match.name is not defined
+      - interface.match.kind is not defined
+      - interface.match.type in ['loopback','ether', 'wlan','dummy']
+      - interface.method in ['static','dhcp']
+    msg: "Unable to continue, check interface configuration ..."
+  when: interface.match.type is defined
+
+- name: "Verify configuration for interface.match.type=ether ..."
+  assert:
+    that:
+      - interface.match.driver is defined
+    msg: "Unable to continue, check interface configuration ..."
+  when: interface.match.type is defined and interface.match.type == 'ether'
+
+- name: "Verify configuration for interface.match.type=loopback ..."
+  assert:
+    that:
+      - interface.method in [ 'static' ]
+    msg: "Unable to continue, check interface configuration ..."
+  when: interface.match.type is defined and interface.match.type == 'loopback'
+
+- name: "Verify configuration for interface.match.type=dummy ..."
+  assert:
+    that:
+      - interface.name is defined
+      - interface.method in [ 'static' ]
+      - interface.gw is not defined
+      - interface.route is not defined
+    msg: "Unable to continue, check interface configuration ..."
+  when: interface.match.type is defined and interface.match.type == 'dummy'
+
+- name: "Verify configuration for static method ..."
+  assert:
+    that:
+      - interface.ip is defined
+      - interface.ip | type_debug == 'list' or interface.ip is string
+    msg: "Unable to continue, check interface configuration ..."
+  when: interface.method == "static"
+
+- name: "Cast IP as list ..."
+  set_fact:
+    interface: "{{ interface | combine( { 'ip': [ interface.ip ] }, recursive=true) }}"
+  when: interface.ip is defined and interface.ip is string
+
+- name: "Verify configuration for static method (IP) ..."
+  assert:
+    that:
+      - ip | ipv4('address/prefix')
+    msg: "Unable to continue, check interface configuration ..."
+  loop: "{{ interface.ip | list }}"
+  loop_control:
+    loop_var: ip
+    label: "{{ ip }}"
+  when: interface.method == 'static'
+
+- name: "Verify configuration for dhcp method ..."
+  assert:
+    that:
+      - interface.ip is not defined
+      - interface.gw is not defined
+    msg: "Unable to continue, check interface configuration ..."
+  when: interface.method == 'dhcp'
+
+- name: "Verify configuration for interface.mac ..."
+  assert:
+    that:
+      - interface.kind is not defined
+      - interface.name is defined
+    msg: "Unable to continue, check interface configuration ..."
+  when: interface.mac is defined
+
+- name: "Verify DNS configuration ..."
+  assert:
+    that:
+      - interface.dns | type_debug == "list"
+      - ip | ipv4('address')
+    msg: "Unable to continue, check interface configuration ..."
+  loop: "{{ interface.dns }}"
+  loop_control:
+    loop_var: ip
+    label: "{{ ip }}"
+  when: interface.dns is defined
+
+- name: "Verify gw configuration ..."
+  assert:
+    that:
+      - interface.gw | ipv4('address')
+    msg: "Unable to continue, check interface configuration ..."
+  when: interface.method == "static" and interface.gw is defined
+
+- name: "Verify interface.route type ..."
+  assert:
+    that:
+      - interface.route | type_debug == "list"
+    msg: "Unable to continue, check interface configuration ..."
+  when: interface.route is defined
+
+- name: "Verify interface.route ..."
+  assert:
+    that:
+      - route.keys() | difference(['to', 'via','onlink']) == []
+      - route.to is defined
+      - route.via is defined
+      - route.to == "default" or route.to | ipv4('net')
+      - route.via | ipv4('address')
+    msg: "'to' and 'via' fields are required and must be defined, 'to' must be either 'default' or a valid IPv4 network address, and 'via' must contain a valid IPv4 address"
+  loop: "{{ interface.route }}"
+  loop_control:
+    loop_var: route
+    label: "ROUTE"
+  when: interface.route is defined

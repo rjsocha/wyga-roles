@@ -1,0 +1,7 @@
+---
+- name: "SYSTEMD / networkd ..."
+  include_tasks: configure.yaml
+  when: >
+        host.network.link is defined
+        or host.network.bridge is defined
+        or host.network.interface is defined

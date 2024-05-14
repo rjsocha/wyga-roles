@@ -1,0 +1,42 @@
+---
+- name: "Prepare bridge changed status variable ..."
+  set_fact:
+    bridge_changed: "{{ bridge_changed | default(false) }}"
+
+- name: "Bridge configuration ..."
+  set_fact:
+    bridge: "{{ bridge_entry }}"
+  when: bridge_entry.use is not defined
+
+- name: "Load template ..."
+  include_tasks: "bridge/use.yaml"
+  when: bridge_entry.use is defined
+
+- name: "Cast slave as list ..."
+  set_fact:
+    bridge: "{{ bridge | combine( { 'slave': [ bridge.slave ] }, recursive=true) }}"
+  when: bridge.slave is defined and bridge.slave is string
+
+- name: "Configure bridge ..."
+  block:
+    - name: "Configure bridge ..."
+      template:
+        src: "network/bridge/bridge"
+        dest: "/etc/systemd/network/05-bridge-{{ bridge.name }}.netdev"
+        group: root
+        owner: root
+        mode: 0644
+      register: bridge_change
+    - name: "Update bridge changed status ..."
+      set_fact:
+        bridge_changed: "{{ bridge_changed or bridge_change.changed }}"
+    - name: "Mark configuration of bridge as managed ..."
+      set_fact:
+        networkd_managed_files: "{{ networkd_managed_files + [ '05-bridge-' ~ bridge.name ~ '.netdev' ] }}"
+
+    - name: "Enslave interface ..."
+      include_tasks: bridge/slave.yaml
+      loop: "{{ bridge.slave }}"
+      loop_control:
+        loop_var: slave
+        label: "{{ slave }}"

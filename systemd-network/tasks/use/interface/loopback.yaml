@@ -1,0 +1,7 @@
+- name: "Apply loopback template ..."
+  set_fact:
+    interface:
+      match:
+        type: loopback
+      method: static
+      ip: "{{ interface_entry.ip }}"
