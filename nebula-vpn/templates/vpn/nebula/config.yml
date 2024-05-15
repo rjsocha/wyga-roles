@@ -76,6 +76,7 @@ tun:
   drop_multicast: true
   tx_queue: 500
   mtu: 1300
+{% if vpn.routing is defined %}
   unsafe_routes:
     {% for via in vpn.routing.keys() if not via == ip %}
     {% for route in vpn.routing[via] %}
@@ -86,6 +87,7 @@ tun:
     {% endfor %}
     {% endfor %}
   use_system_route_table: true
+{% endif %}
 
 logging:
   level: fatal
