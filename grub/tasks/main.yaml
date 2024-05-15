@@ -11,7 +11,7 @@
 #       osprober: false
 #       cmdline:
 #         - quiet
-#       # The order of terminals definied below is important!
+#       # The order of terminals defined below is important!
 #       # the last one will be used by the kernel as /dev/console
 #       terminal:
 #         - serial

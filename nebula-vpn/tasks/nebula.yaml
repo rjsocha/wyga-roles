@@ -163,7 +163,7 @@
     am_lighthouse: "{{ am_lighthouse }}"
     use_relays: "{{ instance.relay | default(false) }}"
     vpn: "{{ vpn }}"
-    port: "{{ instance.port if instance.port is definied else 4242 }}"
+    port: "{{ instance.port if instance.port is defined else 4242 }}"
   register: state_changed
   notify:
     - nebula-vpn-restart
