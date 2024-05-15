@@ -24,8 +24,8 @@
   loop_control:
     loop_var: nebula_routes
     label: "{{ nebula_routes.key }}"
-  when: instance.ip | ipaddr('address') == nebula_routes.key
-  
+  when: vpn.routing is defined and instance.ip | ipaddr('address') == nebula_routes.key
+
 - name: "Certificate marker (test) ..."
   template:
     src: "vpn/nebula/certificate"
@@ -61,7 +61,7 @@
     - name: "Genereate certifiate? ..."
       set_fact:
         generate_cert: "{{ not host_certificate.stat.exists }}"
-  when: not generate_cert 
+  when: not generate_cert
 
 - name: "Generate new host certificate ..."
   block:
@@ -92,11 +92,11 @@
 
     - name: "Manual certicate sign ..."
       include_tasks: sign_cert_manual.yaml
-      when: vpn.ca.encrypted | default(true) 
+      when: vpn.ca.encrypted | default(true)
 
     - name: "Automatic certicate sign ..."
       include_tasks: sign_cert_auto.yaml
-      when: not vpn.ca.encrypted | default(true) 
+      when: not vpn.ca.encrypted | default(true)
 
     - name: "Copy host certificate ..."
       copy:
@@ -135,7 +135,7 @@
 
 - name: "Save change state ..."
   set_fact:
-    restart_me: "{{ state_changed.changed }}" 
+    restart_me: "{{ state_changed.changed }}"
 
 - name: "Copy CA certificate ..."
   copy:
@@ -147,7 +147,7 @@
 
 - name: "Update change state ..."
   set_fact:
-    restart_me: "{{ restart_me or state_changed.changed }}" 
+    restart_me: "{{ restart_me or state_changed.changed }}"
 
 - name: "Configuration ..."
   template:
@@ -169,7 +169,7 @@
 
 - name: "Update change state ..."
   set_fact:
-    restart_me: "{{ restart_me or state_changed.changed }}" 
+    restart_me: "{{ restart_me or state_changed.changed }}"
 
 - name: "Stop old instance ..."
   block:
