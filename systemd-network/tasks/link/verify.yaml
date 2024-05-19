@@ -9,7 +9,7 @@
     - name: "Verify used template ..."
       assert:
         that:
-          - link_entry.use is in [ 'wlan/keep' ]
+          - link_entry.use is in [ 'wlan/keep','wlan/kernel' ]
         msg: "Unable to continue, check link configuration ..."
 
     - name: "Load template ..."
