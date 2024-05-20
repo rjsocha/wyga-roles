@@ -13,11 +13,11 @@
   when: ansible_nodename != host.hostname
 
 - block:
-    - name: "Cleanup /etc/hosts..."
-      replace:
-        path: "/etc/hosts"
-        regexp: '(?i)^(?!(#|127.0.1.1 {{ my_hostname}}.{{ my_domain}} {{ my_hostname}}))(.*\b{{ my_hostname}}\b.*)$'
-        replace: '#\2'
+#    - name: "Cleanup /etc/hosts..."
+#      replace:
+#        path: "/etc/hosts"
+#        regexp: '(?i)^(?!(#|127.0.1.1 {{ my_hostname}}.{{ my_domain}} {{ my_hostname}}))(.*\b{{ my_hostname}}\b.*)$'
+#        replace: '#\2'
 
     - name: "Update /etc/hosts..."
       lineinfile:
@@ -31,6 +31,7 @@
       loop:
         - { backrefs: no,  regexp: '(?i)^127\.0\.0\.1\s+localhost$', line: '127.0.0.1 localhost', insertafter: EOF, state: 'present' }
         - { backrefs: no,  regexp: '(?i)^127\.0\.1\.1', line: '', insertafter: '', state: 'absent' }
+        - { backrefs: no,  regexp: '(?i)^#127\.0\.1\.1', line: '', insertafter: '', state: 'absent' }
         - { backrefs: no,  regexp: '(?i)^127\.0\.1\.1 {{ my_hostname}}.{{ my_domain}} {{ my_hostname}}$', line: '127.0.1.1 {{ my_hostname}}.{{ my_domain}} {{ my_hostname}}', insertafter: '^127\..+localhost$', state: 'present' }
 
 #    - name: "Schedule reboot ..."

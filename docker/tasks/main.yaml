@@ -1,5 +1,14 @@
 - name: "Docker Configuration ..."
   block:
+    - name: "Create /etc/docker ..."
+      file:
+        path: /etc/docker
+        state: directory
+        group: root
+        owner: root
+        mode: 0755
+      register: etcdocker
+
     - name: "Docker Configuration ..."
       template:
         src: "docker/daemon.json"
@@ -18,14 +27,6 @@
         daemon_reload: true
         state: restarted
         masked: no
-      when: docker_updated.changed
-
-    - set_fact:
-        helloworld: "{{ host.setup.docker['live-restore'] }}"
-
-    - debug: var=helloworld
-    - debug: var=xxx
-      vars:
-        xxx: "{{ host.setup.docker }}"
+      when: docker_updated.changed and not etcdocker.changed
 
   when: host.setup.docker is defined
