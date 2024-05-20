@@ -1,7 +1,7 @@
 #jinja2: trim_blocks: True, lstrip_blocks: True
 [Match]
 {% if is_mac %}
-PermanentMACAddress={{ slave }}
+PermanentMACAddress={{ slave | upper }}
 {% else %}
 Name={{ slave }}
 {% endif %}

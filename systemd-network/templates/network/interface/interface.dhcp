@@ -4,7 +4,7 @@
 Name={{ interface.match.name }}
 {% endif %}
 {% if interface.match.mac is defined %}
-MACAddress={{ interface.match.mac }}
+MACAddress={{ interface.match.mac | upper }}
 {% endif %}
 
 [Network]

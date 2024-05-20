@@ -4,6 +4,6 @@
       name: "{{ bridge_entry.name | default('host0') }}"
       mac: "clone"
       slave:
-        - "{{ br_slave }}"
+        - "{{ brparam }}"
       stp: false
       forward: 0

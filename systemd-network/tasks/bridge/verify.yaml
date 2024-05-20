@@ -10,9 +10,9 @@
       assert:
         that:
           - >
-            bridge_entry.use is regex('^clone/mac/([a-fA-F0-9]{2}:){5}[a-fA-F0-9]{2}$')
-            or bridge_entry.use is regex('^clone/if/.+')
-        msg: "Unable to continue, check interface configuration ..."
+            bridge_entry.use is regex('(?i)^clone/([a-f0-9]{2}:){5}[a-f0-9]{2}$')
+            or bridge_entry.use is regex('(?i)^clone/([a-z0-9@.+_-]){1,16}$')
+        msg: "Unable to continue, check interface configuration for {{ bridge_entry.use }} ..."
 
     - name: "Load template ..."
       include_tasks: "bridge/use.yaml"

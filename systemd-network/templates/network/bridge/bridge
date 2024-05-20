@@ -2,7 +2,7 @@
 [NetDev]
 Name={{ bridge.name }}
 {% if bridge.mac is defined %}
-MACAddress={{ 'none' if bridge.mac == 'clone' else bridge.mac }}
+MACAddress={{ 'none' if bridge.mac == 'clone' else bridge.mac | upper }}
 {% endif %}
 Kind=bridge
 

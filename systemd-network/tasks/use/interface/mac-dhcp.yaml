@@ -1,0 +1,3 @@
+- name: "Apply dhcp/mac template ..."
+  set_fact:
+    interface: "{{ {} | combine({'match': {'mac': ifparam }, 'method': 'dhcp' }) | combine(interface_entry) | combine({'use': omit}) }}"

@@ -131,7 +131,7 @@
   block:
     - name: "Set interface file suffix ..."
       set_fact:
-        mac_file: "{{ interface.match.mac | replace(':','-' ) | lower }}"
+        mac_file: "{{ interface.match.mac | replace(':','' ) | upper }}"
     - name: "Configure {{ interface.match.mac }} interface ..."
       template:
         src: "network/interface/interface.{{ interface.method }}"

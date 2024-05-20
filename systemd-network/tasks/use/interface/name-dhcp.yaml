@@ -1,6 +1,3 @@
-- name: "Apply dhcp/{{ if_name }} template ..."
+- name: "Apply dhcp/interface template ..."
   set_fact:
-    interface:
-      match:
-        name: "{{ if_name }}"
-      method: dhcp
+    interface: "{{ {} | combine({'match': {'name': ifparam }, 'method': 'dhcp' }) | combine(interface_entry) | combine({'use': omit}) }}"

@@ -3,7 +3,7 @@
 Type={{ interface.type }}
 Driver={{ interface.driver }}
 {% if interface.mac is defined %}
-PermanentMACAddress={{ interface.mac }}
+PermanentMACAddress={{ interface.mac | upper }}
 {% endif %}
 
 [Network]

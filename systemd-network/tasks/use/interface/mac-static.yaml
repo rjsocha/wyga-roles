@@ -1,0 +1,3 @@
+- name: "Apply static/mac template ..."
+  set_fact:
+    interface: "{{ {} | combine({'match': {'mac': ifparam }, 'method': 'static' }) | combine(interface_entry) | combine({'use': omit}) }}"
