@@ -1,11 +1,11 @@
 ---
 - name: "Check if slave is an interface name or a MAC address ..."
   set_fact:
-    is_mac: "{{ true if slave is regex('^([a-fA-F0-9]{2}:){5}[a-fA-F0-9]{2}$') else false }}"
+    is_mac: "{{ true if slave is regex('(?i)^([a-f0-9]{2}:){5}[a-f0-9]{2}$') else false }}"
 
 - name: "Preapre interface name ..."
   set_fact:
-    ifname: "{{ slave | replace(':','-') | lower if is_mac else slave }}"
+    ifname: "{{ slave | replace(':','') | upper if is_mac else slave }}"
 
 - name: "Enslave interface ..."
   template:
