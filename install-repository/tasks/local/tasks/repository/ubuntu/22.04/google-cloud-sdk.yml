@@ -1,0 +1,14 @@
+- name: "Install google-cloud-sdk apt repository ..."
+  copy:
+    src: "repository/google-cloud-sdk/ubuntu/22.04/{{ repo_file.src }}"
+    dest: "{{ repo_file.dst }}"
+    group: root
+    owner: root
+    mode: 0644
+    force: yes
+  loop:
+    - { 'src': 'google-cloud-sdk.list', 'dst': '/etc/apt/sources.list.d/google-cloud-sdk.list' }
+    - { 'src': 'cloud.google.gpg',  'dst': '/usr/share/keyrings/cloud.google.gpg' }
+  loop_control:
+    loop_var: repo_file
+    label: "{{ repo_file }}"
