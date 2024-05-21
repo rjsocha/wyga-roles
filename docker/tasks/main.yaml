@@ -20,7 +20,7 @@
         docker_config: "{{ docker_use_template.docker | combine(host.setup.docker) | combine({'use': omit}) }}"
       when: host.setup.docker.use is defined and docker_use_template.docker is defined
 
-    - name: "Prepare docker configuration (use) ..."
+    - name: "Prepare docker configuration ..."
       set_fact:
         docker_config: "{{ host.setup.docker }}"
       when: host.setup.docker.use is not defined

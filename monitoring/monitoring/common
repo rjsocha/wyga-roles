@@ -1,0 +1,7 @@
+monitoring:
+  checks:
+    - apt
+    - kernel-check
+  plugins:
+    - ssh-policy
+    - logwatch

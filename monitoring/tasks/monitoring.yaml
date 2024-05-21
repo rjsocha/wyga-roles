@@ -1,7 +1,66 @@
+---
+- name: "Role init ..."
+  set_fact:
+    use_or_merge: false
+
+- name: "Check and prepare template configuration ..."
+  block:
+    - name: "Check configuration ..."
+      assert:
+        that:
+          - >
+            (host.setup.monitoring.use is defined and host.setup.monitoring.merge is not defined)
+            or (host.setup.monitoring.use is not defined and host.setup.monitoring.merge is defined)
+    - name: "Select use strategy ..."
+      set_fact:
+        use_or_merge: true
+        use_or_merge_name: "{{ host.setup.monitoring.use }}"
+      when: host.setup.monitoring.use is defined
+
+    - name: "Select merge strategy ..."
+      set_fact:
+        use_or_merge: true
+        use_or_merge_name: "{{ host.setup.monitoring.merge }}"
+      when: host.setup.monitoring.merge is defined
+  when: host.setup.monitoring.use is defined or host.setup.monitoring.merge is defined
+
+- name: "Load monitoring/use template ..."
+  include_vars:
+    file: "{{ monitoring_template }}"
+    name: monitoring_use_template
+  loop: "{{ query('first_found', params) }}"
+  loop_control:
+    loop_var: monitoring_template
+  vars:
+    params:
+      skip: false
+      files:
+        - "{{ playbook_dir}}/local/monitoring/{{ use_or_merge_name }}"
+        - "{{ role_path }}/monitoring/{{ use_or_merge_name }}"
+  when: use_or_merge
+
+- name: "Prepare monitoring configuration (use) ..."
+  set_fact:
+    monitoring_config: "{{ monitoring_use_template.monitoring | combine(host.setup.monitoring) | combine({'use': omit}) }}"
+  when: host.setup.monitoring.use is defined and monitoring_use_template.monitoring is defined
+
+- name: "Prepare monitoring configuration (merge) ..."
+  set_fact:
+    monitoring_config: "{{ monitoring_use_template.monitoring | combine(host.setup.monitoring,list_merge='prepend_rp') | combine({'merge': omit}) }}"
+  when: host.setup.monitoring.merge is defined and monitoring_use_template.monitoring is defined
+
+- name: "Prepare monitoring configuration ..."
+  set_fact:
+    monitoring_config: "{{ host.setup.monitoring }}"
+  when: not use_or_merge
+
+- debug: var=use_or_merge
+- debug: var=monitoring_config
+
 - name: "Check configuration ..."
   assert:
     that:
-      - host.setup.monitoring.host is defined and host.setup.monitoring.host | type_debug == 'list'
+      - monitoring_config.host is defined and monitoring_config.host | type_debug == 'list'
       - confidential.monitoring is defined or secret.monitoring is defined
 
 - name: "Load monitoring secrets ..."
@@ -22,7 +81,7 @@
       - msecrets[agent] is defined
       - msecrets[agent].auth is defined
       - msecrets[agent].token is defined
-  loop: "{{ host.setup.monitoring.host }}"
+  loop: "{{ monitoring_config.host }}"
   loop_control:
     loop_var: agent
     label: "{{ agent }}"
@@ -42,7 +101,7 @@
     group: root
     mode: 0400
   vars:
-    agents: "{{ host.setup.monitoring.host }}"
+    agents: "{{ monitoring_config.host }}"
     access: "{{ msecrets }}"
 
 - name: "Cleanup ..."
@@ -87,11 +146,11 @@
 - name: "Enumerate enabled checksd ..."
   set_fact:
     enabled_check_mk_checks: "{{ enabled_check_mk_checks + [ check ] }}"
-  loop: "{{ host.setup.monitoring.checks }}"
+  loop: "{{ monitoring_config.checks }}"
   loop_control:
     loop_var: check
     label: "{{ check }}"
-  when: host.setup.monitoring.checks is defined and check in check_mk_checks
+  when: monitoring_config.checks is defined and check in check_mk_checks
 
 - name: "Enable checks ..."
   file:
@@ -123,11 +182,11 @@
 - name: "Enumerate enabled plugins ..."
   set_fact:
     enabled_check_mk_plugins: "{{ enabled_check_mk_plugins + [ plugin ] }}"
-  loop: "{{ host.setup.monitoring.plugins }}"
+  loop: "{{ monitoring_config.plugins }}"
   loop_control:
     loop_var: plugin
     label: "{{ plugin }}"
-  when: host.setup.monitoring.plugins is defined and plugin in check_mk_plugins
+  when: monitoring_config.plugins is defined and plugin in check_mk_plugins
 
 - name: "Enable plugins ..."
   file:
