@@ -103,7 +103,7 @@
     owner: root
     mode: 0644
   vars:
-    grub_terminal: "{{ host.setup.grub.terminal | default(['serial', 'console']) }}"
+    grub_terminal: "{{ host.setup.grub.terminal | default(['gfxterm','serial']) }}"
   when: grub_theme is in [ 'blue', 'green', 'black' ]
 
 - name: "GRUB / Configuration (custom theme) / absent ..."
