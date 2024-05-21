@@ -4,7 +4,7 @@
 #   setup:
 #     grub:
 #       # Restore /etc/default/grub from /usr/share/grub/default/grub
-#       restore_default: false
+#       default: true
 #       timeout: 5
 #       recovery: false
 #       submenu: false
@@ -14,8 +14,8 @@
 #       # The order of terminals defined below is important!
 #       # the last one will be used by the kernel as /dev/console
 #       terminal:
+#         - gfxterm
 #         - serial
-#         - console
 #       # Used only when gfxterm is enabled
 #       display: 640x480
 #
@@ -54,7 +54,7 @@
     remote_src: true
   notify:
     - update-grub
-  when: host.setup.grub.default | default(false)
+  when: host.setup.grub.default | default(true)
 
 - name: "GRUB / Configuration ..."
   template:
@@ -68,7 +68,7 @@
     grub_recovery: "{{ 'false' if host.setup.grub.recovery|default(false) else 'true' }}"
     grub_submenu: "{{ 'false' if host.setup.grub.submenu|default(false) else 'true' }}"
     grub_os_prober: "{{ 'false' if host.setup.grub.osprober|default(false) else 'true' }}"
-    grub_terminal: "{{ host.setup.grub.terminal | default(['serial', 'console']) }}"
+    grub_terminal: "{{ host.setup.grub.terminal | default(['gfxterm','serial']) }}"
     grub_display: "{{ host.setup.grub.display | default('640x480') }}"
     grub_cmdline: "{{ host.setup.grub.cmdline | default(['quiet']) }}"
   notify:
