@@ -1,5 +1,33 @@
 - name: "Docker Configuration ..."
   block:
+    - name: "Load docker/use template ..."
+      include_vars:
+        file: "{{ docker_template }}"
+        name: docker_use_template
+      loop: "{{ query('first_found', params) }}"
+      loop_control:
+        loop_var: docker_template
+      vars:
+        params:
+          skip: false
+          files:
+            - "{{ playbook_dir}}/local/docker/{{ host.setup.docker.use }}"
+            - "{{ role_path }}/docker/{{ host.setup.docker.use }}"
+      when: host.setup.docker.use is defined
+
+    - name: "Prepare docker configuration (use) ..."
+      set_fact:
+        docker_config: "{{ docker_use_template.docker | combine(host.setup.docker) | combine({'use': omit}) }}"
+      when: host.setup.docker.use is defined and docker_use_template.docker is defined
+
+    - name: "Prepare docker configuration (use) ..."
+      set_fact:
+        docker_config: "{{ host.setup.docker }}"
+      when: host.setup.docker.use is not defined
+
+    - name: "Collect services facts ..."
+      ansible.builtin.service_facts:
+
     - name: "Create /etc/docker ..."
       file:
         path: /etc/docker
@@ -7,7 +35,6 @@
         group: root
         owner: root
         mode: 0755
-      register: etcdocker
 
     - name: "Docker Configuration ..."
       template:
@@ -17,7 +44,7 @@
         owner: root
         mode: 0600
       vars:
-        config: "{{ host.setup.docker }}"
+        config: "{{ docker_config }}"
       register: docker_updated
 
     - name: "Restart docker service ..."
@@ -27,6 +54,6 @@
         daemon_reload: true
         state: restarted
         masked: no
-      when: docker_updated.changed and not etcdocker.changed
+      when: docker_updated.changed and 'docker.service' in ansible_facts.services
 
   when: host.setup.docker is defined
