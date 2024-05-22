@@ -1,0 +1,35 @@
+# .base
+# .vm.kvm
+# .docker
+require:
+  - sudo
+  - lsb-release
+  - apt-utils
+  - python3-apt
+  - distro-info-data
+  - python-apt-common
+  - tmux
+  - screen
+  - tcpdump
+  - mc
+  - haveged
+  - wget
+  - curl
+  - zstd
+  - openssh-server
+  - openssh-client
+  - openssh-sftp-server
+  - less
+  - vim
+  - sysstat
+  - rsync
+  - mtr-tiny
+  - bash-completion
+  - lsof
+  - xz-utils
+  - systemd-resolved
+  - linux-image-cloud-amd64
+  - qemu-guest-agent
+  - docker-ce
+  - docker-ce-cli
+  - docker-compose-plugin
