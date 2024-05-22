@@ -1,6 +1,6 @@
 #jinja2: trim_blocks: True, lstrip_blocks: True
-{% if host.setup.locale.generate | type_debug == "list" %}
-{% for locale in host.setup.locale.generate if locale | upper is not in [ 'posix','C','C.UTF8','C.UTF-8', 'NONE' ] %}
+{% if localeConfig.generate | type_debug == "list" %}
+{% for locale in localeConfig.generate if locale | upper is not in [ 'posix','C','C.UTF8','C.UTF-8', 'NONE' ] %}
 {{ locale }}
 {% endfor %}
 {% endif %}

@@ -5,6 +5,8 @@
     owner: root
     group: root
     mode: 0644
+  vars:
+    localeConfig: "{{ locale_config }}"
   register: locale_gen_changed
 
 - name: "Regenerate locales ..."

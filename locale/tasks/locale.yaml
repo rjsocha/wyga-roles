@@ -1,11 +1,42 @@
+- name: "Process locale template ..."
+  block:
+    - name: "Load locale/use template ..."
+      include_vars:
+        file: "{{ locale_template }}"
+        name: locale_use_template
+      loop: "{{ query('first_found', params) }}"
+      loop_control:
+        loop_var: locale_template
+      vars:
+        params:
+          skip: true
+          files:
+            - "{{ playbook_dir}}/local/locale/{{ host.setup.locale | replace('/','-') | lower }}"
+            - "{{ role_path }}/locale/{{ host.setup.locale | replace('/','-') | lower }}"
+
+    - name: "Missing template ..."
+      fail:
+        msg: "locale template {{ host.setup.locale }} not found ..."
+      when: locale_use_template.locale is not defined
+
+    - name: "Prepare locale configuration (use) ..."
+      set_fact:
+        locale_config: "{{ locale_use_template.locale }}"
+  when: host.setup.locale is string
+
+- name: "Prepare locale configuration ..."
+  set_fact:
+    locale_config: "{{ host.setup.locale }}"
+  when: host.setup.locale is not string
+
 - name: "Locale generator ..."
   ansible.builtin.include_tasks: include/generator.yaml
-  when: host.setup.locale.generate is defined
+  when: locale_config.generate is defined
 
 - name: "Locale configuration ..."
   ansible.builtin.include_tasks: include/locale-default.yaml
-  when: host.setup.locale.default is defined
+  when: locale_config.default is defined
 
 - name: "Timezone configuration ..."
   ansible.builtin.include_tasks: include/timezone.yaml
-  when: host.setup.locale.tz is defined
+  when: locale_config.tz is defined

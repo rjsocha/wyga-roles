@@ -6,3 +6,5 @@
     group: root
     mode: 0644
     follow: true
+  vars:
+    localeConfig: "{{ locale_config }}"

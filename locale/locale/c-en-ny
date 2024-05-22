@@ -1,0 +1,7 @@
+locale:
+  template: "C/EN/NY"
+  generate:
+    - "en_US.UTF-8 UTF-8"
+  default:
+    lang: C.UTF-8
+  tz: "America/New_York"
