@@ -7,5 +7,5 @@ Storage={{ systemd_journal_storage }}
 SystemMaxUse={{ systemd_journal_maxuse }}
 RuntimeMaxUse=128M
 {% endif %}
-SystemMaxFiles=32
-RuntimeMaxFiles=8
+SystemMaxFiles=64
+RuntimeMaxFiles=16
