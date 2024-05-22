@@ -1,3 +1,7 @@
+- name: "Host Policy not supported on this host ..."
+  meta: end_host
+  when: aint_got_no_rules_for_this_here_home is defined
+
 - name: "Load policy ..."
   include_role:
     name: wyga/load-policy
