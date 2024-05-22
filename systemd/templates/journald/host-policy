@@ -4,7 +4,8 @@
 Storage={{ systemd_journal_storage }}
 {% endif %}
 {% if systemd_journal_maxuse != 'default' %}
-RuntimeMaxUse={{ systemd_journal_maxuse }}
-{% elif systemd_journal_storage == 'volatile' %}
+SystemMaxUse={{ systemd_journal_maxuse }}
 RuntimeMaxUse=128M
 {% endif %}
+SystemMaxFiles=32
+RuntimeMaxFiles=8

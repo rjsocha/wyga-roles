@@ -12,7 +12,7 @@
     owner: root
     mode: 0644
   vars:
-    systemd_resolved: "{{ host.setup.systemd.resolved | default({}) }}"
+    systemd_resolved: "{{ systemdConfig.resolved | default({}) }}"
   notify:
     - systemd-resolved
 

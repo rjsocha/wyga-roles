@@ -6,7 +6,7 @@
     masked: false
     daemon_reload: true
     state: started
-  loop: "{{ host.setup.systemd.service.enable }}"
+  loop: "{{ systemdConfig.service.enable }}"
   loop_control:
     loop_var: service
     label: "{{ service }}"

@@ -2,7 +2,7 @@
 - name: "SYSTEMD / sysstat ..."
   systemd:
     name: sysstat
-    enabled: "{{ true if host.setup.systemd.service.sysstat.enable | default(false) else false }}"
+    enabled: "{{ true if systemdConfig.service.sysstat.enable | default(false) else false }}"
     masked: false
     daemon_reload: true
-    state: "{{ 'restarted' if host.setup.systemd.service.sysstat.enable | default(false) else 'stopped' }}"
+    state: "{{ 'restarted' if systemdConfig.service.sysstat.enable | default(false) else 'stopped' }}"

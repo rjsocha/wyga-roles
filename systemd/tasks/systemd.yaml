@@ -1,0 +1,36 @@
+---
+# host:
+#   setup:
+#    systemd:
+#      journal:
+#        storage: volatile
+#        maxuse: 60M
+#
+
+- name: "SYSTEMD / system ..."
+  include_tasks: "task/system.yaml"
+  when: systemdConfig.system is defined
+
+- name: "SYSTEMD / journal ..."
+  include_tasks: "task/journal.yaml"
+  when: systemdConfig.journal is defined
+
+- name: "SYSTEMD / resolved ..."
+  include_tasks: "task/resolved.yaml"
+  when: systemdConfig is defined
+
+- name: "SYSTEMD / Service / sysstat ..."
+  include_tasks: "task/service-sysstat.yaml"
+  when: systemdConfig.service.sysstat is defined
+
+- name: "SYSTEMD / Service / systemd-networkd-wait-online ..."
+  include_tasks: "task/service-wait-online.yaml"
+  when: systemdConfig.service.wait_online is defined or systemdConfig.service['wait-online'] is defined
+
+- name: "SYSTEMD / Service / Disable ..."
+  include_tasks: "task/service-disable.yaml"
+  when: systemdConfig.service.disable is defined
+
+- name: "SYSTEMD / Service / Enable ..."
+  include_tasks: "task/service-enable.yaml"
+  when: systemdConfig.service.enable is defined

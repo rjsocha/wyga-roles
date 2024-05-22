@@ -1,0 +1,13 @@
+systemd:
+  template: common
+  journal:
+    storage: "disk"
+    maxuse: 2G
+  resolved:
+    llmnr: false
+    mdns: false
+  service:
+    wait-online: --any
+    sysstat:
+      enable: true
+      every: 5

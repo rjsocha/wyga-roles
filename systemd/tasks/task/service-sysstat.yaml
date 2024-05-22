@@ -12,7 +12,7 @@
     owner: root
     mode: 0644
   vars:
-    sysstat_every: "{{ host.setup.systemd.service.sysstat.every | default('10') }}"
-    sysstat_state: "{{ host.setup.systemd.service.sysstat.enable | default(false) }}"
+    sysstat_every: "{{ systemdConfig.service.sysstat.every | default('10') }}"
+    sysstat_state: "{{ systemdConfig.service.sysstat.enable | default(false) }}"
   notify:
     - systemd-service-sysstat

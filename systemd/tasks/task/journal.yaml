@@ -6,7 +6,7 @@
 
 - name: "Default storage type (auto) ..."
   set_fact:
-    journal_storage: "{{ host.setup.systemd.journal.storage | default('auto') }}"
+    journal_storage: "{{ systemdConfig.journal.storage | default('auto') }}"
 
 - name: "Normalize storage type (disk) ..."
   set_fact:
@@ -18,6 +18,14 @@
     journal_storage: "volatile"
   when: journal_storage in [ 'ram' ]
 
+- name: "Make sure /var/log/journal exists ..."
+  file:
+    path: /var/log/journal
+    state: directory
+  notify:
+    - systemd-journald
+  when: journal_storage == 'persistent'
+
 - name: "SYSTEMD / Journal / Storage ..."
   template:
     src: "journald/host-policy"
@@ -27,7 +35,7 @@
     mode: 0644
   vars:
     systemd_journal_storage: "{{ journal_storage }}"
-    systemd_journal_maxuse: "{{ host.setup.systemd.journal.maxuse | default('default') }}"
+    systemd_journal_maxuse: "{{ systemdConfig.journal.maxuse | default('default') }}"
   notify:
     - systemd-journald
 

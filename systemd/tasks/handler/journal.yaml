@@ -1,4 +1,8 @@
 ---
+- name: "SYSTEMD / Journal /var/log/journal fix permisions ..."
+  command: systemd-tmpfiles --create --prefix /var/log/journal
+  when: journal_storage == 'persistent'
+
 - name: "SYSTEMD / Journal restart ..."
   systemd:
     state: restarted
@@ -10,14 +14,6 @@
     state: absent
   when: journal_storage == 'volatile'
 
-# /var/log/journal is recreated with wrong permisions (and enabled Copy On Write on btrfs)
-# don't know why ...
-- name: "SYSTEMD / Journal / Flush ..."
-  systemd:
-    state: restarted
-    name: systemd-journal-flush
+- name: "SYSTEMD / Journal /var/log/journal switch ..."
+  command: journalctl --flush
   when: journal_storage == 'persistent'
-
-#- name: "SYSTEMD / Journal /var/log/journal switch ..."
-#  command: journalctl --flush
-#  when: journal_storage == 'persistent'

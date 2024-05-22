@@ -1,5 +1,5 @@
 #jinja2: trim_blocks: True, lstrip_blocks: True
 [Manager]
-{% if host.setup.systemd.system['stop-timeout'] is defined %}
-DefaultTimeoutStopSec={{ host.setup.systemd.system['stop-timeout'] }}
+{% if systemdConfig.system['stop-timeout'] is defined %}
+DefaultTimeoutStopSec={{ systemdConfig.system['stop-timeout'] }}
 {% endif %}

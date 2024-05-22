@@ -1,0 +1,65 @@
+---
+- name: "Role init ..."
+  set_fact:
+    use_or_merge: false
+
+- name: "Check and prepare template configuration ..."
+  block:
+    - name: "Check configuration ..."
+      assert:
+        that:
+          - >
+            (host.setup.systemd.use is defined and host.setup.systemd.merge is not defined)
+            or (host.setup.systemd.use is not defined and host.setup.systemd.merge is defined)
+        fail_msg: "use and merge are mutally exclusive ..."
+
+    - name: "Select use strategy ..."
+      set_fact:
+        use_or_merge: true
+        use_or_merge_name: "{{ host.setup.systemd.use }}"
+      when: host.setup.systemd.use is defined
+
+    - name: "Select merge strategy ..."
+      set_fact:
+        use_or_merge: true
+        use_or_merge_name: "{{ host.setup.systemd.merge }}"
+      when: host.setup.systemd.merge is defined
+
+    - name: "Load systemd/use template ..."
+      include_vars:
+        file: "{{ systemd_template }}"
+        name: systemd_use_template
+      loop: "{{ query('first_found', params) }}"
+      loop_control:
+        loop_var: systemd_template
+      vars:
+        params:
+          skip: true
+          files:
+            - "{{ playbook_dir}}/local/systemd/{{ use_or_merge_name }}"
+            - "{{ role_path }}/systemd/{{ use_or_merge_name }}"
+
+    - name: "Check configuration ..."
+      assert:
+        that: systemd_use_template.systemd is defined
+        fail_msg: "systemd template {{ use_or_merge_name }} not found ..."
+
+  when: host.setup.systemd.use is defined or host.setup.systemd.merge is defined
+
+- name: "Prepare systemd configuration (use) ..."
+  set_fact:
+    systemdConfig: "{{ systemd_use_template.systemd | combine(host.setup.systemd) | combine({'use': omit}) }}"
+  when: host.setup.systemd.use is defined
+
+- name: "Prepare systemd configuration (merge) ..."
+  set_fact:
+    systemdConfig: "{{ systemd_use_template.systemd | combine(host.setup.systemd, recursive=true, list_merge='prepend_rp') | combine({'merge': omit}) }}"
+  when: host.setup.systemd.merge is defined
+
+- name: "Prepare systemd configuration ..."
+  set_fact:
+    systemdConfig: "{{ host.setup.systemd }}"
+  when: not use_or_merge
+
+- debug: var=systemdConfig
+  when: systemd_render_config is defined

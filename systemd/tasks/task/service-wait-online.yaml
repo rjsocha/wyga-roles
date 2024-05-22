@@ -12,4 +12,4 @@
     owner: root
     mode: 0644
   vars:
-    wait_online: "{{ host.setup.systemd.service.wait_online }}"
+    wait_online: "{{ systemdConfig.service.wait_online if systemdConfig.service.wait_online is defined else systemdConfig.service['wait-online'] }}"
