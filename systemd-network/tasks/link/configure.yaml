@@ -1,4 +1,11 @@
 ---
+#
+#
+# update-initramfs -k all -u
+# may be required after .link file modifications
+#
+#
+
 - name: "Prepare link changed status variable ..."
   set_fact:
     link_changed: "{{ link_changed | default(false) }}"
