@@ -1,0 +1,3 @@
+- name: "Apply link/interface template ..."
+  set_fact:
+    link: "{{ {} | combine({'match': {'name': lnparam }}) | combine(link_entry) | combine({'use': omit}) }}"

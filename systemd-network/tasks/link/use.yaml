@@ -6,3 +6,15 @@
 - name: "Load template for wlan/kernel ..."
   include_tasks: "use/link/wlan-kernel.yaml"
   when: link_entry.use == 'wlan/kernel'
+
+- name: "Load template for mac ..."
+  include_tasks: "use/link/mac.yaml"
+  vars:
+    lnparam: "{{ link_entry.use[4:] }}"
+  when: link_entry.use is regex('(?i)^mac/([a-f0-9]{2}:){5}[a-f0-9]{2}$')
+
+- name: "Load template for interface ..."
+  include_tasks: "use/link/name.yaml"
+  vars:
+    lnparam: "{{ link_entry.use[3:] }}"
+  when: link_entry.use is regex('(?i)^if/([a-z0-9@.+_-]){1,16}$')

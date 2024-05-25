@@ -1,6 +1,6 @@
 #jinja2: trim_blocks: True, lstrip_blocks: True
 [Match]
-PermanentMACAddress={{ link.match.mac | upper }}
+OriginalName={{ link.match.name }}
 {% if link.match.type is defined %}
 Type={{ link.match.type }}
 {% endif %}

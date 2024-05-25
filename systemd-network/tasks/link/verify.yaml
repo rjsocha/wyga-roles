@@ -9,7 +9,10 @@
     - name: "Verify used template ..."
       assert:
         that:
-          - link_entry.use is in [ 'wlan/keep','wlan/kernel' ]
+          - >
+            link_entry.use is in [ 'wlan/keep','wlan/kernel' ]
+            or link_entry.use is regex('(?i)^mac/([a-f0-9]{2}:){5}[a-f0-9]{2}$')
+            or link_entry.use is regex('(?i)^if/([a-z0-9@.+_-]){1,16}$')
         msg: "Unable to continue, check link configuration ..."
 
     - name: "Load template ..."
@@ -21,7 +24,7 @@
   assert:
     that:
       - link.match is defined
-      - link.match.type is defined or link.match.mac is defined
+      - link.match.type is defined or link.match.mac is defined or link.match.name
     msg: "Unable to continue, check interface configuration ..."
 
 - name: "Verify link configuration (type) ..."
@@ -38,3 +41,10 @@
       - link.namepolicy | type_debug == 'list'
     msg: "Unable to continue, check interface configuration ..."
   when: link.match.type is defined and link.match.type == 'wlan'
+
+- name: "Verify configuration for named interface ..."
+  assert:
+    that:
+      - link.namepolicy is not defined
+    msg: "Unable to continue, check interface configuration (name and namepolicy mutually exclusive) ..."
+  when: link.name is defined

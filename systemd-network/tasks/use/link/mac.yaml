@@ -1,0 +1,3 @@
+- name: "Apply link/mac template ..."
+  set_fact:
+    link: "{{ {} | combine({'match': {'mac': lnparam }}) | combine(link_entry) | combine({'use': omit}) }}"

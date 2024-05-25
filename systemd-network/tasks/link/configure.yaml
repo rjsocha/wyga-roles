@@ -50,3 +50,21 @@
       set_fact:
         networkd_managed_files: "{{ networkd_managed_files + [ '00-mac-' ~ mac_file ~ '.link' ] }}"
   when: link.match.mac is defined
+
+- name: "Configure interface link ..."
+  block:
+    - name: "Configure link ..."
+      template:
+        src: "network/link/name"
+        dest: "/etc/systemd/network/00-{{ link.match.name }}.link"
+        group: root
+        owner: root
+        mode: 0644
+      register: link_change
+    - name: "Update link changed status ..."
+      set_fact:
+        link_changed: "{{ link_changed or link_change.changed }}"
+    - name: "Mark configuration of link as managed ..."
+      set_fact:
+        networkd_managed_files: "{{ networkd_managed_files + [ '00-' ~ link.match.name ~ '.link' ] }}"
+  when: link.match.name is defined
