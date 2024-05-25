@@ -34,7 +34,7 @@
   block:
     - name: "Set link file suffix ..."
       set_fact:
-        mac_file: "{{ link.match.mac | replace(':','-' ) | lower }}"
+        mac_file: "{{ link.match.mac | replace(':','' ) | upper }}"
     - name: "Configure MAC link ..."
       template:
         src: "network/link/mac"

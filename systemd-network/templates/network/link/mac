@@ -1,6 +1,9 @@
 #jinja2: trim_blocks: True, lstrip_blocks: True
 [Match]
-PermanentMACAddress={{ link.match.mac }}
+PermanentMACAddress={{ link.match.mac | upper }}
+{% if link.match.type is defined %}
+Type={{ link.match.type }}
+{% endif %}
 
 [Link]
 {% if link.name is defined %}
@@ -14,7 +17,10 @@ MTUBytes={{ link.mtu | default(1500) | int }}
 {% endif %}
 {% if link.namepolicy is defined %}
 NamePolicy={{ ' '.join(link.namepolicy) }}
+{% else %}
+NamePolicy=path slot onboard kernel keep
 {% endif %}
+AlternativeNamesPolicy=
 {% if link.mac is defined %}
 MACAddressPolicy=none
 MACAddress={{ link.mac }}

@@ -27,7 +27,7 @@
 - name: "Verify link configuration (type) ..."
   assert:
     that:
-      - link.match.type in ['wlan']
+      - link.match.type in ['wlan','ether']
     msg: "Unable to continue, check interface configuration ..."
   when: link.match.type is defined
 
