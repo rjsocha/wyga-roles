@@ -1,6 +1,11 @@
 #jinja2: trim_blocks: True, lstrip_blocks: True
 [Match]
+{% if link.match.name is defined %}
+OriginalName={{ link.match.name }}
+{% endif %}
+{% if link.match.mac is defined %}
 PermanentMACAddress={{ link.match.mac | upper }}
+{% endif %}
 {% if link.match.type is defined %}
 Type={{ link.match.type }}
 {% endif %}
@@ -10,7 +15,7 @@ Type={{ link.match.type }}
 Name={{ link.name }}
 {% endif %}
 {% if link.wol is defined %}
-WakeOnLan={{ 'yes' if link.wol | default(false) else 'no' }}
+WakeOnLan={{ 'magic' if link.wol | default(false) else 'no' }}
 {% endif %}
 {% if link.mtu is defined %}
 MTUBytes={{ link.mtu | default(1500) | int }}

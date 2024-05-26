@@ -1,11 +1,11 @@
 ---
-- name: "Load template for wlan/keep ..."
-  include_tasks: "use/link/wlan-keep.yaml"
-  when: link_entry.use == 'wlan/keep'
+- name: "Load template for wlan/policy/kernel ..."
+  include_tasks: "use/link/wlan-policy-kernel.yaml"
+  when: link_entry.use == 'wlan/policy/kernel'
 
-- name: "Load template for wlan/kernel ..."
-  include_tasks: "use/link/wlan-kernel.yaml"
-  when: link_entry.use == 'wlan/kernel'
+- name: "Load template for ether/policy/path ..."
+  include_tasks: "use/link/ether-policy-path.yaml"
+  when: link_entry.use == 'ether/policy/path'
 
 - name: "Load template for mac ..."
   include_tasks: "use/link/mac.yaml"

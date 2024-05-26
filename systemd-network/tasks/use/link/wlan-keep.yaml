@@ -1,8 +1,0 @@
-- name: "Apply wlan/keep template ..."
-  set_fact:
-    link:
-      match:
-        type: wlan
-      namepolicy:
-        - keep
-        - kernel

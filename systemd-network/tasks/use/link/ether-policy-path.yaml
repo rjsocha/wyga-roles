@@ -1,0 +1,3 @@
+- name: "Apply  ehter/policy/path template ..."
+  set_fact:
+    link: "{{ {} | combine({'template': 'ether/policy/path','match': {'type': 'ether' }, 'namepolicy': [ 'path', 'slot', 'onboard', 'kernel', 'keep' ] }) | combine(link_entry) | combine({'use': omit}) }}"

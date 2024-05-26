@@ -10,7 +10,7 @@
       assert:
         that:
           - >
-            link_entry.use is in [ 'wlan/keep','wlan/kernel' ]
+            link_entry.use is in [ 'wlan/policy/kernel', 'ether/policy/path' ]
             or link_entry.use is regex('(?i)^mac/([a-f0-9]{2}:){5}[a-f0-9]{2}$')
             or link_entry.use is regex('(?i)^if/([a-z0-9@.+_-]){1,16}$')
         msg: "Unable to continue, check link configuration ..."

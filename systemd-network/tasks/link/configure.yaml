@@ -24,7 +24,7 @@
     - name: "Configure wlan link ..."
       template:
         src: "network/link/wlan"
-        dest: "/etc/systemd/network/00-{{ link.match.type }}.link"
+        dest: "/etc/systemd/network/00-wlan-policy.link"
         group: root
         owner: root
         mode: 0644
@@ -34,8 +34,8 @@
         link_changed: "{{ link_changed or link_change.changed }}"
     - name: "Mark configuration of link as managed ..."
       set_fact:
-        networkd_managed_files: "{{ networkd_managed_files + [ '00-' ~ link.match.type ~ '.link' ] }}"
-  when: link.match.type is defined and link.match.type  == 'wlan'
+        networkd_managed_files: "{{ networkd_managed_files + [ '00-wlan-policy.link' ] }}"
+  when: link.template is defined and link.template == 'wlan/policy/kernel'
 
 - name: "Configure MAC link ..."
   block:
@@ -44,7 +44,7 @@
         mac_file: "{{ link.match.mac | replace(':','' ) | upper }}"
     - name: "Configure MAC link ..."
       template:
-        src: "network/link/mac"
+        src: "network/link/generic"
         dest: "/etc/systemd/network/00-mac-{{ mac_file }}.link"
         group: root
         owner: root
@@ -62,7 +62,7 @@
   block:
     - name: "Configure link ..."
       template:
-        src: "network/link/name"
+        src: "network/link/generic"
         dest: "/etc/systemd/network/00-{{ link.match.name }}.link"
         group: root
         owner: root
@@ -75,3 +75,21 @@
       set_fact:
         networkd_managed_files: "{{ networkd_managed_files + [ '00-' ~ link.match.name ~ '.link' ] }}"
   when: link.match.name is defined
+
+- name: "Configure ether/policy/path link ..."
+  block:
+    - name: "Configure link ..."
+      template:
+        src: "network/link/generic"
+        dest: "/etc/systemd/network/00-ether-policy.link"
+        group: root
+        owner: root
+        mode: 0644
+      register: link_change
+    - name: "Update link changed status ..."
+      set_fact:
+        link_changed: "{{ link_changed or link_change.changed }}"
+    - name: "Mark configuration of link as managed ..."
+      set_fact:
+        networkd_managed_files: "{{ networkd_managed_files + [ '00-ether-policy.link' ] }}"
+  when: link.template is defined and link.template == 'ether/policy/path'

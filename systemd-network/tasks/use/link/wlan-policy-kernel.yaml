@@ -1,0 +1,3 @@
+- name: "Apply  wlan/policy/kernel template ..."
+  set_fact:
+    link: "{{ {} | combine({'template': 'wlan/policy/kernel','match': {'type': 'wlan' }, 'namepolicy': [ 'keep', 'kernel' ] }) | combine(link_entry) | combine({'use': omit}) }}"
