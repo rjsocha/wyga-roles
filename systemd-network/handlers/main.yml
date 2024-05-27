@@ -1,0 +1,3 @@
+---
+- name: systemd-network-update-initramfs
+  command: update-initramfs -k all -u

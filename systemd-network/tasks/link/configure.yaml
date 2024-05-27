@@ -29,6 +29,7 @@
         owner: root
         mode: 0644
       register: link_change
+      notify: systemd-network-update-initramfs
     - name: "Update link changed status ..."
       set_fact:
         link_changed: "{{ link_changed or link_change.changed }}"
@@ -50,6 +51,7 @@
         owner: root
         mode: 0644
       register: link_change
+      notify: systemd-network-update-initramfs
     - name: "Update link changed status ..."
       set_fact:
         link_changed: "{{ link_changed or link_change.changed }}"
@@ -68,6 +70,7 @@
         owner: root
         mode: 0644
       register: link_change
+      notify: systemd-network-update-initramfs
     - name: "Update link changed status ..."
       set_fact:
         link_changed: "{{ link_changed or link_change.changed }}"
@@ -86,6 +89,7 @@
         owner: root
         mode: 0644
       register: link_change
+      notify: systemd-network-update-initramfs
     - name: "Update link changed status ..."
       set_fact:
         link_changed: "{{ link_changed or link_change.changed }}"
