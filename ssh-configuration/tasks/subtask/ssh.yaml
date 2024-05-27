@@ -1,4 +1,11 @@
 ---
+# Provider tweaks
+- name: "Cleanup Linode modifications ...."
+  file:
+    path: /etc/systemd/system/ssh.service.d/linode.conf
+    state: absent
+  notify: restart-ssh
+
 - name: "Install /etc/ssh/sshd_config ..."
   copy:
     dest: "/etc/ssh/sshd_config"

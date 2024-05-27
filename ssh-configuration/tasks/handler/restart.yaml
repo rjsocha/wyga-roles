@@ -1,3 +1,7 @@
+- name: "SSH/ systemd reload ..."
+  systemd:
+    daemon_reload: true
+
 - name: "Normalize registred configs ..."
   set_fact:
     wyga_ssh_registred_config: "{{ wyga_ssh_registred_config | unique }}"
