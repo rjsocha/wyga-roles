@@ -54,9 +54,6 @@
     monitoring_config: "{{ host.setup.monitoring }}"
   when: not use_or_merge
 
-- debug: var=use_or_merge
-- debug: var=monitoring_config
-
 - name: "Check configuration ..."
   assert:
     that:
