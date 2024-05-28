@@ -2,6 +2,7 @@ monitoring:
   checks:
     - apt
     - kernel-check
+    - os-release
   plugins:
     - ssh-policy
     - logwatch
