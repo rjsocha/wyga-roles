@@ -1,0 +1,3 @@
+- name: "Apply static/interface template ..."
+  set_fact:
+    interface: "{{ {} | combine({'match': {'name': ifparam }, 'method': 'dns', 'domains': ifdomains }) | combine(interface_entry) | combine({'use': omit}) }}"

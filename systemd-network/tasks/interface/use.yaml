@@ -33,6 +33,18 @@
     ifparam: "{{ interface_entry.use[7:] }}"
   when: interface_entry.use is regex('(?i)^static/([a-z0-9@.+_-]){1,16}$')
 
+- name: "Load template for dns/interface/domains ..."
+  block:
+    - name: "Extract parameters ..."
+      set_fact:
+        dns_template: "{{ interface_entry.use | regex_findall('(?i)^dns/([a-z0-9@.+_-]{1,16})/(.+)$') | flatten }}"
+    - name: "Load template for dns/interface/domains ..."
+      include_tasks: "use/interface/dns-only.yaml"
+      vars:
+        ifparam: "{{ dns_template[0] }}"
+        ifdomains: "{{ dns_template[1] | split('/') | map('regex_replace', '^', '~') | join(' ') }}"
+  when: interface_entry.use is regex('(?i)^dns/([a-z0-9@.+_-]{1,16})/(.+)$')
+
 - name: "Load template for ether/dhcp ..."
   include_tasks: "use/interface/ether-dhcp.yaml"
   when: interface_entry.use == 'ether/dhcp'

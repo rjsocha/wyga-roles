@@ -16,6 +16,7 @@
             or interface_entry.use is regex('(?i)^dhcp/([a-z0-9@.+_-]){1,16}$')
             or interface_entry.use is regex('(?i)^static/([a-f0-9]{2}:){5}[a-f0-9]{2}$')
             or interface_entry.use is regex('(?i)^static/([a-z0-9@.+_-]){1,16}$')
+            or interface_entry.use is regex('(?i)^dns/([a-z0-9@.+_-]){1,16}/(.+)$')
         msg: "Unable to continue, check interface configuration for {{ interface_entry.use }} ..."
 
     - name: "Verify loopback template ..."
@@ -54,7 +55,7 @@
         or interface.match.type is defined
         or interface.match.mac is defined
       - interface.method is defined
-      - interface.method in ['static', 'dhcp']
+      - interface.method in [ 'static', 'dhcp', 'dns' ]
     msg: "Unable to continue, check interface configuration ..."
 
 - name: "Verify configuration for interface.match.type ..."
@@ -66,6 +67,17 @@
       - interface.method in ['static','dhcp']
     msg: "Unable to continue, check interface configuration ..."
   when: interface.match.type is defined
+
+- name: "Verify configuration for interface.method=dns ..."
+  assert:
+    that:
+      - interface.dns | type_debug == 'list' or interface.dns is string
+      - interface.match.mac is not defined
+      - interface.match.kind is not defined
+      - interface.match.type is not defined
+      - interface.ip is not defined
+    msg: "Unable to continue, check interface configuration for {{ interface.match.name }} (DNS method) ..."
+  when: interface.method == 'dns'
 
 - name: "Verify configuration for interface.match.type=ether ..."
   assert:
@@ -97,7 +109,7 @@
       - interface.ip is defined
       - interface.ip | type_debug == 'list' or interface.ip is string
     msg: "Unable to continue, check interface configuration ..."
-  when: interface.method == "static"
+  when: interface.method == 'static'
 
 - name: "Cast IP as list ..."
   set_fact:
@@ -148,7 +160,7 @@
     that:
       - interface.gw | ipv4('address')
     msg: "Unable to continue, check interface configuration ..."
-  when: interface.method == "static" and interface.gw is defined
+  when: interface.method == 'static' and interface.gw is defined
 
 - name: "Verify interface.route type ..."
   assert:
