@@ -2,22 +2,22 @@
 - name: "Generate sign script ..."
   template:
     src: "vpn/nebula/sign-certificate"
-    dest: "{{ playbook_dir }}/vpn/inbox/{{ instance.name }}-{{ host.hostname }}-sign"
+    dest: "{{ playbook_dir }}/vpn/inbox/{{ vpn_instance.name }}-{{ vpn_instance.hostname }}-sign"
     mode: 0755
   vars:
-    ip: "{{ instance.ip }}"
-    name: "{{ instance.name }}"
-    hostname: "{{ host.hostname }}"
+    ip: "{{ vpn_instance.ip }}"
+    name: "{{ vpn_instance.name }}"
+    hostname: "{{ vpn_instance.hostname }}"
     subnets: "{{ node_subnets | sort }}"
     domain: "{{ vpn.domain | default('vpn') }}"
   connection: local
 
-- name: "Waiting for vpn/inbox/{{ instance.name }}-{{ host.hostname }}.crt ..."
+- name: "Waiting for vpn/inbox/{{ vpn_instance.name }}-{{ vpn_instance.hostname }}.crt ..."
   debug: msg="..."
 
 - name: "Waiting for host.crt"
   wait_for:
-    path: "{{ playbook_dir }}/vpn/inbox/{{ instance.name }}-{{ host.hostname }}.crt"
+    path: "{{ playbook_dir }}/vpn/inbox/{{ vpn_instance.name }}-{{ vpn_instance.hostname }}.crt"
     state: present
     timeout: 300
   connection: local

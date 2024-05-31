@@ -1,12 +1,22 @@
+- name: "Append hostname ..."
+  set_fact:
+    vpn_instance: "{{ vpn_entry | combine({ 'hostname': host.hostname}) }}"
+  when: vpn_entry.hostname is not defined
+
+- name: "Append hostname ..."
+  set_fact:
+    vpn_instance: "{{ vpn_entry }}"
+  when: vpn_entry.hostname is defined
+
 - name: "Load VPN configuration ..."
   include_vars:
-    file: "vpn/nebula/{{ instance.name }}/config.yaml"
+    file: "vpn/nebula/{{ vpn_instance.name }}/config.yaml"
     name: vpn
 
 - name: "Prepare variables ..."
   set_fact:
-    am_lighthouse: "{{ true if instance.ip | ipaddr('address') in vpn.lighthouse.hosts.keys() else false }}"
-    ip_valid: "{{ true if instance.ip | ipaddr('address') | ipaddr(vpn.network) else false }}"
+    am_lighthouse: "{{ true if vpn_instance.ip | ipaddr('address') in vpn.lighthouse.hosts.keys() else false }}"
+    ip_valid: "{{ true if vpn_instance.ip | ipaddr('address') | ipaddr(vpn.network) else false }}"
     node_subnets: []
 
 - name: "Check is node IP belongs to VPN network ..."
@@ -15,7 +25,7 @@
   when: not ip_valid
 
 - name: "Preapre VPN instance ..."
-  command: /usr/sbin/nebula-vpn-setup {{ instance.name }}
+  command: /usr/sbin/nebula-vpn-setup {{ vpn_instance.name }}
   changed_when: false
 
 - name: "Node subnets ..."
@@ -24,18 +34,18 @@
   loop_control:
     loop_var: nebula_routes
     label: "{{ nebula_routes.key }}"
-  when: vpn.routing is defined and instance.ip | ipaddr('address') == nebula_routes.key
+  when: vpn.routing is defined and vpn_instance.ip | ipaddr('address') == nebula_routes.key
 
 - name: "Certificate marker (test) ..."
   template:
     src: "vpn/nebula/certificate"
-    dest: "/etc/site/vpn/{{ instance.name }}/certificate"
+    dest: "/etc/site/vpn/{{ vpn_instance.name }}/certificate"
     group: root
     owner: root
     mode: 0600
   vars:
-    ip: "{{ instance.ip }}"
-    name: "{{ host.hostname }}"
+    ip: "{{ vpn_instance.ip }}"
+    name: "{{ vpn_instance.hostname }}"
     subnets: "{{ node_subnets | sort }}"
     domain: "{{ vpn.domain | default('vpn') }}"
   check_mode: true
@@ -43,8 +53,8 @@
 
 - name: "Copy CA certificate (test) ..."
   copy:
-    src: "vpn/nebula/{{ instance.name }}/ca.crt"
-    dest: "/etc/site/vpn/{{ instance.name }}/ca.crt"
+    src: "vpn/nebula/{{ vpn_instance.name }}/ca.crt"
+    dest: "/etc/site/vpn/{{ vpn_instance.name }}/ca.crt"
   check_mode: true
   register: ca_changed
 
@@ -56,7 +66,7 @@
   block:
     - name: "Is host certificate present ..."
       stat:
-        path: "/etc/site/vpn/{{ instance.name }}/host.crt"
+        path: "/etc/site/vpn/{{ vpn_instance.name }}/host.crt"
       register: host_certificate
     - name: "Genereate certifiate? ..."
       set_fact:
@@ -76,9 +86,9 @@
         path: "{{ file }}"
         state: absent
       loop:
-        - "{{ playbook_dir }}/vpn/inbox/{{ instance.name }}-{{ host.hostname }}.pub"
-        - "{{ playbook_dir }}/vpn/inbox/{{ instance.name }}-{{ host.hostname }}.crt"
-        - "{{ playbook_dir }}/vpn/inbox/{{ instance.name }}-{{ host.hostname }}-sign"
+        - "{{ playbook_dir }}/vpn/inbox/{{ vpn_instance.name }}-{{ vpn_instance.hostname }}.pub"
+        - "{{ playbook_dir }}/vpn/inbox/{{ vpn_instance.name }}-{{ vpn_instance.hostname }}.crt"
+        - "{{ playbook_dir }}/vpn/inbox/{{ vpn_instance.name }}-{{ vpn_instance.hostname }}-sign"
       loop_control:
         loop_var: file
         label: "{{ file | basename }}"
@@ -86,8 +96,8 @@
 
     - name: "Fetch host.pub file ..."
       fetch:
-        src: "/etc/site/vpn/{{ instance.name }}/host.pub"
-        dest: "{{ playbook_dir }}/vpn/inbox/{{ instance.name }}-{{ host.hostname }}.pub"
+        src: "/etc/site/vpn/{{ vpn_instance.name }}/host.pub"
+        dest: "{{ playbook_dir }}/vpn/inbox/{{ vpn_instance.name }}-{{ vpn_instance.hostname }}.pub"
         flat: true
 
     - name: "Manual certicate sign ..."
@@ -100,17 +110,17 @@
 
     - name: "Copy host certificate ..."
       copy:
-        src: "{{ playbook_dir }}/vpn/inbox/{{ instance.name }}-{{ host.hostname }}.crt"
-        dest: "/etc/site/vpn/{{ instance.name }}/host.crt"
+        src: "{{ playbook_dir }}/vpn/inbox/{{ vpn_instance.name }}-{{ vpn_instance.hostname }}.crt"
+        dest: "/etc/site/vpn/{{ vpn_instance.name }}/host.crt"
 
     - name: "Cleanup ..."
       file:
         path: "{{ file }}"
         state: absent
       loop:
-        - "{{ playbook_dir }}/vpn/inbox/{{ instance.name }}-{{ host.hostname }}.pub"
-        - "{{ playbook_dir }}/vpn/inbox/{{ instance.name }}-{{ host.hostname }}.crt"
-        - "{{ playbook_dir }}/vpn/inbox/{{ instance.name }}-{{ host.hostname }}-sign"
+        - "{{ playbook_dir }}/vpn/inbox/{{ vpn_instance.name }}-{{ vpn_instance.hostname }}.pub"
+        - "{{ playbook_dir }}/vpn/inbox/{{ vpn_instance.name }}-{{ vpn_instance.hostname }}.crt"
+        - "{{ playbook_dir }}/vpn/inbox/{{ vpn_instance.name }}-{{ vpn_instance.hostname }}-sign"
       loop_control:
         loop_var: file
         label: "{{ file | basename }}"
@@ -120,13 +130,13 @@
 - name: "Certificate marker ..."
   template:
     src: "vpn/nebula/certificate"
-    dest: "/etc/site/vpn/{{ instance.name }}/certificate"
+    dest: "/etc/site/vpn/{{ vpn_instance.name }}/certificate"
     group: root
     owner: root
     mode: 0600
   vars:
-    ip: "{{ instance.ip }}"
-    name: "{{ host.hostname }}"
+    ip: "{{ vpn_instance.ip }}"
+    name: "{{ vpn_instance.hostname }}"
     subnets: "{{ node_subnets | sort }}"
     domain: "{{ vpn.domain | default('vpn') }}"
   register: state_changed
@@ -139,8 +149,8 @@
 
 - name: "Copy CA certificate ..."
   copy:
-    src: "vpn/nebula/{{ instance.name }}/ca.crt"
-    dest: "/etc/site/vpn/{{ instance.name }}/ca.crt"
+    src: "vpn/nebula/{{ vpn_instance.name }}/ca.crt"
+    dest: "/etc/site/vpn/{{ vpn_instance.name }}/ca.crt"
   register: state_changed
   notify:
     - nebula-vpn-restart
@@ -152,18 +162,18 @@
 - name: "Configuration ..."
   template:
     src: "vpn/nebula/config.yml"
-    dest: "/etc/site/vpn/{{ instance.name }}/config.yaml"
+    dest: "/etc/site/vpn/{{ vpn_instance.name }}/config.yaml"
     group: root
     owner: root
     mode: 0600
   vars:
-    ip: "{{ instance.ip | ipaddr('address') }}"
-    name: "{{ instance.name }}"
-    adjacent: "{{ instance.adjacents | default([]) }}"
+    ip: "{{ vpn_instance.ip | ipaddr('address') }}"
+    name: "{{ vpn_instance.name }}"
+    adjacent: "{{ vpn_instance.adjacents | default([]) }}"
     am_lighthouse: "{{ am_lighthouse }}"
-    use_relays: "{{ instance.relay | default(false) }}"
+    use_relays: "{{ vpn_instance.relay | default(false) }}"
     vpn: "{{ vpn }}"
-    port: "{{ instance.port if instance.port is defined else 4242 }}"
+    port: "{{ vpn_instance.port if vpn_instance.port is defined else 4242 }}"
   register: state_changed
   notify:
     - nebula-vpn-restart
@@ -174,9 +184,9 @@
 
 - name: "Stop old instance ..."
   block:
-    - name: "Enable nebula-vpn@{{ instance.name }}.service ..."
+    - name: "Enable nebula-vpn@{{ vpn_instance.name }}.service ..."
       systemd:
-        name: "nebula-vpn@{{ instance.name }}.service"
+        name: "nebula-vpn@{{ vpn_instance.name }}.service"
         enabled: true
         daemon_reload: true
         state: started
@@ -202,9 +212,9 @@
       debug: msg="Continue ..."
   when: nebula_stop_old_instance is defined
 
-- name: "Enable nebula-vpn@{{ instance.name }}.service ..."
+- name: "Enable nebula-vpn@{{ vpn_instance.name }}.service ..."
   systemd:
-    name: "nebula-vpn@{{ instance.name }}.service"
+    name: "nebula-vpn@{{ vpn_instance.name }}.service"
     enabled: true
     daemon_reload: true
     state: started

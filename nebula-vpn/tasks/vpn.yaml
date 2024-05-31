@@ -1,12 +1,12 @@
 - name: "Verify VPN configuration ..."
   assert:
     that:
-      - instance.name is defined
-      - instance.ip is defined
+      - vpn_entry.name is defined
+      - vpn_entry.ip is defined
   loop: "{{ host.setup.vpn }}"
   loop_control:
-    loop_var: instance
-    label: "{{ instance.name if instance.name is defined else 'MISSING' }}"
+    loop_var: vpn_entry
+    label: "{{ vpn_entry.name if vpn_entry.name is defined else 'MISSING' }}"
 
 - name: "Service list ..."
   set_fact:
@@ -23,5 +23,5 @@
   include_tasks: "nebula.yaml"
   loop: "{{ host.setup.vpn }}"
   loop_control:
-    loop_var: instance
-    label: "{{ instance.name }}"
+    loop_var: vpn_entry
+    label: "{{ vpn_entry.name }}"
