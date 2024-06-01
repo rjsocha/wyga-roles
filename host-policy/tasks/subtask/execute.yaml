@@ -36,6 +36,15 @@
     firstboot: "{{ host.package.firstboot }}"
   when: skip_firstboot is not defined and host.package.firstboot.profile is defined and not host.package.firstboot.skip|default(false) and not host.package.skip|default(false)
 
+- name: "Process repositories ..."
+  include_role:
+    name: wyga/install-repository
+  loop: "{{ host.package.repository }}"
+  loop_control:
+    loop_var: repository
+    label: "{{ repository }}"
+  when: host.package.repository is defined and not host.package.skip|default(false)
+
 - name: "Process packages ..."
   include_role:
     name: wyga/install-package-override

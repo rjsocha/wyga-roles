@@ -1,0 +1,14 @@
+- name: "Install gitlab-ee apt repository ..."
+  copy:
+    src: "repository/gitlab-ee/debian/12/{{ repo_file.src }}"
+    dest: "{{ repo_file.dst }}"
+    group: root
+    owner: root
+    mode: 0644
+    force: yes
+  loop:
+    - { 'src': 'gitlab-ee.list', 'dst': '/etc/apt/sources.list.d/gitlab-ee.list' }
+    - { 'src': 'gitlab-ee.gpg',  'dst': '/usr/share/keyrings/gitlab-ee.gpg' }
+  loop_control:
+    loop_var: repo_file
+    label: "{{ repo_file }}"
