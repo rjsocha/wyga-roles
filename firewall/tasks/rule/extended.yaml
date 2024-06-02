@@ -1,0 +1,21 @@
+- name: "Rule parse status ..."
+  set_fact:
+    rule_parsed: false
+
+- name: "Process allow macro ..."
+  include_tasks: use/macro/allow.yaml
+  when: rule.allow is defined
+
+- name: "Process raw rule ..."
+  block:
+  - name: "Append rule ..."
+    set_fact:
+      fwrules: "{{ fwrules + [ rule ] }}"
+      rule_parsed: true
+  when: rule.allow is not defined
+
+- name: "Parsing failed ..."
+  fail:
+    msg:
+      - "Unable to to parse string rule {{ rule }}"
+  when: not rule_parsed

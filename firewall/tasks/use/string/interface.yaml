@@ -1,0 +1,8 @@
+- name: "Use string/interface ..."
+  set_fact:
+    fwrule: "{{ {} | combine({ 'iface': rule | split('/') | last }) }}"
+    rule_parsed: true
+
+- name: "Append rule ..."
+  set_fact:
+    fwrules: "{{ fwrules + [ fwrule ] }}"

@@ -1,0 +1,7 @@
+- name: "Process simple rule ..."
+  include_tasks: "rule/string.yaml"
+  when: rule is string
+
+- name: "Process extended rule ..."
+  include_tasks: "rule/extended.yaml"
+  when: rule is mapping

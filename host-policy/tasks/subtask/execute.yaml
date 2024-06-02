@@ -114,6 +114,11 @@
     name: wyga/docker
   when: host.setup.docker is defined
 
+- name: "Firewall ..."
+  include_role:
+    name: wyga/firewall
+  when: host.firewall is defined
+
 - name: "Canonicalization of group configuation ..."
   include_tasks: "normalize-group.yaml"
   loop: "{{ host.group }}"
