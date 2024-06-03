@@ -1,0 +1,5 @@
+require:
+  - ethtool
+  - lm-sensors
+  - smartmontools
+  - wireless-regdb
