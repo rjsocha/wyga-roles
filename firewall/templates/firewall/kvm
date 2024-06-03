@@ -40,6 +40,19 @@ COMMIT
 :POSTROUTING ACCEPT [0:0]
 :INPUT ACCEPT [0:0]
 :OUTPUT ACCEPT [0:0]
+{% if host.firewall.mapping is defined %}
+{% for rule in host.firewall.mapping %}
+{% set dst = rule.from | split(':') | first %}
+{% set dport = rule.from | split(':') | last %}
+-A PREROUTING
+  {{- ' -m ' ~ rule.proto if rule.proto is defined else ' -m tcp' -}}
+  {{- ' -p ' ~ rule.proto if rule.proto is defined else ' -p tcp' -}}
+  {{- ' -i ' ~ rule.in if rule.in is defined else '' -}}
+  {{- ' --dport ' ~ dport -}}
+  {{- ' -d ' ~ dst -}}
+  {{ '' }} -j DNAT --to {{ rule.to }}
+{% endfor %}
+{% endif %}
 {% if host.firewall.kvm.forward is defined %}
 -A POSTROUTING -s {{ ','.join(host.firewall.kvm.forward) }} -d {{ vm_subnet }} -j ACCEPT
 -A POSTROUTING -d {{ ','.join(host.firewall.kvm.forward) }} -s {{ vm_subnet }} -j ACCEPT
