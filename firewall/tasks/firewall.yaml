@@ -3,7 +3,7 @@
     that:
       - host.setup.kvm.network.subnet is defined
     msg: "Missing KVM subnet configuration ..."
-  when: host.firewall.profile == 'kvm'
+  when: host.firewall.profile is defined and host.firewall.profile == 'kvm'
 
 - name: "Prepare rules bucket ..."
   set_fact:
