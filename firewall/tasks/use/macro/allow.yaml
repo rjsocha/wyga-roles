@@ -16,13 +16,18 @@
 
 - name: "Process allow/vpn ..."
   block:
+    - name: "Append allow/vpn rules ..."
+      set_fact:
+        fwrule_vpn:
+          - { 'iface': 'overlay0' }
+          - { 'dport': '4242', 'match': 'udp', 'proto': 'udp' }
     - name: "Append rule ..."
       set_fact:
-        fwrules: "{{ fwrules + [ { 'iface': 'overlay0' } ] }}"
+        fwrules: "{{ fwrules + fwrule_vpn }}"
         rule_parsed: true
   when: rule.allow == 'vpn'
 
-- name: "Process allow/vpn ..."
+- name: "Process allow/ssh ..."
   block:
     - name: "Extract config name ..."
       set_fact:
