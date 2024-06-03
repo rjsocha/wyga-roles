@@ -2,27 +2,36 @@
 # .vm-kvm
 # .docker
 require:
-  - sudo
-  - lsb-release
   - apt-utils
+  - bash-completion
+  - bzip2
+  - curl
+  - distro-info-data
+  - dnsutils
+  - git
+  - haveged
+  - iptraf-ng
+  - less
+  - lsb-release
+  - lsof
+  - mc
+  - mtr-tiny
+  - openssh-client
+  - openssh-server
+  - openssh-sftp-server
   - python3-apt
   - python-apt-common
-  - tmux
-  - screen
-  - tcpdump
-  - mc
-  - haveged
-  - wget
-  - curl
-  - zstd
-  - openssh-server
-  - openssh-client
-  - openssh-sftp-server
-  - less
-  - vim
-  - sysstat
   - rsync
-  - mtr-tiny
+  - screen
+  - sudo
+  - sysstat
+  - tcpdump
+  - tmux
+  - unzip
+  - vim
+  - wget
+  - xz-utils
+  - zstd
   - qemu-guest-agent
   - linux-image-virtual
   - docker-ce
