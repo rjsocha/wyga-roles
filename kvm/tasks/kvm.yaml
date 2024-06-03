@@ -1,0 +1,71 @@
+- name: "KVM / Configuration check ..."
+  assert:
+    that:
+      - host.setup.kvm.network is defined
+    msg: "Missing KVM network definition ..."
+
+- name: "KVM / Install KVM subsystem ..."
+  include_role:
+    name: wyga/install-package-override
+  vars:
+    packages:
+      - .kvm-system
+      - guestfs-tools
+
+- name: "KVM / Configuration"
+  file:
+    path: "/etc/site/kvm"
+    state: directory
+
+- name: "KVM / Network configuration (check) ..."
+  template:
+    src: "network/default"
+    dest: "/etc/site/kvm/network"
+    group: root
+    owner: root
+    mode: 0600
+  check_mode: true
+  register: default_network
+
+- name: "KVM / Configure defualt network ..."
+  block:
+    - name: "KVM / Define default network ..."
+      community.libvirt.virt_net:
+        command: destroy
+        name: default
+
+    - name: "KVM / Define default network ..."
+      community.libvirt.virt_net:
+        command: undefine
+        name: default
+  rescue:
+    - name: "KVM / Continue ..."
+      debug: msg='.'
+  when: default_network.changed
+
+- name: "KVM / Create default network ..."
+  block:
+    - name: "KVM / Define default network ..."
+      community.libvirt.virt_net:
+        command: define
+        name: default
+        xml: '{{ lookup("template", "network/default") }}'
+
+    - name: "KVM / Start default network ..."
+      community.libvirt.virt_net:
+        command: create
+        name: default
+
+    - name: "KVM / Mark autostart on default network ..."
+      community.libvirt.virt_net:
+        name: default
+        autostart: true
+  when: host.setup.kvm.network is not string
+
+- name: "KVM / Network configuration marker ..."
+  template:
+    src: "network/default"
+    dest: "/etc/site/kvm/network"
+    group: root
+    owner: root
+    mode: 0600

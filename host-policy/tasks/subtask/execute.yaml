@@ -119,6 +119,11 @@
     name: wyga/firewall
   when: host.firewall is defined
 
+- name: "KVM Subsystem ..."
+  include_role:
+    name: wyga/kvm
+  when: host.setup.kvm is defined
+
 - name: "Canonicalization of group configuation ..."
   include_tasks: "normalize-group.yaml"
   loop: "{{ host.group }}"
@@ -186,6 +191,11 @@
 
 - name: "Configure /etc/ssh/sshd_config"
   include_tasks: "update-ssh.yaml"
+
+- name: "Configure KVM Profile ..."
+  include_role:
+    name: wyga/kvm-profile
+  when: host.setup.kvm is defined
 
 - name: "Policy marker ..."
   include_tasks: "mark-policy.yaml"

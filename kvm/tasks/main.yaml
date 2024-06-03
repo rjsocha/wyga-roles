@@ -1,0 +1,4 @@
+---
+- name: "Configure KVM Subsystem ..."
+  include_tasks: kvm.yaml
+  when: host.setup.kvm is defined

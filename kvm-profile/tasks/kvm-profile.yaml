@@ -1,0 +1,24 @@
+- name: "KVM / Cloud profile setup ..."
+  block:
+    - name: "KVM / Select profile owner ..."
+      set_fact:
+        profile_owner: "{{ host.setup.kvm.owner if host.setup.kvm.owner is defined else 'vm' }}"
+
+    - name: "KVM / Create cloud profile directory structure ..."
+      file:
+        path: "{{ kvm_profile.path }}"
+        owner: "{{ kvm_profile.owner }}"
+        group: "{{ kvm_profile.group }}"
+        state: directory
+        mode: "{{ kvm_profile.mode }}"
+      loop:
+        - { 'path': '/storage', 'mode': '0755', 'owner': 'root', 'group': 'root' }
+        - { 'path': '/storage/vm', 'mode': '0755', 'owner': 'root', 'group': 'root' }
+        - { 'path': '/storage/vm/template', 'mode': '0755', 'owner': 'root', 'group': 'root' }
+        - { 'path': '/storage/vm/template/cloud', 'mode': '0755', 'owner': '{{ profile_owner }}', 'group': '{{ profile_owner }}' }
+        - { 'path': '/storage/vm/log', 'mode': '0750', 'owner': '{{ profile_owner }}', 'group': '{{ profile_owner }}' }
+        - { 'path': '/storage/vm/instance', 'mode': '0751', 'owner': '{{ profile_owner }}', 'group': '{{ profile_owner }}' }
+      loop_control:
+        loop_var: kvm_profile
+        label: "{{ kvm_profile.path }}"
+  when: host.setup.kvm.profile is defined and host.setup.kvm.profile | lower == 'cloud'

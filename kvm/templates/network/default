@@ -1,0 +1,24 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+{% if host.setup.kvm.network is string %}
+NETWORK: {{ host.setup.kvm.network }}
+{% else %}
+{% set vm_if = host.setup.kvm.network.interface | default('vm0') %}
+{% set vm_domain = host.setup.kvm.network.domain | default('vm') %}
+{% set vm_subnet = host.setup.kvm.network.subnet %}
+{% set vm_gw = vm_subnet | ipaddr('1') | ipaddr('address') %}
+<network xmlns:dnsmasq='http://libvirt.org/schemas/network/dnsmasq/1.0'>>
+  <name>default</name>
+  <forward mode='open'/>
+  <bridge name='{{ vm_if }}' stp='off' delay='0'/>
+  <domain name='{{ vm_domain }}'/>
+  <ip address='{{ vm_gw }}' netmask='{{ vm_subnet | ipaddr('netmask') }}'>
+    <dhcp>
+      <range start='{{ vm_subnet | ipaddr('256') | ipaddr('address') }}' end='{{ vm_subnet | ipaddr('last_usable') | ipaddr('address') }}'/>
+    </dhcp>
+  </ip>
+  <dnsmasq:options>
+    <dnsmasq:option value="dhcp-rapid-commit"/>
+    <dnsmasq:option value="no-ping"/>
+  </dnsmasq:options>
+</network>
+{% endif %}

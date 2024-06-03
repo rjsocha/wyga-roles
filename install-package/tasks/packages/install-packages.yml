@@ -13,6 +13,11 @@
   until: _action is success
 
 - name: "Install packages ..."
+  debug:
+    msg:
+      - "Starting package installation ..."
+
+- name: "Install packages ..."
   apt:
     name: "{{ __packages }}"
     state: latest

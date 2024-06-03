@@ -1,0 +1,4 @@
+---
+- name: "Configure KVM Subsystem Profile ..."
+  include_tasks: kvm-profile.yaml
+  when: host.setup.kvm is defined
