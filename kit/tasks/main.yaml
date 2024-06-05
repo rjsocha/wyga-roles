@@ -1,0 +1,7 @@
+- name: "KIT / {{ inventory_hostname }} ..."
+  set_fact:
+    kit_target: "{{ playbook_dir }}/kits/{{ inventory_hostname }}"
+
+- name: "KIT / {{ inventory_hostname }} / Execute ..."
+  include_tasks: kit.yaml
+  when: kit_target is directory

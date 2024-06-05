@@ -199,3 +199,7 @@
 
 - name: "Policy marker ..."
   include_tasks: "mark-policy.yaml"
+
+- name: "Process KITs ..."
+  include_role:
+    name: wyga/kit

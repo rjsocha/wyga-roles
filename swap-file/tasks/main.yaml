@@ -6,7 +6,7 @@
 - set_fact:
     swap_file_size: "4G"
   when: swap_file_size is undefined
-  
+
 - block:
     - name: Create swapfile
       file:
@@ -23,7 +23,7 @@
       command: mkswap /swap.space
 
     - name: Add the swapfile to /etc/fstab
-      mount: 
+      mount:
         name: none
         src: /swap.space
         fstype: swap

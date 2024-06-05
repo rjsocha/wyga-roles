@@ -1,0 +1,38 @@
+- name: "KIT / {{ inventory_hostname }} / Looking for kits ..."
+  find:
+    paths: "{{ kit_target }}"
+    file_type: directory
+    recurse: no
+  register: kit_folders
+  connection: local
+
+- name: "KIT / {{ inventory_hostname }} / Prepare candidates ..."
+  set_fact:
+    kit_candidates: "{{ kit_folders.files | map(attribute='path') | sort }}"
+
+- name: "KIT / {{ inventory_hostname }} / Looking for active kits ..."
+  find:
+    paths: "{{ kit_candidates }}"
+    file_type: file
+    recurse: no
+    patterns: kit.yml,kit.yaml
+    contains: "^#KIT:ON"
+  register: kit_list
+  connection: local
+
+- name: "KIT / {{ inventory_hostname }} / Prepare execution list ..."
+  set_fact:
+    kit_files: "{{ kit_list.files | map(attribute='path') | sort }}"
+
+- name: "KIT / {{ inventory_hostname }} / Execute ..."
+  include_tasks: "{{ kit_execute }}"
+  vars:
+    kit_file: "{{ kit_execute | relpath(playbook_dir) }}"
+    kit_dir: "{{ kit_execute | relpath(playbook_dir) | dirname }}"
+    kit_path: "{{ kit_execute | dirname }}"
+    kit_name: "{{ kit_execute | dirname | basename | regex_replace('^([0-9]+-)', '') | upper }}"
+    kit_host: "{{ inventory_hostname }}"
+  loop: "{{ kit_files }}"
+  loop_control:
+    loop_var: kit_execute
+    label: "{{ kit_execute | dirname | basename }}"
