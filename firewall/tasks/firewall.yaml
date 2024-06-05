@@ -30,6 +30,7 @@
   register: pkg_installed
   ignore_errors: yes
   no_log: true
+  changed_when: false
 
 - name: "Install iptables persistent ..."
   include_role:
