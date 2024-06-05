@@ -30,7 +30,7 @@
     kit_file: "{{ kit_execute | relpath(playbook_dir) }}"
     kit_dir: "{{ kit_execute | relpath(playbook_dir) | dirname }}"
     kit_path: "{{ kit_execute | dirname }}"
-    kit_name: "{{ kit_execute | dirname | basename | regex_replace('^([0-9]+-)', '') | upper }}"
+    kit_name: "{{ kit_execute | dirname | basename | regex_replace('^([0-9]+-)', '') | replace('-',' ') | upper }}"
     kit_host: "{{ inventory_hostname }}"
   loop: "{{ kit_files }}"
   loop_control:
