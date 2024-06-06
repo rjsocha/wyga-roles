@@ -25,13 +25,6 @@
     fw_input_rules: "{{ fwrules }}"
     fwrules: []
 
-- name: "Check if required packages are installed ..."
-  command: dpkg-query -W netfilter-persistent iptables-persistent
-  register: pkg_installed
-  ignore_errors: yes
-  no_log: true
-  changed_when: false
-
 - name: "Install iptables persistent ..."
   include_role:
     name: wyga/install-package-override
@@ -40,7 +33,6 @@
       - -ufw
       - netfilter-persistent
       - iptables-persistent
-  when: pkg_installed is failed
 
 - name: "Generate firewall configuration ..."
   template:
