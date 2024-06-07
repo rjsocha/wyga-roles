@@ -52,4 +52,4 @@
         loop_var: etc_hosts_file
         label: "{{ etc_hosts_file.path }}"
       when: etc_hosts_cleanup.files | length > 0
-  when: force_hosts_update is defined or host.hosts is defined (hostname_changed is defined and hostname_changed.changed)
+  when: force_hosts_update is defined or host.hosts is defined or (hostname_changed is defined and hostname_changed.changed)
