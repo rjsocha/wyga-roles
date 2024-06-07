@@ -1,3 +1,11 @@
+---
+- name: "Process allow/any ..."
+  block:
+    - name: "Append rule ..."
+      set_fact:
+        fwrules: "{{ fwrules + [ { 'any': 'any' } ] }}"
+        rule_parsed: true
+  when: rule.allow == 'any'
 
 - name: "Process allow/http ..."
   block:

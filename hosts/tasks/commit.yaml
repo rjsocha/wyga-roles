@@ -1,0 +1,4 @@
+---
+- debug: msg="Notify hosts handler ..."
+  changed_when: true
+  notify: hosts-commit

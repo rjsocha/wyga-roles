@@ -1,0 +1,19 @@
+---
+- name: "HOSTS / Verify /etc/hosts entry ..."
+  assert:
+    that:
+      - HostsEntry.ip is defined and HostsEntry.ip is string
+      - HostsEntry.name is defined
+
+- name: "HOSTS / Normalize entry ..."
+  set_fact:
+    WHEntry: "{{ { 'ip': HostsEntry.ip, 'name': [ HostsEntry.name ] } if HostsEntry.name is string else HostsEntry }}"
+
+- name: "HOSTS / Append/Update hosts entry ..."
+  set_fact:
+    wyga_hosts_registry: >-
+      {{
+        wyga_hosts_registry | selectattr('ip', 'eq', WHEntry.ip) | map('combine', WHEntry,list_merge='append_rp') | list
+        + wyga_hosts_registry | selectattr('ip', 'ne', WHEntry.ip) | list
+        if wyga_hosts_registry | selectattr('ip', 'eq', WHEntry.ip) | list | length > 0 else wyga_hosts_registry + [ WHEntry ]
+      }}

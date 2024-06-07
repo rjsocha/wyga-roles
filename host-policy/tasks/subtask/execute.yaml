@@ -1,6 +1,7 @@
 ---
 - name: "Hostname setup ..."
-  include_tasks: "hostname.yaml"
+  include_role:
+    name: wyga/hostname
   when: skip_hostname is not defined
 
 - name: "Network configuration (systemd) ..."

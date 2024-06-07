@@ -1,0 +1,6 @@
+docker:
+  max-concurrent-uploads: 1
+  bip: 172.20.0.1/24
+  default-address-pools:
+    - base: 172.20.0.0/16
+      size: 24

@@ -1,0 +1,17 @@
+---
+- name: "HOSTS / Sort hosts ..."
+  set_fact:
+    wyga_hosts_loopback: "{{ wyga_hosts_registry | selectattr('ip', 'match', '^127\\.') | list }}"
+    wyga_hosts_other: "{{ wyga_hosts_registry | rejectattr('ip', 'match', '^127\\.') | list }}"
+
+- name: "HOSTS / Preapre final list ..."
+  set_fact:
+     wyga_hosts_apply: "{{ wyga_hosts_loopback | sort(attribute='ip') + wyga_hosts_other | sort(attribute='ip') }}"
+
+- name: "HOSTS / Generate /etc/hosts file ..."
+  template:
+    src: "hosts/generic"
+    dest: "/etc/hosts"
+    group: root
+    owner: root
+    mode: 0644

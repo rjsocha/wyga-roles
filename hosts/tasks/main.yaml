@@ -1,0 +1,8 @@
+---
+- name: "HOSTS / Append entry for /etc/hosts ..."
+  include_tasks: append.yaml
+  when: HostsEntry is defined
+
+- name: "HOSTS / Notify commit handler ..."
+  include_tasks: commit.yaml
+  when: HostsCommit is defined

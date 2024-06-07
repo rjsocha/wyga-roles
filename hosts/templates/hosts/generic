@@ -1,0 +1,14 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+127.0.0.1	        localhost
+::1               ip6-localhost ip6-loopback
+fe00::0           ip6-localnet
+ff00::0           ip6-mcastprefix
+ff02::1           ip6-allnodes
+ff02::2           ip6-allrouters
+
+{% if wyga_hosts_apply is defined and wyga_hosts_apply | length > 0 %}
+{% set max_ip_length = wyga_hosts_apply | map(attribute='ip') | map('length') | max %}
+{% for entry in wyga_hosts_apply %}
+{{ ('%-16s') | format(entry.ip) }}  {{ entry.name | zip(entry.name|map('count')) | sort(attribute=1,reverse=true) | map(attribute=0) | list | join(' ')}}
+{% endfor %}
+{% endif %}

@@ -45,7 +45,7 @@
     - name: "Clone MAC for the bridge ..."
       template:
         src: "network/bridge/clone-name"
-        dest: "/etc/systemd/network/00-bridge-clone-{{ bridge.name }}.link"
+        dest: "/etc/systemd/network/01-bridge-clone-{{ bridge.name }}.link"
         group: root
         owner: root
         mode: 0644
@@ -55,5 +55,5 @@
         bridge_changed: "{{ bridge_changed or bridge_change.changed }}"
     - name: "Mark configuration of bridge as managed ..."
       set_fact:
-        networkd_managed_files: "{{ networkd_managed_files + [ '00-bridge-clone-' ~ bridge.name ~ '.link' ] }}"
+        networkd_managed_files: "{{ networkd_managed_files + [ '01-bridge-clone-' ~ bridge.name ~ '.link' ] }}"
   when: bridge.mac is defined and bridge.mac == 'clone'
