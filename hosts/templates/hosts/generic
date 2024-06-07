@@ -1,5 +1,5 @@
 #jinja2: trim_blocks: True, lstrip_blocks: True
-127.0.0.1	        localhost
+127.0.0.1         localhost
 ::1               ip6-localhost ip6-loopback
 fe00::0           ip6-localnet
 ff00::0           ip6-mcastprefix
