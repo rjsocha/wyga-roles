@@ -14,8 +14,8 @@
       when: wyga_system_network.changed
 
     - meta: end_host
-      when: wyga_system_network.changed and network_follow_anyway is not defined
-  when: skip_network is not defined and host.network.skip is not defined and host.network.interface is defined
+      when: wyga_system_network.changed and network_stop_on_change is defined
+  when: skip_network is not defined and host.network.skip is not defined and host.network is defined
 
 - name: "Trigger any pending reboots ..."
   meta: flush_handlers
