@@ -10,32 +10,8 @@
   register: hostname_changed
   when: host.hostname != 'generic' and ansible_nodename != host.hostname
 
-- name: "Manage /etc/hosts ..."
+- name: "Cleanup /etc/hosts backups ..."
   block:
-    - name: "Update /etc/hosts file ..."
-      include_role:
-        name: wyga/hosts
-      vars:
-        HostsCommit: yes
-        HostsEntry:
-          ip: 127.0.1.1
-          name:
-            - "{{ host.hostname }}"
-            - "{{ _host_short_hostname }}"
-
-    - name: "Custom /etc/hosts entries ..."
-      include_role:
-        name: wyga/hosts
-      vars:
-        HostsEntry:
-          ip: "{{ entry.ip }}"
-          name: "{{ entry.name }}"
-      loop: "{{ host.hosts }}"
-      loop_control:
-        loop_var: entry
-        label: "{{ entry.ip }}"
-      when: host.hosts is defined
-
     - name: "Looking for backup files ..."
       find:
         paths: /etc
@@ -52,4 +28,31 @@
         loop_var: etc_hosts_file
         label: "{{ etc_hosts_file.path }}"
       when: etc_hosts_cleanup.files | length > 0
-  when: force_hosts_update is defined or host.hosts is defined or (hostname_changed is defined and hostname_changed.changed)
+  when: force_hosts_update is defined
+
+- name: "Update /etc/hosts file (hostname) ..."
+  include_role:
+    name: wyga/hosts
+  vars:
+    HostsCommit: yes
+    HostsEntry:
+      ip: 127.0.1.1
+      name:
+        - "{{ host.hostname }}"
+        - "{{ _host_short_hostname }}"
+
+- name: "Manage /etc/hosts ..."
+  block:
+    - name: "Custom /etc/hosts entries ..."
+      include_role:
+        name: wyga/hosts
+      vars:
+        HostsEntry:
+          ip: "{{ entry.ip }}"
+          name: "{{ entry.name }}"
+      loop: "{{ host.hosts }}"
+      loop_control:
+        loop_var: entry
+        label: "{{ entry.ip }}"
+      when: host.hosts is defined
+  when: host.hosts is defined
