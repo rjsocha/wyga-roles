@@ -14,9 +14,9 @@ Address={{ ip }}
 {% endfor %}
 {% if interface.dns is defined %}
 DNS={{ interface.dns | ipaddr('address') | join(' ') }}
+{% endif %}
 {% if interface.domains is defined %}
 Domains={{ interface.domains }}
-{% endif %}
 {% endif %}
 LLMNR=no
 {% for route in routes %}

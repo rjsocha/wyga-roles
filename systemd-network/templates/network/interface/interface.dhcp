@@ -13,9 +13,9 @@ IPv6AcceptRA={{ 'yes' if interface.ra | default(false) else 'no' }}
 LinkLocalAddressing={{ interface.lla | default('ipv6') | string }}
 {% if interface.dns is defined %}
 DNS={{ interface.dns | ipaddr('address') | join(' ') }}
-{% if interface.netowk.domains is defined %}
-Domains={{ interface.domains }}
 {% endif %}
+{% if interface.domains is defined %}
+Domains={{ interface.domains }}
 {% endif %}
 LLMNR=no
 {% for route in routes %}

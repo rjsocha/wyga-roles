@@ -1,7 +1,3 @@
 - name: "Apply ether/dhcp template ..."
   set_fact:
-    interface:
-      match:
-        type: ether
-        driver: any
-      method: dhcp
+    interface: "{{ {} | combine({ 'match': { 'type': 'ether', 'driver': 'any' }, 'method': 'dhcp' }) | combine(interface_entry) | combine({'use': omit}) }}"
