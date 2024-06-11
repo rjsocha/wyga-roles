@@ -1,7 +1,7 @@
 ---
 - name: "Select policy ..."
   set_fact:
-    select_policy: "{{ inventory_hostname }}"
+    select_policy: "{{ inventory_hostname | basename }}"
   when: select_policy is not defined
 
 # refrain from coding in YAML ...
