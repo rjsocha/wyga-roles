@@ -3,6 +3,7 @@ monitoring:
     - apt
     - kernel-check
     - os-release
+    - unmanaged
   plugins:
     - ssh-policy
     - logwatch
