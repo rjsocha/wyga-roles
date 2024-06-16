@@ -26,6 +26,7 @@ require:
   - sudo
   - sysstat
   - systemd-resolved
+  - systemd-timesyncd
   - tcpdump
   - tmux
   - unzip
