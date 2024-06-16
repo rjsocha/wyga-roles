@@ -1,0 +1,7 @@
+---
+- name: "SYSTEMD / timesyncd ..."
+  systemd:
+    state: started
+    name: systemd-resolved
+    enabled: true
+    masked: false

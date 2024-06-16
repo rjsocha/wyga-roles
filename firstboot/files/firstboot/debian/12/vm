@@ -105,3 +105,7 @@ purge:
   - bind9-dnsutils
   - bind9-host
   - publicsuffix
+  - ntp
+  - watchdog
+  - ntpsec
+  - python3-ntp

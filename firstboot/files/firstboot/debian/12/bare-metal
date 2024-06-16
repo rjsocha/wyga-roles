@@ -67,3 +67,7 @@ purge:
   - util-linux-locales
   - mailcap
   - mime-support
+  - ntp
+  - watchdog
+  - ntpsec
+  - python3-ntp
