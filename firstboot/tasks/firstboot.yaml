@@ -69,20 +69,18 @@
 
 # Disable misc services ...
 # Debian/Vultr cloud-init-local.service
-- name: "Firstboot cleanup (misc) ..."
-  block:
-    - name: "Stop/Disable misc services ..."
-      systemd:
-        name: "{{ stop_service }}"
-        state: stopped
-        enabled: false
-      loop:
-        - cloud-init-local.service
-      loop_control:
-        loop_var: stop_service
-        label: "stop {{ stop_service }} service"
-      ignore_errors: yes
-      changed_when: false
+- name: "Stop/Disable misc services ..."
+  systemd:
+    name: "{{ stop_service }}"
+    state: stopped
+    enabled: false
+  loop:
+    - cloud-init-local.service
+  loop_control:
+    loop_var: stop_service
+    label: "stop {{ stop_service }} service"
+  ignore_errors: yes
+  changed_when: false
 
 - name: "Create {{ host_policy_dir }}/firstboot ..."
   block:

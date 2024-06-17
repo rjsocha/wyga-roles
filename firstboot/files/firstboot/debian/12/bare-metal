@@ -128,3 +128,12 @@ purge:
   - xdg-user-dirs
   - xkb-data
   - zlib1g-dev
+  - gpg
+  - gpgconf
+  - libassuan0
+  - pkgconf-bin
+  - pkgconf
+  - pkg-config
+  - parted
+  - libparted2
+  - libpkgconf3
