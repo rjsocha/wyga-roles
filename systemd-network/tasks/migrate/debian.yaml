@@ -23,13 +23,33 @@
     path: /etc/network/interfaces
     state: absent
 
+- name: "Clear facts ..."
+  ansible.builtin.meta: clear_facts
+
 - name: "Collect services facts ..."
   ansible.builtin.service_facts:
+
+- name: "Disable networking.service (debug-1) ..."
+  debug:
+    msg:
+      - "networking.service present ..."
+  when: "'networking.service' in ansible_facts.services"
+
+- name: "networking.service (reload) ..."
+  systemd:
+    daemon_reload: true
+
+- name: "Disable networking.service (debug-2) ..."
+  debug:
+    msg:
+      - "networking.service present ..."
+  when: "'networking.service' in ansible_facts.services"
 
 - name: "Disable networking.service ..."
   systemd:
     name: networking.service
     enabled: false
+  ignore_errors: true
   when: "'networking.service' in ansible_facts.services"
 
 - name: "Enable systemd-networkd.service ..."
