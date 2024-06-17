@@ -94,6 +94,24 @@
   ignore_errors: yes
   changed_when: false
 
+- name: "Collect services facts ..."
+  ansible.builtin.service_facts:
+
+- name: "Digital Ocean cleanup ..."
+  block:
+    - name: "Remove /etc/apt/sources.list.d/droplet-agent.list ..."
+      file:
+        path: /etc/apt/sources.list.d/droplet-agent.list
+        state: absent
+
+    - name: "Purge packages ..."
+      include_tasks: "packages/purge-packages.yml"
+      vars:
+        purge_list:
+          - droplet-agent
+          - droplet-agent-keyring
+  when: 'droplet-agent.service' in ansible_facts.services
+
 - name: "Create {{ host_policy_dir }}/firstboot ..."
   block:
     - name: "Create {{ host_policy_dir }} directory ..."

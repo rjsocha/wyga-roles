@@ -27,6 +27,18 @@
   retries: 25
   until: _action is success or ('Failed to lock apt for exclusive operation' not in _action.msg and '/var/lib/dpkg/lock' not in _action.msg)
 
+# Digital Ocean
+- name: "Cleanup providers files ..."
+  file:
+    path: "{{ provider_cleanup }}"
+    state: absent
+  loop:
+    - /etc/udev/rules.d/70-persistent-net.rules
+    - /etc/udev/rules.d/99-digitalocean-automount.rules
+  loop_control:
+    loop_var: provider_cleanup
+    label: "{{ provider_cleanup }}"
+
 - name: "Create /etc/site/network directory ..."
   file:
     path: "/etc/site/network"

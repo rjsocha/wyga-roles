@@ -46,7 +46,19 @@
     - /usr/lib/python3/dist-packages/netplan
   loop_control:
     loop_var: netplan_cleanup
-    label: "{{ netplan_cleanup}}"
+    label: "{{ netplan_cleanup }}"
+
+# Digital Ocean
+- name: "Cleanup providers files ..."
+  file:
+    path: "{{ provider_cleanup }}"
+    state: absent
+  loop:
+    - /etc/udev/rules.d/70-persistent-net.rules
+    - /etc/udev/rules.d/99-digitalocean-automount.rules
+  loop_control:
+    loop_var: provider_cleanup
+    label: "{{ provider_cleanup }}"
 
 - name: "Enable systemd-networkd.service ..."
   systemd:
