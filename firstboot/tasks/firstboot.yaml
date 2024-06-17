@@ -81,8 +81,8 @@
     - cloud-init.target
   loop_control:
     loop_var: stop_service
-    label: "stop {{ stop_service }} service"
-  when: stop_service in ansible_facts.services
+    label: "{{ stop_service }}"
+  when: ansible_facts.services[stop_service] is defined
 
 # Disable misc services ...
 # Vultr's Debian image sucks a lot ... :/
@@ -101,10 +101,10 @@
     - cloud-init.target
   loop_control:
     loop_var: stop_service
-    label: "stop {{ stop_service }} service"
+    label: "{{ stop_service }}"
   ignore_errors: yes
   changed_when: false
-  when: stop_service in ansible_facts.services
+  when: ansible_facts.services[stop_service] is defined
 
 - name: "Vultr cleanup (debian) ..."
   command:
