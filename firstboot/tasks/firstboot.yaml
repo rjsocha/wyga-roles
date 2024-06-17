@@ -95,6 +95,9 @@
   ignore_errors: yes
   changed_when: false
 
+- name: "Collect services facts ..."
+  ansible.builtin.service_facts:
+
 - name: "Digital Ocean cleanup ..."
   block:
     - name: "Remove /etc/apt/sources.list.d/droplet-agent.list ..."
