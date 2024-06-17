@@ -12,4 +12,8 @@
     - name: "Debian network migration ..."
       include_tasks: migrate/debian.yaml
       when: target_distribution == 'debian'
+
+    - name: "Ubuntu network migration ..."
+      include_tasks: migrate/ubuntu.yaml
+      when: target_distribution == 'ubuntu'
   when: not net_migration_status.stat.exists

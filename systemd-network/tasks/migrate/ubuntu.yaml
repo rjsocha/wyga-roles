@@ -1,0 +1,66 @@
+- name: "Purge packages ..."
+  apt:
+    name:
+      - netplan.io
+      - libnetplan0
+      - libyaml-0-2
+      - python3-dbus
+      - python3-netifaces
+      - python3-yaml
+      - python3-gi
+    state: absent
+    autoremove: yes
+    purge: yes
+  register: _action
+  retries: 25
+  until: _action is success or ('Failed to lock apt for exclusive operation' not in _action.msg and '/var/lib/dpkg/lock' not in _action.msg)
+  when: target_distribution_version == '22.04'
+
+- name: "Purge packages ..."
+  apt:
+    name:
+      - netplan.io
+      - libnetplan1
+      - libyaml-0-2
+      - netplan-generator
+      - python3-cffi-backend
+      - python3-dbus
+      - python3-netifaces
+      - python3-netplan
+      - python3-yaml
+    state: absent
+    autoremove: yes
+    purge: yes
+  register: _action
+  retries: 25
+  until: _action is success or ('Failed to lock apt for exclusive operation' not in _action.msg and '/var/lib/dpkg/lock' not in _action.msg)
+  when: target_distribution_version == '24.04'
+
+- name: "Cleanup after netplan ..."
+  file:
+    path: "{{ netplan_cleanup }}"
+    state: absent
+  loop:
+    - /etc/netplan
+    - /usr/share/netplan
+  loop_control:
+    loop_var: netplan_cleanup
+    label: "{{ netplan_cleanup}"
+
+- name: "Enable systemd-networkd.service ..."
+  systemd:
+    name: systemd-networkd.service
+    enabled: true
+
+- name: "Create /etc/site/network directory ..."
+  file:
+    path: "/etc/site/network"
+    state: directory
+
+- name: "Create migration marker ..."
+  copy:
+    content: "systemd-networkd"
+    dest: "/etc/site/network/mode"
+    mode: "0644"
+    owner: "root"
+    group: "root"
