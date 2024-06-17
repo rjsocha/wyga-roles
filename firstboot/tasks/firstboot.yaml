@@ -110,7 +110,7 @@
         purge_list:
           - droplet-agent
           - droplet-agent-keyring
-  when: 'droplet-agent.service' in ansible_facts.services
+  when: "'droplet-agent.service' in ansible_facts.services"
 
 - name: "Create {{ host_policy_dir }}/firstboot ..."
   block:
