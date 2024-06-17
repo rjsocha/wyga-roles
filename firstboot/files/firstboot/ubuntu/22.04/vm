@@ -279,3 +279,13 @@ purge:
   - xtrans-dev
   - xxd
   - zerofree
+  - libopenblas-pthread-dev
+  - liblapack-dev
+  - libopenblas-dev
+  - libblas-dev
+  - libblas3
+  - libgfortran5
+  - liblapack3
+  - libopenblas0
+  - libopenblas0-pthread
+  - libquadmath0

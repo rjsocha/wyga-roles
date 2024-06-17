@@ -43,6 +43,7 @@
   loop:
     - /etc/netplan
     - /usr/share/netplan
+    - /usr/lib/python3/dist-packages/netplan
   loop_control:
     loop_var: netplan_cleanup
     label: "{{ netplan_cleanup}}"

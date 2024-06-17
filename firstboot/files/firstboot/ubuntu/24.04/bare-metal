@@ -2,6 +2,7 @@ purge:
   - accountsservice
   - acct
   - acpid
+  - apache2-utils
   - apport
   - apport-core-dump-handler
   - apport-symptoms
@@ -64,9 +65,10 @@ purge:
   - ibverbs-providers
   - inetutils-telnet
   - info
-  - iwd
   - install-info
   - iso-codes
+  - iwd
+  - javascript-common
   - jq
   - kbd
   - keyboard-configuration
@@ -75,9 +77,13 @@ purge:
   - krb5-locales
   - landscape-common
   - libappstream5
+  - libapr1t64
+  - libaprutil1t64
   - libarchive13
   - libatasmart4
   - libatm1
+  - libblas-dev
+  - libblas3
   - libblockdev-crypto3
   - libblockdev-fs3
   - libblockdev-loop3
@@ -89,6 +95,9 @@ purge:
   - libblockdev3
   - libbytesize-common
   - libbytesize1
+  - libc-dev-bin
+  - libc6-dev
+  - libcrypt-dev
   - libcurl3-gnutls
   - libdbus-glib-1-2
   - libdrm-common
@@ -99,9 +108,11 @@ purge:
   - libell0
   - liberror-perl
   - libevdev2
+  - libexpat1-dev
   - libflashrom1
   - libftdi1-2
   - libfwupd2
+  - libgfortran5
   - libgirepository-1.0-1
   - libglib2.0-bin
   - libglib2.0-data
@@ -117,9 +128,14 @@ purge:
   - libisns0
   - libjcat1
   - libjq1
+  - libjs-jquery
+  - libjs-sphinxdoc
+  - libjs-underscore
   - libjson-glib-1.0-0
   - libjson-glib-1.0-common
   - libksba8
+  - liblapack-dev
+  - liblapack3
   - liblmdb0
   - liblzo2-2
   - libmaxminddb0
@@ -137,6 +153,10 @@ purge:
   - libnuma1
   - libnvme1
   - libonig5
+  - libopenblas-dev
+  - libopenblas-pthread-dev
+  - libopenblas0
+  - libopenblas0-pthread
   - libopeniscsiusr
   - libpackagekit-glib2-18
   - libpam-cap
@@ -148,6 +168,8 @@ purge:
   - libpolkit-gobject-1-0
   - libproc-processtable-perl
   - libprotobuf-c1
+  - libpython3-dev
+  - libpython3.12-dev
   - libqmi-glib5
   - libqmi-proxy
   - libqmi-utils
@@ -169,13 +191,21 @@ purge:
   - libusbmuxd6
   - libuv1
   - libvolume-key1
+  - libx11-6
+  - libx11-data
+  - libxau6
+  - libxcb1
+  - libxdmcp6
+  - libxext6
   - libxkbcommon0
   - libxml2
   - libxmlb2
   - libxmlsec1
   - libxmlsec1-openssl
+  - libxmuu1
   - libxslt1.1
   - linux-headers-*
+  - linux-libc-dev
   - lshw
   - lsof
   - lxd-agent-loader
@@ -222,6 +252,7 @@ purge:
   - python3-cryptography
   - python3-debconf
   - python3-debian
+  - python3-dev
   - python3-distro-info
   - python3-distupgrade
   - python3-distutils
@@ -267,6 +298,8 @@ purge:
   - python3-wadllib
   - python3-xkit
   - python3-zope.interface
+  - python3.12-dev
+  - rpcsvc-proto
   - run-one
   - sg3-utils
   - sg3-utils-udev
@@ -298,14 +331,10 @@ purge:
   - usbmuxd
   - uuid-runtime
   - vim-tiny
+  - wamerican
+  - watchdog
+  - xauth
   - xkb-data
   - xml-core
   - zerofree
-  - libx11-6
-  - libx11-data
-  - libxau6
-  - libxcb1
-  - libxdmcp6
-  - libxext6
-  - libxmuu1
-  - xauth
+  - zlib1g-dev
