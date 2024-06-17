@@ -151,3 +151,13 @@ purge:
   - xdg-user-dirs
   - xkb-data
   - zlib1g-dev
+  - exim4-base
+  - exim4-config
+  - exim4-daemon-light
+  - libevent-2.1-7
+  - libgnutls-dane0
+  - libidn12
+  - liblockfile-bin
+  - liblockfile1
+  - libunbound8
+  - bsd-mailx
