@@ -88,7 +88,7 @@
   loop_control:
     loop_var: stop_service
     label: "stop {{ stop_service }} service"
-  when: stop_service in ansible_facts.services"
+  when: stop_service in ansible_facts.services
   ignore_errors: yes
   changed_when: false
 
