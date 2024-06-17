@@ -68,6 +68,7 @@
       changed_when: false
 
 # Disable misc services ...
+# Vultr's Debian image sucks a lot ... :/
 # Debian/Vultr cloud-init-local.service
 - name: "Stop/Disable misc services ..."
   systemd:
@@ -76,9 +77,20 @@
     enabled: false
   loop:
     - cloud-init-local.service
+    - cloud-init-log-reader.service
+    - cloud-config.service
+    - cloud-final.service
+    - cloud-init.service
+    - cloud-init.target
   loop_control:
     loop_var: stop_service
     label: "stop {{ stop_service }} service"
+  ignore_errors: yes
+  changed_when: false
+
+- name: "Vultr cleanup (debian) ..."
+  command:
+    cmd: rm -rf /usr/local/bin/cloud-init /usr/local/bin/cloud-id /usr/local/bin/cloud-init-per  /usr/local/bin/jsonschema   /usr/local/bin/pyserial-miniterm /usr/local/bin/pyserial-ports /usr/local/lib/python3.11
   ignore_errors: yes
   changed_when: false
 
