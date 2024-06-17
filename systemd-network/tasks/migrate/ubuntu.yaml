@@ -45,7 +45,7 @@
     - /usr/share/netplan
   loop_control:
     loop_var: netplan_cleanup
-    label: "{{ netplan_cleanup}"
+    label: "{{ netplan_cleanup}}"
 
 - name: "Enable systemd-networkd.service ..."
   systemd:
