@@ -1,9 +1,9 @@
 purge:
-  - linux-headers-*
   - accountsservice
   - acct
   - acpid
   - amd64-microcode
+  - apache2-utils
   - apport
   - at
   - bc
@@ -18,6 +18,7 @@ purge:
   - cloud-init
   - cloud-initramfs-copymods
   - cloud-initramfs-dyn-netconf
+  - command-not-found
   - cryptsetup
   - cryptsetup-bin
   - dbus-user-session
@@ -27,8 +28,8 @@ purge:
   - dirmngr
   - distro-info
   - dmidecode
-  - dnsmasq-base
   - dns-root-data
+  - dnsmasq-base
   - dosfstools
   - eatmydata
   - ebtables
@@ -54,8 +55,8 @@ purge:
   - hdparm
   - htop
   - info
-  - installation-report
   - install-info
+  - installation-report
   - intel-microcode
   - irqbalance
   - isc-dhcp-client
@@ -68,30 +69,56 @@ purge:
   - language-pack-en
   - laptop-detect
   - libaccountsservice0
+  - libapr1
+  - libaprutil1
   - libatm1
   - libbinutils
-  - libctf0
   - libctf-nobfd0
+  - libctf0
+  - libdrm-amdgpu1
+  - libdrm-common
+  - libdrm-intel1
+  - libdrm-nouveau2
+  - libdrm-radeon1
+  - libdrm2
+  - libegl-mesa0
+  - libegl1
   - libfribidi0
   - libftdi1-2
+  - libgbm1
   - libgdbm-compat4
+  - libgl1
+  - libgl1-amber-dri
+  - libgl1-mesa-dri
+  - libglapi-mesa
+  - libgles1
+  - libgles2
   - libglib2.0-data
+  - libglvnd-core-dev
+  - libglvnd0
+  - libglx-mesa0
+  - libglx0
   - libintl-perl
   - libintl-xs-perl
   - libldap-common
+  - libllvm15
   - liblocale-gettext-perl
+  - liblxc-common
+  - liblxc-common
   - liblxc1
-  - liblxc-common
-  - liblxc-common
   - liblzo2-2
   - libmodule-find-perl
   - libmodule-scandeps-perl
   - libnih1
   - libnss-systemd
+  - libopengl-dev
+  - libopengl0
   - libpci3
+  - libpciaccess0
   - libperl5.34
   - libpipeline1
   - libproc-processtable-perl
+  - libpthread-stubs0-dev
   - libpython3.10
   - libsasl2-modules
   - libsodium23
@@ -108,7 +135,28 @@ purge:
   - libunwind8
   - libusb-1.0-0
   - libuv1
+  - libwayland-client0
+  - libwayland-server0
+  - libx11-6
+  - libx11-data
+  - libx11-xcb1
+  - libxau6
+  - libxcb-dri2-0
+  - libxcb-dri3-0
+  - libxcb-glx0
+  - libxcb-present0
+  - libxcb-randr0
+  - libxcb-shm0
+  - libxcb-sync1
+  - libxcb-xfixes0
+  - libxcb1
+  - libxdmcp6
+  - libxext6
+  - libxfixes3
+  - libxshmfence1
+  - libxxf86vm1
   - linux-firmware
+  - linux-headers-*
   - linux-headers-*
   - linux-image-generic
   - lshw
@@ -119,10 +167,12 @@ purge:
   - lxd-agent-loader
   - lxd-client
   - make
+  - make
   - man-db
   - manpages
   - mdadm
   - mlocate
+  - modemmanager
   - motd-news-config
   - mtr-tiny
   - multipath-tools
@@ -135,6 +185,8 @@ purge:
   - open-iscsi
   - open-vm-tools
   - os-prober
+  - packagekit
+  - packagekit-tools
   - parted
   - pastebinit
   - patch
@@ -145,23 +197,27 @@ purge:
   - plymouth
   - plymouth-theme-ubuntu-text
   - policykit-1
+  - polkitd
   - pollinate
   - popularity-contest
   - postfix
   - powermgmt-base
   - publicsuffix
+  - python-babel-localedata
   - python3-blinker
   - python3-certifi
   - python3-cffi-backend
   - python3-chardet
+  - python3-commandnotfound
   - python3-distro
   - python3-distro-info
   - python3-distupgrade
   - python3-distutils
+  - python3-gdbm
   - python3-idna
   - python3-jinja2
-  - python3-jsonpatch
   - python3-json-pointer
+  - python3-jsonpatch
   - python3-jwt
   - python3-lib2to3
   - python3-markupsafe
@@ -169,14 +225,16 @@ purge:
   - python3-pyrsistent
   - python3-serial
   - python3-six
+  - python3-software-properties
   - python3-tz
   - python3-update-manager
-  - python-babel-localedata
+  - s-nail
   - screen
   - sg3-utils
   - shared-mime-info
-  - s-nail
+  - smartmontools
   - snapd
+  - software-properties-common
   - sosreport
   - squashfs-tools
   - strace
@@ -196,9 +254,9 @@ purge:
   - update-notifier-common
   - upower
   - ureadahead
-  - usb.ids
   - usb-modeswitch
   - usb-modeswitch-data
+  - usb.ids
   - usbmuxd
   - usbutils
   - usrmerge
@@ -208,22 +266,16 @@ purge:
   - vim-runtime
   - vim-tiny
   - wamerican
+  - watchdog
   - wbritish
   - wireless-regdb
+  - x11proto-dev
   - xauth
   - xdelta3
   - xdg-user-dirs
   - xfsprogs
   - xkb-data
+  - xorg-sgml-doctools
+  - xtrans-dev
   - xxd
   - zerofree
-  - command-not-found
-  - python3-commandnotfound
-  - python3-gdbm
-  - modemmanager
-  - packagekit
-  - packagekit-tools
-  - polkitd
-  - software-properties-common
-  - python3-software-properties
-  - make
