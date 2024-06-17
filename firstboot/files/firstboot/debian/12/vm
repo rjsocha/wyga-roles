@@ -1,111 +1,167 @@
 purge:
+  - amd64-microcode
+  - apache2-utils
+  - apt-listchanges
+  - bind9-dnsutils
+  - bind9-host
+  - bind9-libs
+  - binutils
+  - binutils-common:amd64
+  - binutils-x86-64-linux-gnu
+  - build-essential
+  - cloud-guest-utils
+  - cloud-image-utils
+  - cloud-initramfs-growroot
+  - cloud-utils
+  - console-setup
+  - console-setup-linux
+  - cpp
+  - cpp-12
+  - debconf-i18n
+  - debian-faq
+  - dictionaries-common
   - discover
   - discover-data
-  - libdiscover2
+  - doc-debian
+  - emacsen-common
+  - fakeroot
+  - firmware-linux-free
+  - g++
+  - g++-12
+  - gdisk
+  - groff-base
+  - iamerican
+  - ibritish
+  - ienglish-common
+  - inetutils-telnet
+  - installation-report
+  - intel-microcode
+  - iso-codes
+  - ispell
+  - keyboard-configuration
+  - krb5-locales
+  - laptop-detect
+  - libalgorithm-diff-perl
+  - libalgorithm-diff-xs-perl
+  - libalgorithm-merge-perl
+  - libapr1
+  - libaprutil1
+  - libasan8
+  - libatomic1
+  - libblas-dev
+  - libblas3
+  - libc-dev-bin
+  - libc6-dev
+  - libcc1-0
+  - libcrypt-dev
+  - libctf-nobfd0
   - libcurl3-gnutls
+  - libdiscover2
+  - libdpkg-perl
+  - libduktape207
+  - libexpat1-dev
+  - libfakeroot
+  - libfile-fcntllock-perl
+  - libfstrm0
+  - libfuse3-3
+  - libgcc-12-dev
+  - libgfortran5
+  - libgomp1
+  - libicu72
+  - libisl23
+  - libitm1
+  - libjemalloc2
+  - libjs-sphinxdoc
+  - libjs-underscore
+  - liblapack-dev
+  - liblapack3
   - libldap-2.5-0
   - libldap-common
+  - liblmdb0
+  - liblsan0
+  - libmaxminddb0
+  - libmpc3
+  - libmpfr6
+  - libnsl-dev
+  - libnuma1
+  - libopenblas-dev
+  - libopenblas-pthread-dev
+  - libopenblas0
+  - libopenblas0-pthread
+  - libpci3
+  - libpipeline1
+  - libpolkit-agent-1-0
+  - libpolkit-gobject-1-0
+  - libprotobuf-c1
+  - libpython3.11
+  - libquadmath0
   - librtmp1
   - libsasl2-2
   - libsasl2-modules
   - libsasl2-modules-db
-  - python3-chardet
-  - python3-charset-normalizer
-  - python3-debian
-  - python3-debianbts
-  - python3-httplib2
-  - python3-idna
-  - python3-pycurl
-  - python3-pyparsing
-  - python3-pysimplesoap
-  - python3-six
-  - python3-urllib3
-  - python3-certifi
-  - python3-reportbug
-  - python3-requests
-  - reportbug
-  - xauth
+  - libstdc++-12-dev
+  - libtirpc-dev
+  - libtsan2
+  - libubsan1
+  - libuchardet0
+  - liburing2
+  - libusb-1.0-0
+  - libuv1
   - libx11-6
   - libx11-data
   - libxau6
   - libxcb1
   - libxdmcp6
   - libxext6
+  - libxml2
   - libxmuu1
-  - os-prober
-  - console-setup
-  - console-setup-linux
-  - keyboard-configuration
-  - xkb-data
-  - dictionaries-common
-  - emacsen-common
-  - iamerican
-  - ibritish
-  - ienglish-common
-  - ispell
-  - wamerican
-  - debconf-i18n
-  - debian-faq
-  - doc-debian
-  - firmware-linux-free
-  - inetutils-telnet
-  - installation-report
-  - krb5-locales
-  - laptop-detect
-  - libpipeline1
+  - linux-headers-amd64
+  - linux-kbuild-6.1
+  - linux-libc-dev
+  - mailcap
   - man-db
   - manpages
+  - mime-support
+  - ntp
+  - ntpsec
+  - os-prober
+  - pci.ids
+  - pciutils
+  - polkitd
+  - publicsuffix
+  - python3-certifi
+  - python3-chardet
+  - python3-charset-normalizer
+  - python3-debconf
+  - python3-debian
+  - python3-debianbts
+  - python3-distro-info
+  - python3-httplib2
+  - python3-idna
+  - python3-ntp
+  - python3-pycurl
+  - python3-pyparsing
+  - python3-pysimplesoap
+  - python3-reportbug
+  - python3-requests
+  - python3-six
+  - python3-urllib3
+  - qemu-utils
+  - rdnssd
+  - reportbug
+  - rpcsvc-proto
+  - sgml-base
   - task-english
   - tasksel
   - tasksel-data
-  - xdg-user-dirs
-  - groff-base
-  - libuchardet0
-  - amd64-microcode
-  - intel-microcode
-  - apt-listchanges
-  - iso-codes
-  - python3-debconf
-  - libpci3
-  - pci.ids
-  - pciutils
-  - util-linux-locales
-  - libusb-1.0-0
-  - usbutils
-  - mailcap
-  - mime-support
-# Debian Image on Digital Ocean
-  - cloud-guest-utils
-  - cloud-image-utils
-  - cloud-initramfs-growroot
-  - cloud-utils
-  - gdisk
-  - libfuse3-3
-  - libnuma1
-  - liburing2
-  - qemu-utils
-  - polkitd
-  - xml-core
-  - libduktape207
-  - libpolkit-agent-1-0
-  - libpolkit-gobject-1-0
-  - sgml-base
   - unattended-upgrades
-  - python3-distro-info
+  - usbutils
+  - util-linux-locales
   - uuid-runtime
-  - bind9-libs
-  - libfstrm0
-  - libicu72
-  - libjemalloc2
-  - liblmdb0
-  - libmaxminddb0
-  - libprotobuf-c1
-  - libuv1
-  - libxml2
-  - bind9-dnsutils
-  - bind9-host
-  - publicsuffix
-  - ntp
+  - wamerican
   - watchdog
-  - ntpsec
-  - python3-ntp
+  - xauth
+  - xdg-user-dirs
+  - xkb-data
+  - xml-core
+  - zlib1g-dev
