@@ -14,18 +14,38 @@
     path: /etc/network/interfaces
     state: absent
 
+# netplan.io is present in DO's DEBIAN 12 image (??)
 - name: "Purge packages ..."
   apt:
     name:
       - ifupdown
       - isc-dhcp-client
       - dhcp-client
+      - netplan.io
+      - libnetplan0
+      - python3-markdown-it
+      - python3-mdurl
+      - python3-pygments
+      - python3-rich
     state: absent
     autoremove: yes
     purge: yes
   register: _action
   retries: 25
   until: _action is success or ('Failed to lock apt for exclusive operation' not in _action.msg and '/var/lib/dpkg/lock' not in _action.msg)
+
+- name: "Cleanup after netplan ..."
+  file:
+    path: "{{ netplan_cleanup }}"
+    state: absent
+  loop:
+    - /etc/netplan
+    - /usr/share/netplan
+    - /usr/lib/python3/dist-packages/netplan
+  loop_control:
+    loop_var: netplan_cleanup
+    label: "{{ netplan_cleanup }}"
+
 
 # Digital Ocean
 - name: "Cleanup providers files ..."
