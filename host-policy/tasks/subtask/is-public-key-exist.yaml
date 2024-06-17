@@ -1,12 +1,14 @@
 ---
 - name: "Check if key file exists..."
-  local_action: stat path={{ playbook_dir }}/{{ user_ssh_keys }}/{{ item }}
+  stat:
+    path: "{{ playbook_dir }}/{{ user_ssh_keys }}/{{ item }}"
   loop: "{{ pool.value.authorized }}"
   when: not item.startswith('BASE64')
+  connection: local
   register: keys_exists
 
 - name: "Verifying all keys are present..."
-  fail: 
+  fail:
     msg="File {{ item.item }} doesn't exist"
   loop: "{{ keys_exists.results }}"
   when: not item.skipped|default(false) and not item.stat.exists
