@@ -19,6 +19,8 @@ purge:
   - fakeroot
   - g++
   - g++-12
+  - gpg
+  - gpgconf
   - groff-base
   - iamerican
   - ibritish
@@ -27,6 +29,7 @@ purge:
   - installation-report
   - iso-codes
   - ispell
+  - kbd
   - keyboard-configuration
   - krb5-locales
   - laptop-detect
@@ -36,6 +39,7 @@ purge:
   - libapr1
   - libaprutil1
   - libasan8
+  - libassuan0
   - libatomic1
   - libblas-dev
   - libblas3
@@ -69,7 +73,9 @@ purge:
   - libopenblas-pthread-dev
   - libopenblas0
   - libopenblas0-pthread
+  - libparted2
   - libpipeline1
+  - libpkgconf3
   - libpython3.11
   - libquadmath0
   - librtmp1
@@ -98,23 +104,40 @@ purge:
   - ntp
   - ntpsec
   - os-prober
+  - parted
+  - pkg-config
+  - pkgconf
+  - pkgconf-bin
+  - python3-attr
   - python3-certifi
   - python3-chardet
   - python3-charset-normalizer
   - python3-debconf
   - python3-debian
   - python3-debianbts
+  - python3-distutils
   - python3-httplib2
   - python3-idna
+  - python3-json-pointer
+  - python3-jsonschema
+  - python3-lib2to3
   - python3-ntp
+  - python3-pip
+  - python3-pkg-resources
   - python3-pkg-resources
   - python3-pycurl
   - python3-pyparsing
+  - python3-pyrsistent
   - python3-pysimplesoap
   - python3-reportbug
   - python3-requests
+  - python3-rfc3987
+  - python3-setuptools
   - python3-six
+  - python3-uritemplate
   - python3-urllib3
+  - python3-webcolors
+  - python3-wheel
   - rdnssd
   - reportbug
   - rpcsvc-proto
@@ -128,13 +151,3 @@ purge:
   - xdg-user-dirs
   - xkb-data
   - zlib1g-dev
-  - gpg
-  - gpgconf
-  - libassuan0
-  - pkgconf-bin
-  - pkgconf
-  - pkg-config
-  - parted
-  - libparted2
-  - libpkgconf3
-  - kbd

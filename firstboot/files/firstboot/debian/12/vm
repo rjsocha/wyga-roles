@@ -29,6 +29,8 @@ purge:
   - g++
   - g++-12
   - gdisk
+  - gpg
+  - gpgconf
   - groff-base
   - iamerican
   - ibritish
@@ -38,6 +40,7 @@ purge:
   - intel-microcode
   - iso-codes
   - ispell
+  - kbd
   - keyboard-configuration
   - krb5-locales
   - laptop-detect
@@ -47,6 +50,7 @@ purge:
   - libapr1
   - libaprutil1
   - libasan8
+  - libassuan0
   - libatomic1
   - libblas-dev
   - libblas3
@@ -88,8 +92,10 @@ purge:
   - libopenblas-pthread-dev
   - libopenblas0
   - libopenblas0-pthread
+  - libparted2
   - libpci3
   - libpipeline1
+  - libpkgconf3
   - libpolkit-agent-1-0
   - libpolkit-gobject-1-0
   - libprotobuf-c1
@@ -125,10 +131,15 @@ purge:
   - ntp
   - ntpsec
   - os-prober
+  - parted
   - pci.ids
   - pciutils
+  - pkg-config
+  - pkgconf
+  - pkgconf-bin
   - polkitd
   - publicsuffix
+  - python3-attr
   - python3-certifi
   - python3-chardet
   - python3-charset-normalizer
@@ -136,21 +147,34 @@ purge:
   - python3-debian
   - python3-debianbts
   - python3-distro-info
+  - python3-distutils
   - python3-httplib2
   - python3-idna
+  - python3-json-pointer
+  - python3-jsonschema
+  - python3-lib2to3
   - python3-ntp
+  - python3-pip
+  - python3-pkg-resources
   - python3-pycurl
   - python3-pyparsing
+  - python3-pyrsistent
   - python3-pysimplesoap
   - python3-reportbug
   - python3-requests
+  - python3-rfc3987
+  - python3-setuptools
   - python3-six
+  - python3-uritemplate
   - python3-urllib3
+  - python3-webcolors
+  - python3-wheel
   - qemu-utils
   - rdnssd
   - reportbug
   - rpcsvc-proto
   - sgml-base
+  - smartmontools
   - task-english
   - tasksel
   - tasksel-data
@@ -165,14 +189,3 @@ purge:
   - xkb-data
   - xml-core
   - zlib1g-dev
-  - gpg
-  - gpgconf
-  - libassuan0
-  - smartmontools
-  - pkgconf-bin
-  - pkgconf
-  - pkg-config
-  - parted
-  - libparted2
-  - libpkgconf3
-  - kbd
