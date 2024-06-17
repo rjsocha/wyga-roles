@@ -338,3 +338,7 @@ purge:
   - xml-core
   - zerofree
   - zlib1g-dev
+  - pkg-config
+  - pkgconf
+  - pkgconf-bin
+  - libpkgconf3
