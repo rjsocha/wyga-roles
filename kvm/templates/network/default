@@ -5,7 +5,9 @@ NETWORK: {{ host.setup.kvm.network }}
 {% set vm_if = host.setup.kvm.network.interface | default('vm0') %}
 {% set vm_domain = host.setup.kvm.network.domain | default('vm') %}
 {% set vm_subnet = host.setup.kvm.network.subnet %}
-{% set vm_gw = vm_subnet | ipaddr('1') | ipaddr('address') %}
+{% set vm_gw = host.setup.kvm.network.gateway if host.setup.kvm.network.gateway is defined else vm_subnet | ipaddr('1') | ipaddr('address') %}
+{% set vm_dhcp_start = host.setup.kvm.network.dhcp.range | first if host.setup.kvm.network.dhcp.range is defined else vm_subnet | ipaddr('256') | ipaddr('address') %}
+{% set vm_dhcp_end = host.setup.kvm.network.dhcp.range | last if host.setup.kvm.network.dhcp.range is defined else vm_subnet | ipaddr('last_usable') | ipaddr('address') %}
 <network xmlns:dnsmasq='http://libvirt.org/schemas/network/dnsmasq/1.0'>>
   <name>default</name>
   <forward mode='open'/>
@@ -13,12 +15,26 @@ NETWORK: {{ host.setup.kvm.network }}
   <domain name='{{ vm_domain }}'/>
   <ip address='{{ vm_gw }}' netmask='{{ vm_subnet | ipaddr('netmask') }}'>
     <dhcp>
-      <range start='{{ vm_subnet | ipaddr('256') | ipaddr('address') }}' end='{{ vm_subnet | ipaddr('last_usable') | ipaddr('address') }}'/>
+      <range start='{{ vm_dhcp_start }}' end='{{ vm_dhcp_end }}'/>
     </dhcp>
   </ip>
+{% if host.setup.kvm.network.dhcp.rapid | default(true) %}
   <dnsmasq:options>
     <dnsmasq:option value="dhcp-rapid-commit"/>
     <dnsmasq:option value="no-ping"/>
   </dnsmasq:options>
+{% endif %}
+{% if host.setup.kvm.network.dns is defined %}
+  <dns>
+{% for vm_dns in host.setup.kvm.network.dns %}
+    <forwarder domain='{{ vm_dns.zone }}' addr='{{ vm_dns.ns }}'/>
+{% endfor %}
+  </dns>
+{% endif %}
+{% if host.setup.kvm.network.route is defined %}
+{% for vm_rt in host.setup.kvm.network.route %}
+  <route address='{{ vm_rt.to | ipaddr('network') }}' prefix='{{ vm_rt.to | ipaddr('prefix') }}' gateway='{{ vm_rt.via }}'/>
+{% endfor %}
+{% endif %}
 </network>
 {% endif %}

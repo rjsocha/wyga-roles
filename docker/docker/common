@@ -1,5 +1,5 @@
 docker:
-  live-restore: true
+  live-restore: false
   max-concurrent-uploads: 1
   bip: 172.20.0.1/24
   default-address-pools:

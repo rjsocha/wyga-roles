@@ -22,6 +22,7 @@
   {{- ' --sport ' ~ rule.sport if rule.sport is defined else '' -}}
   {{- ' -s ' ~ ','.join(rule.src) if rule.src is defined else '' -}}
   {{- ' -d ' ~ ','.join(rule.dst) if rule.dst is defined else '' -}}
+  {{- ' -m comment --comment "' ~ rule.comment ~ '"' if rule.comment is defined else '' -}}
   {{ '' }} -j ACCEPT
 {% endfor %}
 # VM Network
@@ -57,6 +58,7 @@ COMMIT
 -A POSTROUTING -s {{ ','.join(host.firewall.kvm.forward) }} -d {{ vm_subnet }} -j ACCEPT
 -A POSTROUTING -d {{ ','.join(host.firewall.kvm.forward) }} -s {{ vm_subnet }} -j ACCEPT
 {% endif %}
+-A POSTROUTING -s {{ vm_subnet }} -d {{ vm_subnet }} -j ACCEPT
 -A POSTROUTING -s {{ vm_subnet }} -d 255.255.255.255/32 -j ACCEPT
 -A POSTROUTING -s {{ vm_subnet }} -j MASQUERADE
 COMMIT

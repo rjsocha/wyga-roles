@@ -22,6 +22,30 @@
         rule_parsed: true
   when: rule.allow == 'http'
 
+- name: "Process allow/nebula ..."
+  block:
+    - name: "Append allow/nebula rules ..."
+      set_fact:
+        fwrule_nebula:
+          - { 'dport': '4242', 'match': 'udp', 'proto': 'udp' }
+    - name: "Append rule ..."
+      set_fact:
+        fwrules: "{{ fwrules + fwrule_nebula }}"
+        rule_parsed: true
+  when: rule.allow == 'nebula'
+
+- name: "Process allow/overlay ..."
+  block:
+    - name: "Append allow/overlay rules ..."
+      set_fact:
+        fwrule_overlay:
+          - { 'iface': 'overlay0' }
+    - name: "Append rule ..."
+      set_fact:
+        fwrules: "{{ fwrules + fwrule_overlay }}"
+        rule_parsed: true
+  when: rule.allow == 'overlay'
+
 - name: "Process allow/vpn ..."
   block:
     - name: "Append allow/vpn rules ..."
