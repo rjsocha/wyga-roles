@@ -1,9 +1,17 @@
 # managed by host-policy
+{% if mirror == "cdn" %}
+Types: deb
+URIs: http://archive.ubuntu.com/ubuntu/
+Suites: noble noble-updates noble-backports
+Components: main universe restricted multiverse
+Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
+{% else %}
 Types: deb
 URIs: http://{{ mirror }}.archive.ubuntu.com/ubuntu/
 Suites: noble noble-updates noble-backports
 Components: main universe restricted multiverse
 Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
+{% endif %}
 
 Types: deb
 URIs: http://security.ubuntu.com/ubuntu/

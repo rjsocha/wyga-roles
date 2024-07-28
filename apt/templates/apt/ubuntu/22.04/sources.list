@@ -1,4 +1,22 @@
 # HOST-POLICY IN USE - DO NOT EDIT BY HAND
+{% if mirror == "cdn" %}
+deb http://archive.ubuntu.com/ubuntu jammy main restricted
+deb http://archive.ubuntu.com/ubuntu jammy-updates main restricted
+deb http://archive.ubuntu.com/ubuntu jammy-security main restricted
+{% if universe %}
+deb http://archive.ubuntu.com/ubuntu jammy universe
+deb http://archive.ubuntu.com/ubuntu jammy-updates universe
+deb http://archive.ubuntu.com/ubuntu jammy-security universe
+{% endif %}
+{% if multiverse %}
+deb http://archive.ubuntu.com/ubuntu jammy multiverse
+deb http://archive.ubuntu.com/ubuntu jammy-updates multiverse
+deb http://archive.ubuntu.com/ubuntu jammy-security multiverse
+{% endif %}
+{% if backports %}
+deb http://archive.ubuntu.com/ubuntu jammy-backports main restricted{% if universe %} universe{% endif %}{% if multiverse %} multiverse{% endif %}
+{% endif %}
+{% else %}
 deb http://{{ mirror }}.archive.ubuntu.com/ubuntu jammy main restricted
 deb http://{{ mirror }}.archive.ubuntu.com/ubuntu jammy-updates main restricted
 deb http://{{ mirror }}.archive.ubuntu.com/ubuntu jammy-security main restricted
@@ -14,4 +32,5 @@ deb http://{{ mirror }}.archive.ubuntu.com/ubuntu jammy-security multiverse
 {% endif %}
 {% if backports %}
 deb http://{{ mirror }}.archive.ubuntu.com/ubuntu jammy-backports main restricted{% if universe %} universe{% endif %}{% if multiverse %} multiverse{% endif %}
+{% endif %}
 {% endif %}
