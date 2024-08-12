@@ -1,0 +1,80 @@
+- name: "Check kvm profile ..."
+  assert:
+    that:
+      - host.setup.kvm.network.subnet is defined
+    msg: "Missing KVM subnet configuration ..."
+  when: host.firewall.profile is defined and host.firewall.profile == 'kvm'
+
+- name: "Prepare rules bucket ..."
+  set_fact:
+    fwrules: []
+    fw_input_rules: []
+    fw_forward_rules: []
+    fw_output_rules: []
+
+- name: "Process input rules ..."
+  include_tasks: rule.yaml
+  loop: "{{ host.firewall.input }}"
+  loop_control:
+    loop_var: rule
+    label: "rule"
+  when: host.firewall.input is defined
+
+- name: "Copy input rules ..."
+  set_fact:
+    fw_input_rules: "{{ fwrules }}"
+    fwrules: []
+
+- name: "Install iptables persistent ..."
+  include_role:
+    name: wyga/install-package-override
+  vars:
+    packages:
+      - -ufw
+      - netfilter-persistent
+      - iptables-persistent
+
+- name: "Generate firewall configuration ..."
+  template:
+    src: "firewall/{{ host.firewall.profile if host.firewall.profile is defined else 'basic' }}"
+    dest: "/etc/iptables/rules.v4"
+    group: root
+    owner: root
+    mode: 0644
+  register: rulesV4
+
+- name: "Restart netfilter-persistent service ..."
+  systemd:
+    name: netfilter-persistent
+    enabled: true
+    daemon_reload: true
+    state: restarted
+    masked: no
+  when: rulesV4.changed
+
+- name: "Trigger service restart ..."
+  block:
+    - name: "Collect services facts ..."
+      ansible.builtin.service_facts:
+
+    - name: "Service list to restart ..."
+      set_fact:
+        restart_services: "{{ host.firewall.restart }}"
+      when: host.firewall.restart is defined
+
+    - name: "Restart docker (if installed) ..."
+      set_fact:
+        restart_services:
+          - docker.service
+      when: host.firewall.restart is not defined
+
+    - name: "Restarting service ..."
+      systemd:
+        name: "{{ service }}"
+        state: restarted
+      loop: "{{ restart_services }}"
+      loop_control:
+        loop_var: service
+        label: "{{ service }}"
+      when: service in ansible_facts.services
+  when: rulesV4.changed

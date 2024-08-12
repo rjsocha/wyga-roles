@@ -1,0 +1,45 @@
+- name: "Rule parse status ..."
+  set_fact:
+    rule_parsed: false
+
+- name: "Porcess port/udp rule ..."
+  block:
+    - name: "Use string/port/udp ..."
+      include_tasks: use/string/port-udp.yaml
+  when: rule is regex('(?i)^[0-9]+/udp$')
+
+- name: "Porcess port/tcp rule ..."
+  block:
+    - name: "Use string/port/udp ..."
+      include_tasks: use/string/port-tcp.yaml
+  when: rule is regex('(?i)^[0-9]+/tcp$')
+
+- name: "Porcess port/udp/tcp rule ..."
+  block:
+    - name: "Use string/port/udp/tcp ..."
+      include_tasks: use/string/port-udp-tcp.yaml
+  when: rule is regex('(?i)^[0-9]+/udp/tcp$')
+
+- name: "Porcess port/tcp/udp rule ..."
+  block:
+    - name: "Use string/port/tcp/udp ..."
+      include_tasks: use/string/port-udp-tcp.yaml
+  when: rule is regex('(?i)^[0-9]+/tcp/udp$')
+
+- name: "Porcess interface rule ..."
+  block:
+    - name: "Use string/interface ..."
+      include_tasks: use/string/interface.yaml
+  when: rule is regex('(?i)^if/[a-z0-9@.+_-]{1,16}$')
+
+- name: "Porcess proto rule ..."
+  block:
+    - name: "Use string/proto ..."
+      include_tasks: use/string/proto.yaml
+  when: rule is regex('(?i)^proto/(icmp|udp|tcp)$')
+
+- name: "Parsing failed ..."
+  fail:
+    msg:
+      - "Unable to to parse string rule {{ rule }}"
+  when: not rule_parsed

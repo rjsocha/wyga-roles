@@ -1,0 +1,72 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+{% set vm_if = host.setup.kvm.network.interface | default('vm0') %}
+{% set vm_subnet = host.setup.kvm.network.subnet %}
+{% set vm_gw = vm_subnet | ipaddr('1') | ipaddr('address') %}
+*filter
+:INPUT ACCEPT [0:0]
+:FORWARD ACCEPT [0:0]
+:OUTPUT ACCEPT [0:0]
+-A INPUT -i lo -j ACCEPT
+-A INPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+-A INPUT -m conntrack --ctstate INVALID -j DROP
+-A INPUT -p icmp -m icmp --icmp-type 3 -j ACCEPT
+-A INPUT -p icmp -m icmp --icmp-type 8 -j ACCEPT
+-A INPUT -p icmp -m icmp --icmp-type 11 -j ACCEPT
+-A INPUT -p icmp -m icmp --icmp-type 12 -j ACCEPT
+{% for rule in fw_input_rules %}
+-A INPUT
+  {{- ' -m ' ~ rule.match if rule.match is defined else '' -}}
+  {{- ' -p ' ~ rule.proto if rule.proto is defined else '' -}}
+  {{- ' -i ' ~ rule.iface if rule.iface is defined else '' -}}
+  {{- ' --dport ' ~ rule.dport if rule.dport is defined else '' -}}
+  {{- ' --sport ' ~ rule.sport if rule.sport is defined else '' -}}
+  {{- ' -s ' ~ ','.join(rule.src) if rule.src is defined else '' -}}
+  {{- ' -d ' ~ ','.join(rule.dst) if rule.dst is defined else '' -}}
+  {{- ' -m comment --comment "' ~ rule.comment ~ '"' if rule.comment is defined else '' -}}
+  {{ '' }} -j ACCEPT
+{% endfor %}
+# VM Network
+-A INPUT -i {{ vm_if }} -p udp --dport 53 -j ACCEPT
+-A INPUT -i {{ vm_if }} -p tcp --dport 53 -j ACCEPT
+-A INPUT -i {{ vm_if }} -p udp -s 0.0.0.0 --sport 68 -d 255.255.255.255 --dport 67 -j ACCEPT
+-A INPUT -i {{ vm_if }} -p udp -s 0.0.0.0 --sport 68 -d {{ vm_gw }} --dport 67 -j ACCEPT
+-A INPUT -i {{ vm_if }} -p udp -s {{ vm_subnet }} --sport 68 -d {{ vm_gw }} --dport 67 -j ACCEPT
+# /VM Network
+-A INPUT -j REJECT --reject-with icmp-host-prohibited
+-A FORWARD -j ACCEPT
+-A FORWARD -j REJECT --reject-with icmp-host-prohibited
+COMMIT
+*nat
+:PREROUTING ACCEPT [0:0]
+:POSTROUTING ACCEPT [0:0]
+:INPUT ACCEPT [0:0]
+:OUTPUT ACCEPT [0:0]
+{% if host.firewall.mapping is defined %}
+{% for rule in host.firewall.mapping %}
+{% set dst = rule.from | split(':') | first %}
+{% set dport = rule.from | split(':') | last %}
+-A PREROUTING
+  {{- ' -m ' ~ rule.proto if rule.proto is defined else ' -m tcp' -}}
+  {{- ' -p ' ~ rule.proto if rule.proto is defined else ' -p tcp' -}}
+  {{- ' -i ' ~ rule.in if rule.in is defined else '' -}}
+  {{- ' --dport ' ~ dport -}}
+  {{- ' -d ' ~ dst -}}
+  {{ '' }} -j DNAT --to {{ rule.to }}
+{% endfor %}
+{% endif %}
+{% if host.firewall.kvm.forward is defined %}
+-A POSTROUTING -s {{ ','.join(host.firewall.kvm.forward) }} -d {{ vm_subnet }} -j ACCEPT
+-A POSTROUTING -d {{ ','.join(host.firewall.kvm.forward) }} -s {{ vm_subnet }} -j ACCEPT
+{% endif %}
+-A POSTROUTING -s {{ vm_subnet }} -d {{ vm_subnet }} -j ACCEPT
+-A POSTROUTING -s {{ vm_subnet }} -d 255.255.255.255/32 -j ACCEPT
+-A POSTROUTING -s {{ vm_subnet }} -j MASQUERADE
+COMMIT
+*mangle
+:PREROUTING ACCEPT [0:0]
+:INPUT ACCEPT [0:0]
+:FORWARD ACCEPT [0:0]
+:OUTPUT ACCEPT [0:0]
+:POSTROUTING ACCEPT [0:0]
+-A POSTROUTING -o {{ vm_if }} -p udp -m udp --dport 68 -j CHECKSUM --checksum-fill
+COMMIT

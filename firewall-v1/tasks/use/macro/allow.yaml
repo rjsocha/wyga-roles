@@ -7,22 +7,6 @@
         rule_parsed: true
   when: rule.allow == 'any'
 
-- name: "Process allow/icmp ..."
-  block:
-    - name: "Append common icmp rules ..."
-      set_fact:
-        fwrule_icmp:
-          - { 'icmptype': 'destination-unreachable', 'match': 'icmp', 'proto': 'icmp' }
-          - { 'icmptype': 'echo-request', 'match': 'icmp', 'proto': 'icmp' }
-          - { 'icmptype': 'time-exceeded', 'match': 'icmp', 'proto': 'icmp' }
-          - { 'icmptype': 'parameter-problem', 'match': 'icmp', 'proto': 'icmp' }
-
-    - name: "Append rule ..."
-      set_fact:
-        fwrules: "{{ fwrules + fwrule_icmp }}"
-        rule_parsed: true
-  when: rule.allow == 'icmp'
-
 - name: "Process allow/http ..."
   block:
     - name: "Append http/https/http3 rules ..."

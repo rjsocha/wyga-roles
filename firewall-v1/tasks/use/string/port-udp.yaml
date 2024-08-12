@@ -1,0 +1,8 @@
+- name: "Use port/udp ..."
+  set_fact:
+    fwrule: "{{ {} | combine({ 'dport': rule | split('/') | first, 'match': 'udp', 'proto': 'udp' }) }}"
+    rule_parsed: true
+
+- name: "Append rule ..."
+  set_fact:
+    fwrules: "{{ fwrules + [ fwrule ] }}"

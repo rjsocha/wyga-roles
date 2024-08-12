@@ -1,0 +1,46 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+# {{ ansible_managed }}
+*filter
+:INPUT ACCEPT [0:0]
+:FORWARD ACCEPT [0:0]
+:OUTPUT ACCEPT [0:0]
+:FILTER-INPUT-RULES - [0:0]
+:FILTER-OUTPUT-RULES - [0:0]
+:FILTER-FORWARD-RULES - [0:0]
+:DOCKER-USER - [0:0]
+:DOCKER-USER-HOOK - [0:0]
+:DOCKER-RUNTIME-RULES - [0:0]
+:DOCKER-USER-RULES - [0:0]
+-A INPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+-A INPUT -m conntrack --ctstate INVALID -j DROP
+-A INPUT -i lo -j ACCEPT
+-A INPUT -j FILTER-INPUT-RULES
+-A INPUT -j REJECT --reject-with icmp-host-prohibited
+-A INPUT -m comment --comment MANAGED-FIREWALL
+-A FORWARD -j FILTER-FORWARD-RULES
+-A FORWARD -j REJECT --reject-with icmp-host-prohibited
+-A OUTPUT -j FILTER-OUTPUT-RULES
+-A DOCKER-USER -j DOCKER-USER-HOOK
+-A DOCKER-USER-HOOK -j DOCKER-RUNTIME-RULES
+-A DOCKER-USER-HOOK -j DOCKER-USER-RULES
+{% if firewall_rules | default(false) %}
+{% include "firewall/rules-filter" %}
+{% endif %}
+COMMIT
+*nat
+:PREROUTING ACCEPT [0:0]
+:POSTROUTING ACCEPT [0:0]
+:INPUT ACCEPT [0:0]
+:OUTPUT ACCEPT [0:0]
+:NAT-INPUT-RULES ACCEPT [0:0]
+:NAT-OUTPUT-RULES ACCEPT [0:0]
+:NAT-PREROUTING-RULES ACCEPT [0:0]
+:NAT-POSTROUTING-RULES ACCEPT [0:0]
+-A INPUT -j NAT-INPUT-RULES
+-A OUTPUT -j NAT-OUTPUT-RULES
+-A PREROUTING -j NAT-PREROUTING-RULES
+-A POSTROUTING -j NAT-POSTROUTING-RULES
+{% if firewall_rules | default(false) %}
+{% include "firewall/rules-nat" %}
+{% endif %}
+COMMIT

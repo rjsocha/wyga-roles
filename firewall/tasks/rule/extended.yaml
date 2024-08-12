@@ -1,20 +1,39 @@
-- name: "Rule parse status ..."
+- name: "Firewall / Rule parse status ..."
   set_fact:
     rule_parsed: false
 
-- name: "Process allow macro ..."
+- name: "Firewall / Process allow macro ..."
   include_tasks: use/macro/allow.yaml
   when: rule.allow is defined
 
-- name: "Process raw rule ..."
+- name: "Firewall / Process raw rule ..."
   block:
-  - name: "Append rule ..."
-    set_fact:
-      fwrules: "{{ fwrules + [ rule ] }}"
-      rule_parsed: true
+    - name: "Firewall / Clone raw rule ..."
+      set_fact:
+        fw_raw_rule: "{{ rule }}"
+
+    - name: "Firewall / Raw rule defaults ..."
+      set_fact:
+        fw_raw_rule: "{{ fw_raw_rule | combine({ 'match': 'tcp', 'proto': 'tcp' }) }}"
+      when: rule.match is not defined and rule.proto is not defined
+
+    - name: "Firewall / Normalize src ..."
+      set_fact:
+        fw_raw_rule: "{{ fw_raw_rule | combine({ 'src': [ rule.src ] }) }}"
+      when: rule.src is string
+
+    - name: "Firewall / Normalize dst ..."
+      set_fact:
+        fw_raw_rule: "{{ fw_raw_rule | combine({ 'dst': [ rule.dst ] }) }}"
+      when: rule.dst is string
+
+    - name: "Append rule ..."
+      set_fact:
+        fwrules: "{{ fwrules + [ fw_raw_rule ] }}"
+        rule_parsed: true
   when: rule.allow is not defined
 
-- name: "Parsing failed ..."
+- name: "Firewall / Parsing failed ..."
   fail:
     msg:
       - "Unable to to parse string rule {{ rule }}"

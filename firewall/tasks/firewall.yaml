@@ -1,31 +1,95 @@
-- name: "Check kvm profile ..."
+- name: "Firewall / Check profile (FAIL) ..."
+  fail: msg="PROFILES NOT SUPPORTED YET"
+  when: host.firewall.profile is defined
+
+- name: "Firewall / Check kvm profile ..."
   assert:
     that:
       - host.setup.kvm.network.subnet is defined
     msg: "Missing KVM subnet configuration ..."
   when: host.firewall.profile is defined and host.firewall.profile == 'kvm'
 
-- name: "Prepare rules bucket ..."
+- name: "Firewall / Prepare rules bucket ..."
   set_fact:
     fwrules: []
     fw_input_rules: []
     fw_forward_rules: []
     fw_output_rules: []
+    fw_docker_drop_rules: []
+    fw_docker_reject_rules: []
 
-- name: "Process input rules ..."
-  include_tasks: rule.yaml
-  loop: "{{ host.firewall.input }}"
-  loop_control:
-    loop_var: rule
-    label: "rule"
+- name: "Firewall / Process input rules ..."
+  block:
+    - name: "Firewall / Process input rules ..."
+      include_tasks: rule.yaml
+      loop: "{{ host.firewall.input }}"
+      loop_control:
+        loop_var: rule
+        label: "{{ rule }}"
+    - name: "Firewall / Copy input rules ..."
+      set_fact:
+        fw_input_rules: "{{ fwrules }}"
+        fwrules: []
   when: host.firewall.input is defined
 
-- name: "Copy input rules ..."
-  set_fact:
-    fw_input_rules: "{{ fwrules }}"
-    fwrules: []
+- name: "Firewall / Process forward rules ..."
+  block:
+    - name: "Firewall / Process forward rules ..."
+      include_tasks: rule.yaml
+      loop: "{{ host.firewall.forward }}"
+      loop_control:
+        loop_var: rule
+        label: "{{ rule }}"
+    - name: "Firewall / Copy forward rules ..."
+      set_fact:
+        fw_forward_rules: "{{ fwrules }}"
+        fwrules: []
+  when: host.firewall.forward is defined
 
-- name: "Install iptables persistent ..."
+- name: "Firewall / Process output rules ..."
+  block:
+    - name: "Firewall / Process output rules ..."
+      include_tasks: rule.yaml
+      loop: "{{ host.firewall.output }}"
+      loop_control:
+        loop_var: rule
+        label: "{{ rule }}"
+    - name: "Firewall / Copy output rules ..."
+      set_fact:
+        fw_output_rules: "{{ fwrules }}"
+        fwrules: []
+  when: host.firewall.output is defined
+
+- name: "Firewall / Process docker drop rules ..."
+  block:
+    - name: "Firewall / Process docker drop rules ..."
+      include_tasks: rule.yaml
+      loop: "{{ host.firewall.docker.drop }}"
+      loop_control:
+        loop_var: rule
+        label: "{{ rule }}"
+    - name: "Firewall / Copy docker drop rules ..."
+      set_fact:
+        fw_docker_drop_rules: "{{ fwrules }}"
+        fwrules: []
+  when: host.firewall.docker.drop is defined
+
+- name: "Firewall / Process docker reject rules ..."
+  block:
+    - name: "Firewall / Process docker reject rules ..."
+      include_tasks: rule.yaml
+      loop: "{{ host.firewall.docker.reject }}"
+      loop_control:
+        loop_var: rule
+        label: "{{ rule }}"
+    - name: "Firewall / Copy docker reject rules ..."
+      set_fact:
+        fw_docker_reject_rules: "{{ fwrules }}"
+        fwrules: []
+  when: host.firewall.docker.reject is defined
+
+
+- name: "Firewall / Install iptables persistent ..."
   include_role:
     name: wyga/install-package-override
   vars:
@@ -34,41 +98,93 @@
       - netfilter-persistent
       - iptables-persistent
 
-- name: "Generate firewall configuration ..."
+- name: "Firewall / Prepare site configuration directory... "
+  file:
+    path: "/etc/site"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+
+- name: "Firewall / Prepare firewall configuration directory... "
+  file:
+    path: "/etc/site/firewall"
+    state: directory
+    owner: root
+    group: root
+    mode: 0750
+
+- name: "Firewall / Checking master configuration ..."
   template:
-    src: "firewall/{{ host.firewall.profile if host.firewall.profile is defined else 'basic' }}"
+    src: "firewall/master"
+    dest: "/etc/site/firewall/master"
+    group: root
+    owner: root
+    mode: 0640
+  register: firewall_master
+
+- name: "Firewall / Check if restart is required ..."
+  set_fact:
+    firewall_restart: "{{ firewall_master.changed }}"
+
+- name: "Firewall / Check if master template is loaded ..."
+  block:
+    - name: "Firewall / Check if master template is loaded ..."
+      command: iptables -C INPUT -m comment --comment MANAGED-FIREWALL
+      no_log: true
+      changed_when: false
+  rescue:
+    - name: "Firewall / Force firewall restart ..."
+      set_fact:
+        firewall_restart: true
+
+- name: "Firewall / Generate firewall configuration (persistent) ..."
+  template:
+    src: "firewall/master"
     dest: "/etc/iptables/rules.v4"
     group: root
     owner: root
     mode: 0644
+  vars:
+    firewall_rules: true
   register: rulesV4
 
-- name: "Restart netfilter-persistent service ..."
+- name: "Firewall / Render runtime firewall configuration ..."
+  set_fact:
+     firewall_rendered_rules: "{{ lookup('template', 'firewall/rules-apply') }}"
+
+- name: "Firewall / Apply firewall  rules ..."
+  command:
+    cmd: iptables-restore --noflush
+    stdin: "{{ firewall_rendered_rules }}"
+  changed_when: rulesV4.changed
+
+- name: "Firewall / Restart netfilter-persistent service ..."
   systemd:
     name: netfilter-persistent
     enabled: true
     daemon_reload: true
     state: restarted
     masked: no
-  when: rulesV4.changed
+  when: firewall_restart
 
-- name: "Trigger service restart ..."
+- name: "Firewall / Trigger service restart ..."
   block:
-    - name: "Collect services facts ..."
+    - name: "Firewall / Collect services facts ..."
       ansible.builtin.service_facts:
 
-    - name: "Service list to restart ..."
+    - name: "Firewall / Service list to restart ..."
       set_fact:
         restart_services: "{{ host.firewall.restart }}"
       when: host.firewall.restart is defined
 
-    - name: "Restart docker (if installed) ..."
+    - name: "Firewall / Restart docker (if installed) ..."
       set_fact:
         restart_services:
           - docker.service
       when: host.firewall.restart is not defined
 
-    - name: "Restarting service ..."
+    - name: "Firewall / Restarting service ..."
       systemd:
         name: "{{ service }}"
         state: restarted
@@ -77,4 +193,4 @@
         loop_var: service
         label: "{{ service }}"
       when: service in ansible_facts.services
-  when: rulesV4.changed
+  when: firewall_restart

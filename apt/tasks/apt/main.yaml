@@ -3,7 +3,7 @@
   assert:
     that:
       - target_distribution in ['ubuntu','debian']
-      - target_distribution_version in ['18.04','20.04','22.04','24.04','12']
+      - target_distribution_version in ['18.04','20.04','22.04','24.04','12','13']
     fail_msg: "Unsupported distribution: {{ target_distribution }} {{ target_distribution_version }}"
     quiet: true
 
