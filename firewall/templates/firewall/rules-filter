@@ -8,6 +8,7 @@
   {{- ' -s ' ~ ','.join(rule.src) if rule.src is defined else '' -}}
   {{- ' -d ' ~ ','.join(rule.dst) if rule.dst is defined else '' -}}
   {{- ' --icmp-type ' ~ rule.icmptype if rule.icmptype is defined and rule.proto is defined and rule.proto == 'icmp' else '' -}}
+  {{- ' -m comment --comment "' ~ rule.comment ~ '"' if rule.comment is defined else '' -}}
   {{ '' }} -j ACCEPT
 {% endfor %}
 {% for rule in fw_forward_rules %}
@@ -20,6 +21,7 @@
   {{- ' -s ' ~ ','.join(rule.src) if rule.src is defined else '' -}}
   {{- ' -d ' ~ ','.join(rule.dst) if rule.dst is defined else '' -}}
   {{- ' --icmp-type ' ~ rule.icmptype if rule.icmptype is defined and rule.proto is defined and rule.proto == 'icmp' else '' -}}
+  {{- ' -m comment --comment "' ~ rule.comment ~ '"' if rule.comment is defined else '' -}}
   {{ '' }} -j ACCEPT
 {% endfor %}
 {% for rule in fw_output_rules %}
@@ -32,6 +34,7 @@
   {{- ' -s ' ~ ','.join(rule.src) if rule.src is defined else '' -}}
   {{- ' -d ' ~ ','.join(rule.dst) if rule.dst is defined else '' -}}
   {{- ' --icmp-type ' ~ rule.icmptype if rule.icmptype is defined and rule.proto is defined and rule.proto == 'icmp' else '' -}}
+  {{- ' -m comment --comment "' ~ rule.comment ~ '"' if rule.comment is defined else '' -}}
   {{ '' }} -j ACCEPT
 {% endfor %}
 {% for rule in fw_docker_drop_rules %}
@@ -44,6 +47,7 @@
   {{- ' -s ' ~ ','.join(rule.src) if rule.src is defined else '' -}}
   {{- ' -d ' ~ ','.join(rule.dst) if rule.dst is defined else '' -}}
   {{- ' --icmp-type ' ~ rule.icmptype if rule.icmptype is defined and rule.proto is defined and rule.proto == 'icmp' else '' -}}
+  {{- ' -m comment --comment "' ~ rule.comment ~ '"' if rule.comment is defined else '' -}}
   {{ '' }} -j DROP
 {% endfor %}
 {% for rule in fw_docker_reject_rules %}
@@ -56,5 +60,6 @@
   {{- ' -s ' ~ ','.join(rule.src) if rule.src is defined else '' -}}
   {{- ' -d ' ~ ','.join(rule.dst) if rule.dst is defined else '' -}}
   {{- ' --icmp-type ' ~ rule.icmptype if rule.icmptype is defined and rule.proto is defined and rule.proto == 'icmp' else '' -}}
+  {{- ' -m comment --comment "' ~ rule.comment ~ '"' if rule.comment is defined else '' -}}
   {{ '' }} -j REJECT --reject-with icmp-host-prohibited
 {% endfor %}

@@ -153,7 +153,7 @@
   set_fact:
      firewall_rendered_rules: "{{ lookup('template', 'firewall/rules-apply') }}"
 
-- name: "Firewall / Apply firewall  rules ..."
+- name: "Firewall / Apply firewall rules ..."
   command:
     cmd: iptables-restore --noflush
     stdin: "{{ firewall_rendered_rules }}"
