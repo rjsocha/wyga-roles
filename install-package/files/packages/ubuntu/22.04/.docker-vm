@@ -37,3 +37,4 @@ require:
   - docker-ce
   - docker-ce-cli
   - docker-compose-plugin
+  - python3-requests
