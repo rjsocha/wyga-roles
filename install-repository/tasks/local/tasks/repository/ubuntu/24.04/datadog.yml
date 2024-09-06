@@ -1,0 +1,14 @@
+- name: "Install datadog apt repository ..."
+  copy:
+    src: "repository/datadog/ubuntu/24.04/{{ repo_file.src }}"
+    dest: "{{ repo_file.dst }}"
+    group: root
+    owner: root
+    mode: 0644
+    force: yes
+  loop:
+    - { 'src': 'datadog.list', 'dst': '/etc/apt/sources.list.d/datado.list' }
+    - { 'src': 'datadog-archive-keyring.gpg', 'dst': '/usr/share/keyrings/datadog-archive-keyring.gpg' }
+  loop_control:
+    loop_var: repo_file
+    label: "{{ repo_file }}"
