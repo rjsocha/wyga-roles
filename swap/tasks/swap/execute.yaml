@@ -1,0 +1,19 @@
+---
+# low-level lvm stuff - community.general.lvol/lvg is not for me ...
+- name: "SWAP / Locate root filesystem backend device ..."
+  command: "findmnt -n -o SOURCE /"
+  register: swap_root_device
+  changed_when: false
+
+# not quite "perfect"
+- name: "SWAP / Check if root device is on LVM ..."
+  set_fact:
+    swap_root_on_lvm: "{{ swap_root_device.stdout is search('^/dev/mapper') }}"
+
+- name: "SWAP / lvm swap ..."
+  include_tasks: "swap/lvm.yaml"
+  when: swap_root_on_lvm and host.setup.swap.file is not defined
+
+- name: "SWAP / file swap ..."
+  include_tasks: "swap/file.yaml"
+  when: not swap_root_on_lvm or host.setup.swap.file is defined

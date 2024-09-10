@@ -20,6 +20,11 @@
 - name: "Trigger any pending reboots ..."
   meta: flush_handlers
 
+- name: "Swap ..."
+  include_role:
+    name: wyga/swap
+  when: host.setup.swap is defined
+
 - name: "Locale configuration ..."
   include_role:
     name: wyga/locale
@@ -92,13 +97,6 @@
   include_role:
     name: wyga/monitoring
   when: host.setup.monitoring is defined
-
-- name: "Swap ..."
-  include_role:
-    name: wyga/swap-file
-  vars:
-    swap_file_size: "{{ host.setup.swap.size }}"
-  when: host.setup.swap.size is defined
 
 - name: "User profile ..."
   include_role:

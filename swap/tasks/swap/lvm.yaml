@@ -1,0 +1,44 @@
+---
+- name: "SWAP / Get LVM volume details for root ..."
+  command: "lvs --noheadings -o vg_name {{ swap_root_device.stdout }}"
+  register: swap_vg_name
+  when: swap_root_on_lvm
+  changed_when: false
+
+- name: "SWAP / Register volume group name ..."
+  set_fact:
+    swap_vg_name: "{{ swap_vg_name.stdout.strip() }}"
+
+- name: "SWAP / Check if {{ swap_vg_name }}/swap is present ..."
+  stat:
+    path: "/dev/mapper/{{ swap_vg_name }}-swap"
+  register: swap_lv_present
+
+- block:
+    - name: "SWAP / Create /dev/{{ swap_vg_name }}/swap"
+      command: lvcreate --quiet --yes --wipesignatures y --zero y -n swap -L "{{ host.setup.swap.size | default('1GiB') }}" "{{ swap_vg_name }}"
+
+    - name: "SWAP / Initialize swap device ..."
+      command: mkswap -qf -L SWAP "/dev/{{ swap_vg_name }}/swap"
+  when: not swap_lv_present.stat.exists
+
+- name: "SWAP / Add swap device to /etc/fstab ..."
+  mount:
+    name: none
+    src: "/dev/mapper/{{ swap_vg_name }}-swap"
+    fstype: swap
+    opts: sw
+    passno: "0"
+    dump: "0"
+    state: present
+  register: swap_fstab
+
+- name: "SWAP / Enable swap space ..."
+  block:
+    - name: "SWAP / reload systemd config ..."
+      systemd:
+        daemon_reload: true
+
+    - name: "SWAP / enable swap space ..."
+      command: swapon -a
+  when: swap_fstab.changed

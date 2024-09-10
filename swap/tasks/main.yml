@@ -1,0 +1,4 @@
+---
+- name: "SWAP / Create swap sapce ..."
+  include_tasks: swap/execute.yaml
+  when: host.setup.swap is defined and ansible_facts.swaptotal_mb == 0
