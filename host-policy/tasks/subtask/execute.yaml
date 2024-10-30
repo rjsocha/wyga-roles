@@ -98,6 +98,11 @@
     name: wyga/monitoring
   when: host.setup.monitoring is defined
 
+- name: "Datadog ..."
+  include_role:
+    name: wyga/datadog
+  when: host.setup.datadog is defined
+
 - name: "User profile ..."
   include_role:
     name: wyga/profile

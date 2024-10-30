@@ -1,0 +1,78 @@
+---
+- name: "Datadog / configuration"
+  block:
+    - name: "Datadog / looking for datadog configuration ..."
+      set_fact:
+        datadog_config: "{{ datadog_config_file }}"
+      loop: "{{ query('first_found', params) }}"
+      loop_control:
+        loop_var:  datadog_config_file
+        label: "{{ datadog_config_file }}"
+      vars:
+        params:
+          skip: false
+          files:
+            - "datadog/{{ inventory_hostname }}/datadog.yaml"
+            - "datadog/datadog.yaml"
+
+    - name: "Datadog / looking for system-probe configuration ..."
+      set_fact:
+        system_probe_config: "{{ system_probe_config_file }}"
+      loop: "{{ query('first_found', params) }}"
+      loop_control:
+        loop_var:  system_probe_config_file
+        label: "{{ system_probe_config_file }}"
+      vars:
+        params:
+          skip: false
+          files:
+            - "datadog/{{ inventory_hostname }}/system-probe.yaml"
+            - "datadog/system-probe.yaml"
+
+    - name: "Datadog / check if docker group exists ..."
+      ansible.builtin.group:
+        name: docker
+        state: present
+      check_mode: true
+      changed_when: false
+      register: docker_group_present
+
+    - name: "Datadog / evaluate docker group state ..."
+      set_fact:
+        docker_present: "{{ true if docker_group_present.state is defined and docker_group_present.state == 'present' else false }}"
+
+    - name: "Datadog / adding dd-agent to docker group ..."
+      ansible.builtin.user:
+        name: dd-agent
+        groups: docker
+        append: yes
+      register: dd_agent_docker_group
+      when: docker_present
+
+    - name: "Datadog / generate main configuration ..."
+      template:
+        src: "{{ datadog_config }}"
+        dest: "/etc/datadog-agent/datadog.yaml"
+        owner: dd-agent
+        group: dd-agent
+        mode: 0640
+      register: datadog_config_state
+
+    - name: "Datadog / generate system-probe configuration ..."
+      template:
+        src: "{{ system_probe_config }}"
+        dest: "/etc/datadog-agent/system-probe.yaml"
+        owner: dd-agent
+        group: dd-agent
+        mode: 0640
+      register: system_probe_config_state
+
+    - name: "Datadog / restart service ..."
+      systemd:
+        name: datadog-agent.service
+        enabled: true
+        daemon_reload: true
+        state: restarted
+        masked: no
+      when: datadog_config_state.changed or system_probe_config_state.changed or dd_agent_docker_group.changed
+  when: host.setup.datadog is defined and confidential.datadog.key is defined

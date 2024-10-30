@@ -1,0 +1,6 @@
+network_config:
+  enabled: true
+
+system_probe_config:
+  process_config:
+    enabled: true

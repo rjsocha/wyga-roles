@@ -1,0 +1,13 @@
+api_key: {{ confidential.datadog.key }}
+site: {{ host.setup.datadog.site | default('datadoghq.com') }}
+
+process_config:
+  process_collection:
+    enabled: true
+
+{% if host.setup.datadog.tags is defined %}
+tags:
+{% for tag in host.setup.datadog.tags %}
+  - "{{ tag }}"
+{% endfor %}
+{% endif %}
