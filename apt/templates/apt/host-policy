@@ -16,4 +16,5 @@ Dir::Cache::pkgcache "";
 {% if host.setup.apt.forceipv4|default(true) %}
 Acquire::ForceIPv4 "true";
 {% endif %}
+Acquire::PDiffs "{{ host.setup.apt.pdiffs | default(false) | ternary('true','false') }}";
 # HOST-POLICY
