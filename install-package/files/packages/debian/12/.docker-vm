@@ -34,7 +34,7 @@ require:
   - wget
   - xz-utils
   - zstd
-  - linux-image-cloud-amd64
+  - linux-image-cloud-{{ target_arch | default('amd64') }}
   - qemu-guest-agent
   - docker-ce
   - docker-ce-cli

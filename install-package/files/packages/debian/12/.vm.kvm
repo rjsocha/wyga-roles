@@ -1,3 +1,3 @@
 require:
-  - linux-image-cloud-amd64
+  - linux-image-cloud-{{ target_arch | default('amd64') }}
   - qemu-guest-agent
