@@ -10,6 +10,6 @@
     name: ansible
     install_deps: true
   environment:
-    PIPX_HOME: /opt/pipx
+    PIPX_HOME: /opt/external/ansible
     PIPX_BIN_DIR: /usr/local/bin
     PIPX_MAN_DIR: /usr/local/share/man
