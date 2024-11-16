@@ -7,7 +7,7 @@
 -F FILTER-OUTPUT-RULES
 -F FILTER-FORWARD-RULES
 -F DOCKER-USER-RULES
-{% include "firewall/rules-filter" %}
+{% include "firewall/docker/rules-filter" %}
 COMMIT
 *nat
 :NAT-INPUT-RULES ACCEPT [0:0]
@@ -18,5 +18,5 @@ COMMIT
 -F NAT-OUTPUT-RULES
 -F NAT-PREROUTING-RULES
 -F NAT-POSTROUTING-RULES
-{% include "firewall/rules-nat" %}
+{% include "firewall/docker/rules-nat" %}
 COMMIT

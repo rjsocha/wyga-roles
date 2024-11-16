@@ -1,15 +1,20 @@
-- name: "Firewall / Check profile (FAIL) ..."
-  fail: msg="PROFILES NOT SUPPORTED YET"
-  when: host.firewall.profile is defined
+- name: "Firewall / Select profile ..."
+  set_fact:
+    firewall_profile: "{{ host.firewall.profile | default('docker') }}"
+
+- name: "Firewall / Veryfiy profile ..."
+  assert:
+    that:
+      - firewall_profile is in [ 'docker', 'kvm' ]
 
 - name: "Firewall / Check kvm profile ..."
   assert:
     that:
       - host.setup.kvm.network.subnet is defined
     msg: "Missing KVM subnet configuration ..."
-  when: host.firewall.profile is defined and host.firewall.profile == 'kvm'
+  when: host.firewall.profile is defined and firewall_profile == 'kvm'
 
-- name: "Firewall / Prepare rules bucket ..."
+- name: "Firewall / Prepare rule buckets ..."
   set_fact:
     fwrules: []
     fw_input_rules: []
@@ -88,7 +93,6 @@
         fwrules: []
   when: host.firewall.docker.reject is defined
 
-
 - name: "Firewall / Install iptables persistent ..."
   include_role:
     name: wyga/install-package-override
@@ -116,11 +120,13 @@
 
 - name: "Firewall / Checking master configuration ..."
   template:
-    src: "firewall/master"
+    src: "firewall/{{ firewall_profile }}/rules"
     dest: "/etc/site/firewall/master"
     group: root
     owner: root
     mode: 0640
+  vars:
+    profile: "{{ firewall_profile }}"
   register: firewall_master
 
 - name: "Firewall / Check if restart is required ..."
@@ -140,18 +146,19 @@
 
 - name: "Firewall / Generate firewall configuration (persistent) ..."
   template:
-    src: "firewall/master"
+    src: "firewall/{{ firewall_profile }}/rules"
     dest: "/etc/iptables/rules.v4"
     group: root
     owner: root
     mode: 0644
   vars:
     firewall_rules: true
+    profile: "{{ firewall_profile }}"
   register: rulesV4
 
 - name: "Firewall / Render runtime firewall configuration ..."
   set_fact:
-     firewall_rendered_rules: "{{ lookup('template', 'firewall/rules-apply') }}"
+     firewall_rendered_rules: "{{ lookup('template', 'firewall/{{ firewall_profile }}/rules-apply') }}"
 
 - name: "Firewall / Apply firewall rules ..."
   command:
@@ -193,4 +200,4 @@
         loop_var: service
         label: "{{ service }}"
       when: service in ansible_facts.services
-  when: firewall_restart
+  when: firewall_restart and (host.firewall.restart is defined or firewall_profile == 'docker')

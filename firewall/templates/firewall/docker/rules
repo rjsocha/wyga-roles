@@ -24,7 +24,7 @@
 -A DOCKER-USER-HOOK -j DOCKER-RUNTIME-RULES
 -A DOCKER-USER-HOOK -j DOCKER-USER-RULES
 {% if firewall_rules | default(false) %}
-{% include "firewall/rules-filter" %}
+{% include "firewall/" ~ profile ~ "/rules-filter" %}
 {% endif %}
 COMMIT
 *nat
@@ -41,6 +41,6 @@ COMMIT
 -A PREROUTING -j NAT-PREROUTING-RULES
 -A POSTROUTING -j NAT-POSTROUTING-RULES
 {% if firewall_rules | default(false) %}
-{% include "firewall/rules-nat" %}
+{% include "firewall/" ~ profile ~ "/rules-nat" %}
 {% endif %}
 COMMIT
