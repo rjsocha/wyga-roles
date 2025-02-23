@@ -5,7 +5,7 @@
 {% set vm_gw = vm_subnet | ipaddr('1') | ipaddr('address') %}
 *filter
 :INPUT ACCEPT [0:0]
-:FORWARD ACCEPT [0:0]
+:FORWARD DROP [0:0]
 :OUTPUT ACCEPT [0:0]
 :FILTER-INPUT-RULES - [0:0]
 :FILTER-OUTPUT-RULES - [0:0]
@@ -25,7 +25,6 @@
 -A INPUT -m comment --comment MANAGED-FIREWALL
 -A FORWARD -j FILTER-FORWARD-RULES
 -A FORWARD -j ACCEPT
--A FORWARD -j REJECT --reject-with icmp-host-prohibited
 -A OUTPUT -j FILTER-OUTPUT-RULES
 {% if firewall_rules | default(false) %}
 {% include "firewall/" ~ profile ~ "/rules-filter" %}
