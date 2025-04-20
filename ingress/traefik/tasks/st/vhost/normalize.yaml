@@ -16,9 +16,9 @@
   set_fact:
     vhost_result: "{{ vhost_result | combine( { 'tls': vhost.tls | default('http') } ) }}"
 
-- name: "Traefik Ingress / Vhost / Copy tls ..."
+- name: "Traefik Ingress / Vhost / Copy priority ..."
   set_fact:
-    vhost_result: "{{ vhost_result | combine( { 'tls': vhost.tls | default('http') } ) }}"
+    vhost_result: "{{ vhost_result | combine( { 'priority': vhost.priority | default(0) } ) }}"
 
 - name: "Traefik Ingress / Vhost / Copy backend server ..."
   set_fact:

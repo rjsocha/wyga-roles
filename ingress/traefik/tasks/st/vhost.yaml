@@ -96,6 +96,8 @@
   loop_control:
     loop_var: cleanup
     label: "{{ cleanup.path | basename }}"
+  notify:
+    - traefik-ingress-restart
 
 - name: "Traefik Ingress / Vhost / Generate configuration ..."
   include_tasks: "st/vhost/vhost-generator.yaml"
