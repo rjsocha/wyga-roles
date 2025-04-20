@@ -1,0 +1,16 @@
+- name: "Traefik Ingress / Install"
+  include_tasks: st/install.yaml
+
+- name: "Traefik Ingress / Setup"
+  include_tasks: st/setup.yaml
+
+- name: "Traefik Ingress / Config"
+  include_tasks: st/config.yaml
+
+- name: "Traefik Ingress / VHOSTS ..."
+  include_tasks: st/vhost.yaml
+  when: IngressConfig.vhost is defined
+
+- name: "Traefik Ingress / ACME Mode"
+  include_tasks: st/acme-mode.yaml
+  when: IngressConfig.acme is defined

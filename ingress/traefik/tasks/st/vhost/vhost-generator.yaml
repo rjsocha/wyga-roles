@@ -1,0 +1,161 @@
+- name: "Traefik Ingress / Vhost / Generator / Prepare ..."
+  set_fact:
+    vh_http: []
+    vh_https: []
+    vh_http2s: []
+    vh_https_sans: []
+    vh_http2s_sans: []
+    vh_id: "{{ vhost.url | join('-') | hash('md5') }}"
+
+- name: "Traefik Ingress / Vhost / Generator / List of HTTP vhosts ..."
+  set_fact:
+    vh_http: "{{ vh_http + [ vhurl ] }}"
+  loop: "{{ vhost.urls }}"
+  loop_control:
+    loop_var: vhurl
+    label: "{{ vhurl.url }}"
+  when: vhurl.scheme == "http"
+
+- name: "Traefik Ingress / Vhost / Generator / List of HTTPS vhosts ..."
+  set_fact:
+    vh_https: "{{ vh_https + [ vhurl ] }}"
+    vh_https_sans: "{{ vh_https_sans + [ vhurl.sans ] }}"
+  loop: "{{ vhost.urls }}"
+  loop_control:
+    loop_var: vhurl
+    label: "{{ vhurl.url }}"
+  when: vhurl.scheme == "https"
+
+- name: "Traefik Ingress / Vhost / Generator / List of HTTP2S vhosts ..."
+  set_fact:
+    vh_http2s: "{{ vh_http2s + [ vhurl ] }}"
+    vh_http2s_sans: "{{ vh_http2s_sans + [ vhurl.sans ] }}"
+  loop: "{{ vhost.urls }}"
+  loop_control:
+    loop_var: vhurl
+    label: "{{ vhurl.url }}"
+  when: vhurl.scheme == "http2s"
+
+- name: "Traefik Ingress / Vhost / Generator / Generate HTTP rule (normal) ..."
+  set_fact:
+    vh_http_rules: "{{ [ vh_http | selectattr('rx', 'equalto', false) | map(attribute='url') | map('regex_replace', '^(.*)$', 'Host(`\\1`)') | join(' || ') ] }}"
+
+- name: "Traefik Ingress / Vhost / Generator / Generate HTTP rule (rx) ..."
+  set_fact:
+    vh_http_rules: "{{ vh_http_rules + [ vh_http | selectattr('rx', 'equalto', true) | map(attribute='url') | map('regex_replace', '^(.*)$', 'HostRegexp(`\\1`)') | join(' || ') ] }}"
+
+- name: "Traefik Ingress / Vhost / Generator / Generate HTTP rule ..."
+  set_fact:
+    vh_http_rule: "{{ vh_http_rules | reject('equalto', '') | join(' || ') }}"
+
+- name: "Traefik Ingress / Vhost / Generator / Generate HTTPS rule (normal) ..."
+  set_fact:
+    vh_https_rules: "{{ [ vh_https | selectattr('rx', 'equalto', false) | map(attribute='url') | map('regex_replace', '^(.*)$', 'Host(`\\1`)') | join(' || ') ] }}"
+
+- name: "Traefik Ingress / Vhost / Generator / Generate HTTPS rule (rx) ..."
+  set_fact:
+    vh_https_rules: "{{ vh_https_rules + [ vh_https | selectattr('rx', 'equalto', true) | map(attribute='url') | map('regex_replace', '^(.*)$', 'HostRegexp(`\\1`)') | join(' || ') ] }}"
+
+- name: "Traefik Ingress / Vhost / Generator / Generate HTTPS rule ..."
+  set_fact:
+    vh_https_rule: "{{ vh_https_rules | reject('equalto', '') | join(' || ') }}"
+
+- name: "Traefik Ingress / Vhost / Generator / Generate HTTP2S rule (normal) ..."
+  set_fact:
+    vh_http2s_rules: "{{ [ vh_http2s | selectattr('rx', 'equalto', false) | map(attribute='url') | map('regex_replace', '^(.*)$', 'Host(`\\1`)') | join(' || ') ] }}"
+
+- name: "Traefik Ingress / Vhost / Generator / Generate HTTP2S rule (rx) ..."
+  set_fact:
+    vh_http2s_rules: "{{ vh_http2s_rules + [ vh_http2s | selectattr('rx', 'equalto', true) | map(attribute='url') | map('regex_replace', '^(.*)$', 'HostRegexp(`\\1`)') | join(' || ') ] }}"
+
+- name: "Traefik Ingress / Vhost / Generator / Generate HTTP2S rule ..."
+  set_fact:
+    vh_http2s_rule: "{{ vh_http2s_rules | reject('equalto', '') | join(' || ') }}"
+
+- name: "Traefik Ingress / Vhost / Generator / Select SAN addresses (HTTPS) ..."
+  set_fact:
+    vh_sans: "{{ vhost.san | unique if vhost.san else vh_https_sans | flatten | unique }}"
+
+- name: "Traefik Ingress / Vhost / Generator / Select SAN addresses (HTTP2S) ..."
+  set_fact:
+    vh_san2s: "{{ vhost.san | unique if vhost.san else vh_http2s_sans | flatten | unique }}"
+
+- name: "Traefik Ingress / Vhost / Generator / Normalize SAN addresses (HTTPS) ..."
+  set_fact:
+    vh_sans: >-
+      {%- set vh_domains = [] %}
+      {%- set vh_wildcards = [] %}
+      {%- set vh_matcher = [] %}
+      {%- for vdomain in vh_sans %}
+        {%- if vdomain.startswith('*') %}
+          {{- vh_wildcards.append(vdomain) -}}
+          {{- vh_matcher.append(vdomain | split('.',1) | last) -}}
+        {%- endif %}
+      {%- endfor %}
+      {%- for vdomain in vh_sans %}
+        {%- if not vdomain.startswith('*') %}
+          {%- set dfirst = vdomain | split('.',1) | first -%}
+          {%- set dlast = vdomain | split('.',1) | last -%}
+          {% if not dlast in vh_matcher %}
+            {{- vh_domains.append(vdomain) -}}
+          {% endif %}
+        {%- endif %}
+      {%- endfor %}
+      {{- ( vh_matcher + vh_domains ) | unique + vh_wildcards | unique -}}
+
+- name: "Traefik Ingress / Vhost / Generator / Normalize SAN addresses (HTTP2S) ..."
+  set_fact:
+    vh_san2s: >-
+      {%- set vh_domains = [] %}
+      {%- set vh_wildcards = [] %}
+      {%- set vh_matcher = [] %}
+      {%- for vdomain in vh_san2s %}
+        {%- if vdomain.startswith('*') %}
+          {{- vh_wildcards.append(vdomain) -}}
+          {{- vh_matcher.append(vdomain | split('.',1) | last) -}}
+        {%- endif %}
+      {%- endfor %}
+      {%- for vdomain in vh_san2s %}
+        {%- if not vdomain.startswith('*') %}
+          {%- set dfirst = vdomain | split('.',1) | first -%}
+          {%- set dlast = vdomain | split('.',1) | last -%}
+          {% if not dlast in vh_matcher %}
+            {{- vh_domains.append(vdomain) -}}
+          {% endif %}
+        {%- endif %}
+      {%- endfor %}
+      {{- ( vh_matcher + vh_domains ) | unique + vh_wildcards | unique -}}
+
+#- debug:
+#    msg:
+#      - "{{ vh_sans }}"
+#      - "{{ vh_sans | type_debug }}"
+#      - "{{ vh_sans | length }}"
+#      - "HTTP2S"
+#      - "{{ vh_san2s }}"
+#      - "{{ vh_san2s | type_debug }}"
+#      - "{{ vh_san2s | length }}"
+
+- name: "Traefik Ingress / Vhost / Generator / Generate vhost config ..."
+  template:
+    src: "traefik/vhost"
+    dest: "/etc/site/ingress/runtime/vhost-{{ vh_id }}.yaml"
+    owner: root
+    group: root
+    mode: 0644
+  vars:
+    vtemplate:
+      id: "{{ vh_id }}"
+      rule: "{{ vh_http_rule }}"
+      http: "{{ vh_http }}"
+      rules: "{{ vh_https_rule }}"
+      https: "{{ vh_https }}"
+      rule2s: "{{ vh_http2s_rule }}"
+      http2s: "{{ vh_http2s }}"
+      vhost: "{{ vhost }}"
+      san: "{{ vh_sans }}"
+      san2s: "{{ vh_san2s }}"
+      http2https: "{{ IngressConfig.http2https | default(false) }}"
+      priority: "{{ vhost.priority | default(0) }}"
+  notify:
+    - traefik-ingress-restart

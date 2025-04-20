@@ -1,0 +1,122 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+http:
+  middlewares:
+    http2https:
+      redirectScheme:
+        scheme: https
+        permanent: false
+
+    cleanup-headers:
+      headers:
+        customResponseHeaders:
+          x-powered-by: ""
+
+    compress:
+      compress:
+        includedContentTypes:
+          - text/html
+          - text/plain
+          - text/css
+          - application/javascript
+          - text/javascript
+          - application/json
+          - application/xml
+          - text/xml
+          - text/csv
+
+{% if IngressConfig.dashboard.url is defined %}
+{% if confidential.ingress.dashboard.users is defined %}
+    auth4dashboard:
+      basicAuth:
+        realm: "[PROTECTED]"
+        users:
+{% for dash_user in confidential.ingress.dashboard.users %}
+          - {{ dash_user }}
+{% endfor %}
+{% endif %}
+
+    redirect4dashboard:
+      replacePath:
+        path: "/dashboard/"
+
+    redirect2dashboard:
+      redirectRegex:
+        regex: "^/$"
+        replacement: "/dashboard/"
+
+  routers:
+{% if IngressConfig.dashboard.url | urlsplit('scheme') == 'http' %}
+    traefik-dashboard-http:
+      entryPoints:
+        - http
+      middlewares:
+{% if confidential.ingress.dashboard.users is defined %}
+        - auth4dashboard
+{% endif %}
+        - redirect2dashboard
+      service: api@internal
+      rule: Host(`{{ IngressConfig.dashboard.url | urlsplit('hostname') }}`)
+      priority: 999
+{% endif %}
+{% if IngressConfig.dashboard.url | urlsplit('scheme') == 'https' %}
+    traefik-dashboard-https:
+      entryPoints:
+        - https
+      middlewares:
+{% if confidential.ingress.dashboard.users is defined %}
+        - auth4dashboard
+{% endif %}
+        - redirect2dashboard
+      service: api@internal
+      rule: Host(`{{ IngressConfig.dashboard.url | urlsplit('hostname') }}`)
+      priority: 999
+{% if IngressConfig.acme is defined and IngressConfig.dashboard.tls is defined and IngressConfig.dashboard.tls != "none" %}
+      tls:
+        certResolver: {{ IngressConfig.dashboard.tls }}
+{% else %}
+      tls: {}
+{% endif %}
+{% endif %}
+{% if IngressConfig.dashboard.url | urlsplit('scheme') == 'http2s' %}
+    traefik-dashboard-http:
+      entryPoints:
+        - http
+      middlewares:
+        - http2https
+      service: noop@internal
+      rule: Host(`{{ IngressConfig.dashboard.url | urlsplit('hostname') }}`)
+      priority: 999
+
+    traefik-dashboard-https:
+      entryPoints:
+        - https
+      middlewares:
+{% if confidential.ingress.dashboard.users is defined %}
+        - auth4dashboard
+{% endif %}
+        - redirect2dashboard
+      service: api@internal
+      rule: Host(`{{ IngressConfig.dashboard.url | urlsplit('hostname') }}`)
+      priority: 999
+{% if IngressConfig.acme is defined and IngressConfig.dashboard.tls is defined and IngressConfig.dashboard.tls != "none" %}
+      tls:
+        certResolver: {{ IngressConfig.dashboard.tls }}
+{% else %}
+      tls: {}
+{% endif %}
+{% endif %}
+
+{% endif %}
+tls:
+  options:
+    default:
+      sniStrict: false
+      minVersion: VersionTLS12
+      # Based on https://ssl-config.mozilla.org/#server=traefik&version=2.1.2&config=intermediate&guideline=5.6
+      cipherSuites:
+        - TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256
+        - TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+        - TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384
+        - TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+        - TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305
+        - TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305

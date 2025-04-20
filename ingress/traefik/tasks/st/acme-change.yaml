@@ -1,0 +1,16 @@
+- name: "Traefik Ingress / ACME / Clear ACME state files  1/2 ..."
+  find:
+    paths: /var/lib/traefik-ingress/
+    patterns: "*.json"
+  register: acme_state_files
+
+- name: "Traefik Ingress / ACME / Clear ACME state files  2/2 ..."
+  file:
+    path: "{{ acme_state.path }}"
+    state: absent
+  loop: "{{ acme_state_files.files }}"
+  loop_control:
+    loop_var: acme_state
+    label: "{{ acme_state.path }}"
+  notify:
+    - traefik-ingress-restart

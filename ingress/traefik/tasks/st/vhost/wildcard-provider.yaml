@@ -1,0 +1,15 @@
+- name: "Traefik Ingress / Vhost / normalize url ..."
+  set_fact:
+    vh_urls: "{{ [ vhost.url ] }}"
+  when: vhost.url is string
+
+- name: "Traefik Ingress / Vhost / normalize url ..."
+  set_fact:
+    vh_urls: "{{ vhost.url }}"
+  when: vhost.url is not string
+
+- debug:
+    msg:
+      - "{{ vh_urls | wyga_url_wildcards }}"
+      - "{{ vhost.tls | default('http') }}"
+  when: ( vh_urls | wyga_url_wildcards ) | length > 0

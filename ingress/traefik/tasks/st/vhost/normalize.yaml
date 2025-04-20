@@ -1,0 +1,41 @@
+- name: "Traefik Ingress / Vhost / Preapare ..."
+  set_fact:
+    vhost_result: {}
+
+- name: "Traefik Ingress / Vhost / Normalize url type ..."
+  set_fact:
+    vhost_result: "{{ vhost_result | combine( { 'url': [ vhost.url ] } ) }}"
+  when: vhost.url is string
+
+- name: "Traefik Ingress / Vhost / Copy url ..."
+  set_fact:
+    vhost_result: "{{ vhost_result | combine( { 'url': vhost.url } ) }}"
+  when: vhost.url is not string
+
+- name: "Traefik Ingress / Vhost / Copy tls ..."
+  set_fact:
+    vhost_result: "{{ vhost_result | combine( { 'tls': vhost.tls | default('http') } ) }}"
+
+- name: "Traefik Ingress / Vhost / Copy tls ..."
+  set_fact:
+    vhost_result: "{{ vhost_result | combine( { 'tls': vhost.tls | default('http') } ) }}"
+
+- name: "Traefik Ingress / Vhost / Copy backend server ..."
+  set_fact:
+    vhost_result: "{{ vhost_result | combine( { 'backend': vhost.srv } ) }}"
+
+- name: "Traefik Ingress / Vhost / Process urls (prepare) ..."
+  set_fact:
+    vhost_urls: []
+    vhost_urls_rx: false
+
+- name: "Traefik Ingress / Vhost / Process urls ..."
+  include_tasks: "st/vhost/process-url.yaml"
+  loop: "{{ vhost_result.url }}"
+  loop_control:
+    loop_var: vhost_url
+    label: "{{ vhost_url }}"
+
+- name: "Traefik Ingress / Vhost / Update urls ..."
+  set_fact:
+    ingress_vhosts: "{{ ingress_vhosts + [ vhost_result | combine( { 'urls': vhost_urls, 'rx': vhost_urls_rx, 'san': vhost.san | default([])  } ) ] }}"

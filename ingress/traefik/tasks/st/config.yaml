@@ -1,0 +1,55 @@
+- name: "Traefik Ingress / Config / Create site directory ..."
+  file:
+    path: "{{ IngressConfig.runtime }}"
+    state: directory
+    mode: 0755
+    owner: root
+    group: root
+
+- name: "Traefik Ingress / Config / Create runtime directory ..."
+  file:
+    path: "{{ IngressConfig.runtime }}/runtime"
+    state: directory
+    mode: 0755
+    owner: root
+    group: root
+
+- name: "Traefik Ingress / Config / Main configuration ..."
+  template:
+    src: "traefik/config.yaml"
+    dest: "{{ IngressConfig.runtime }}/config.yaml"
+    owner: root
+    group: root
+    mode: 0644
+  notify:
+    - traefik-ingress-restart
+
+- name: "Traefik Ingress / Config / Runtime configuration ..."
+  template:
+    src: "traefik/runtime/config.yaml"
+    dest: "{{ IngressConfig.runtime }}/runtime/config.yaml"
+    owner: root
+    group: root
+    mode: 0644
+  notify:
+    - traefik-ingress-restart
+
+- name: "Traefik Ingress / Config / DNS Secrects ..."
+  block:
+    - name: "Traefik Ingress / Config / Create env directory ..."
+      file:
+        path: "{{ IngressConfig.runtime }}/env"
+        state: directory
+        mode: 0755
+        owner: root
+        group: root
+    - name: "Traefik Ingress / Config / Secret / Env ..."
+      copy:
+        dest: "{{ IngressConfig.runtime }}/env/secret"
+        content: "{{ ( confidential.ingress.dns | dict2items | map(attribute='key') | zip( confidential.ingress.dns | dict2items | map(attribute='value') | map('quote')) ) | map('join', '=') | join('\n') + '\n' }}"
+        owner: root
+        group: root
+        mode: 0600
+      notify:
+        - traefik-ingress-restart
+  when: confidential.ingress.dns is defined

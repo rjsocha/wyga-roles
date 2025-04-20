@@ -1,0 +1,22 @@
+- name: "Traefik Ingress / Setup / Load extra testes ..."
+  include_role: name=wyga/import/common
+
+- name: "Traefik Ingress / Setup / Load additional filters ..."
+  include_role: name=wyga/import/kit
+
+- name: "Traefik Ingress / Setup / Preparation ..."
+  set_fact:
+    default_runtime_dir: /etc/site/ingress
+
+- name: "Traefik Ingress / Setup / Prepare IngressConfig ..."
+  set_fact:
+    IngressConfig: {}
+
+- name: "Traefik Ingress / Setup / Load IngressConfig ..."
+  set_fact:
+    IngressConfig: "{{ host.setup.ingress }}"
+
+- name: "Traefik Ingress / Setup / Update runtime directory ..."
+  set_fact:
+    IngressConfig: "{{ host.setup.ingress | combine( { 'runtime': default_runtime_dir } ) }}"
+  when: IngressConfig.runtime is not defined

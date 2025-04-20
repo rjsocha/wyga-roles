@@ -1,0 +1,8 @@
+- name: "Traefik Ingress / Vhost / Basic vhost verification ..."
+  assert:
+    that:
+      - vhost.url is defined
+      - vhost.url is string or vhost.url is TList
+      - vhost.srv is defined
+      - vhost.srv | urlsplit('scheme') in [ 'http', 'https', 'http2s' ]
+      - vhost.san is not defined or (vhost.san is defined and vhost.san is TList)

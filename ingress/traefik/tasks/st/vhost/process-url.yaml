@@ -1,0 +1,34 @@
+- name: "Traefik Ingress / Vhost / URL / Verify URL ..."
+  assert:
+    that:
+      - vhost_url | urlsplit('scheme') in [ 'http', 'https','http2s' ]
+    msg: "assert failed for {{ vhost_url }}"
+
+- name: "Traefik Ingress / Vhost / URL / Prepare ..."
+  set_fact:
+    vhost_url_result: {}
+    vhost_current_url_rx: false
+    vhost_current_url: "{{ vhost_url | urlsplit('hostname') }}"
+    vhost_current_url_sans: []
+
+- name: "Traefik Ingress / Vhost / URL / Wildcard url (verify) ..."
+  fail:
+    msg: "url not supported: {{ vhost_url }}"
+  when: "'*' in vhost_current_url.split('.', 1)[1]"
+
+- name: "Traefik Ingress / Vhost / URL / Normal url ..."
+  set_fact:
+      vhost_current_url_sans: "{{ [ vhost_current_url ] }}"
+  when: "'*' not in vhost_current_url"
+
+- name: "Traefik Ingress / Vhost / URL / Wildcard url ..."
+  set_fact:
+      vhost_urls_rx: true
+      vhost_current_url_rx: true
+      vhost_current_url_sans: "{{ [ vhost_current_url.split('.', 1)[1], '*.' ~ vhost_current_url.split('.', 1)[1] ] }}"
+      vhost_current_url: "^{{ vhost_current_url | replace('.','\\.') | replace('*','.+') }}$"
+  when: "'*' in vhost_current_url"
+
+- name: "Traefik Ingress / Vhost / URL / Update urls ..."
+  set_fact:
+    vhost_urls: "{{ vhost_urls + [ { 'url': vhost_current_url, 'rx': vhost_current_url_rx, 'sans': vhost_current_url_sans, 'scheme': vhost_url | urlsplit('scheme') } ] }}"

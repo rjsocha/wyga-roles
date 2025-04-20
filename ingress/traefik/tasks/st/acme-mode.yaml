@@ -1,0 +1,14 @@
+- name: "Traefik Ingress / ACME / Mode update ..."
+  copy:
+    dest: "{{ IngressConfig.runtime }}/acme-mode"
+    content: "{{ IngressConfig.acme.staging | default(false) | ternary('staging','production') }}"
+    mode: 0644
+    owner: root
+    group: root
+  register: acme_changed
+  notify:
+    - traefik-ingress-restart
+
+- name: "Traefik Ingress / ACME / Mode change ..."
+  include_tasks: st/acme-change.yaml
+  when: acme_changed.changed

@@ -1,0 +1,105 @@
+- name: "Traefik Ingress / Vhost / Prepare ..."
+  set_fact:
+    ingress_vhosts: []
+    ingress_runtime_files: [ 'config.yaml' ]
+
+- name: "Traefik Ingress / Vhost / Verify configuration ..."
+  assert:
+    that:
+      - IngressConfig.vhosts is not defined
+      - IngressConfig.used is not defined
+      - IngressConfig.wildcards is not defined
+
+- name: "Traefik Ingress / Vhost / Verify vhosts ..."
+  include_tasks: "st/vhost/verify.yaml"
+  loop: "{{ IngressConfig.vhost }}"
+  loop_control:
+    loop_var: vhost
+    label: "{{ vhost.url is string | ternary(vhost.url, vhost.url | first) }}"
+
+- name: "Traefik Ingress / Vhost / Enumerate url ..."
+  set_fact:
+    IngressConfig: "{{ IngressConfig | combine( { 'used': { 'url':  IngressConfig.vhost | selectattr('url','defined') | map(attribute='url') | flatten | map('urlsplit','hostname') } }, recursive=true) }}"
+
+- name: "Traefik Ingress / Vhost / Enumerate used sans ..."
+  set_fact:
+    IngressConfig: "{{ IngressConfig | combine( { 'used': { 'san':  IngressConfig.vhost | selectattr('san','defined') | map(attribute='san') | flatten } }, recursive=true) }}"
+
+- name: "Traefik Ingress / Vhost / Enumerate used tls providers ..."
+  set_fact:
+    IngressConfig: "{{ IngressConfig | combine( { 'used': { 'san':  IngressConfig.vhost | selectattr('san','defined') | map(attribute='san') | flatten } }, recursive=true) }}"
+
+    vh_used_tls_providers: "{{ IngressConfig.vhost | map(attribute='tls', default='none' ) | flatten }}"
+
+- name: "Traefik Ingress / Vhost / Enumerate wildcards ..."
+  set_fact:
+    IngressConfig: "{{ IngressConfig | combine( { 'wildcards': (IngressConfig.used.url + IngressConfig.used.san ) | kit_wildcard_domains }, recursive=true) }}"
+
+- name: "Traefik Ingress / Vhost / DNS Providers (init) ..."
+  set_fact:
+    vh_tls_providers: [ 'none' ]
+
+- name: "Traefik Ingress / Vhost / DNS Providers ..."
+  set_fact:
+    vh_tls_providers: "{{ vh_tls_providers + (IngressConfig.acme.dns | map(attribute='provider') | flatten | unique) }}"
+  when: IngressConfig.acme.dns is defined
+
+
+- name: "Traefik Ingress / Vhost / HTTP Provider ..."
+  set_fact:
+    vh_tls_providers: "{{ ( vh_tls_providers + [ 'http' ] ) | flatten | unique }}"
+  when: IngressConfig.acme.http | default(true)
+
+#- name: "Traefik Ingress / Vhost / Map wildcards -> provider ..."
+#  include_tasks: "{{ kit.path }}/task/wildcard-provider.yaml"
+#  loop: "{{ IngressConfig.vhost }}"
+#  loop_control:
+#    loop_var: vhost
+#    label: "{{ vhost.url is string | ternary(vhost.url, vhost.url | first) }}"
+
+- name: "Traefik Ingress / Vhost / Verify used TLS providers ..."
+  assert:
+    that:
+      -  vh_used_tls_providers is subset(vh_tls_providers)
+    msg: "one of the selected providers is not defined"
+
+- name: "Traefik Ingress / Vhost / Normalize vhosts ..."
+  include_tasks: "st/vhost/normalize.yaml"
+  loop: "{{ IngressConfig.vhost }}"
+  loop_control:
+    loop_var: vhost
+    label: "{{ vhost.url }}"
+
+- name: "Traefik Ingress / Vhost / Generete list of vhosts files ..."
+  set_fact:
+    ingress_runtime_files: "{{ ingress_runtime_files + [ 'vhost-' ~ vhost.url | join('-') | hash('md5') ~ '.yaml'] }}"
+  loop: "{{ ingress_vhosts }}"
+  loop_control:
+    loop_var: vhost
+    label: "{{ vhost.backend }}"
+
+- name: "Traefik Ingress / Vhost / List of runtime files ..."
+  debug: var=ingress_runtime_files
+
+- name: "Traefik Ingress / Vhost / Create list of runtime files to remove ..."
+  find:
+    paths: "{{ IngressConfig.runtime }}/runtime"
+    file_type: any
+    excludes: "{{ ingress_runtime_files }}"
+  register: ingress_runtime_cleanup
+
+- name: "Traefik Ingress / Vhost / Remove unmanaged files ..."
+  file:
+    path: "{{ cleanup.path }}"
+    state: absent
+  loop: "{{ ingress_runtime_cleanup.files }}"
+  loop_control:
+    loop_var: cleanup
+    label: "{{ cleanup.path | basename }}"
+
+- name: "Traefik Ingress / Vhost / Generate configuration ..."
+  include_tasks: "st/vhost/vhost-generator.yaml"
+  loop: "{{ ingress_vhosts }}"
+  loop_control:
+    loop_var: vhost
+    label: "{{ vhost.backend }}"
