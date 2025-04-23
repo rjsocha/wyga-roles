@@ -5,8 +5,8 @@
       register: _ca_key_is_present
       ignore_errors: yes
       changed_when: false
-      connection: local
       retries: 25
+      delegate_to: localhost
       until: _ca_key_is_present is success
 
     - name: "Host CA key not loaded ..."
