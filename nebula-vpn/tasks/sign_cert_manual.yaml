@@ -10,7 +10,7 @@
     hostname: "{{ vpn_instance.hostname }}"
     subnets: "{{ node_subnets | sort }}"
     domain: "{{ vpn.domain | default('vpn') }}"
-  connection: local
+  deleagate_to: localhost
 
 - name: "Waiting for vpn/inbox/{{ vpn_instance.name }}-{{ vpn_instance.hostname }}.crt ..."
   debug: msg="..."
@@ -20,4 +20,4 @@
     path: "{{ playbook_dir }}/vpn/inbox/{{ vpn_instance.name }}-{{ vpn_instance.hostname }}.crt"
     state: present
     timeout: 300
-  connection: local
+  delegate_to: localhost

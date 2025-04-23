@@ -79,7 +79,7 @@
       file:
         path: "{{ playbook_dir }}/vpn/inbox"
         state: directory
-      connection: local
+      delegate_to: localhost
 
     - name: "Cleanup ..."
       file:
@@ -92,7 +92,7 @@
       loop_control:
         loop_var: file
         label: "{{ file | basename }}"
-      connection: local
+      delegate_to: localhost
 
     - name: "Fetch host.pub file ..."
       fetch:
@@ -124,7 +124,7 @@
       loop_control:
         loop_var: file
         label: "{{ file | basename }}"
-      connection: local
+      delegate_to: localhost
   when: generate_cert
 
 - name: "Certificate marker ..."
