@@ -21,4 +21,11 @@
       loop_control:
         loop_var: kvm_profile
         label: "{{ kvm_profile.path }}"
+
+    - name: "KVM / Set immutable flag on /storage/vm/instance ..."
+      include_role:
+        name: wyga/immutable-directory
+      vars:
+        immutable_path: "/storage/vm/instance"
+        immutable_state: "{{ (host.setup.kvm.storage.immutable | default(false)) | bool }}"
   when: host.setup.kvm.profile is defined and host.setup.kvm.profile | lower == 'cloud'
