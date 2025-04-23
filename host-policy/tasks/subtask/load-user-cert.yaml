@@ -8,7 +8,7 @@
   stat:
     path: "{{ playbook_dir }}/{{user_ca_key}}.pub"
   register: _public_user_ca_exists
-  connection: local
+  delegate_to: localhost
 
 - debug:
     msg:
@@ -17,7 +17,7 @@
 - name: "Select public key ..."
   set_fact:
     user_cert_file: "{{ _public_user_ca_exists.stat.path }}"
-  connection: local
+  delegate_to: localhost
   when: _public_user_ca_exists.stat.exists == True
 
 - name: "No such file ..."
@@ -28,4 +28,4 @@
 - name: "Load key ..."
   set_fact:
     user_cert: "{{ lookup('file',user_cert_file) }}"
-  connection: local
+  delegate_to: localhost

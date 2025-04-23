@@ -4,7 +4,7 @@
     file_type: directory
     recurse: no
   register: kit_folders
-  connection: local
+  delegate_to: localhost
 
 - name: "KIT / {{ inventory_hostname }} / Prepare candidates ..."
   set_fact:
@@ -18,7 +18,7 @@
     patterns: kit.yml,kit.yaml
     contains: "^#KIT:ON"
   register: kit_list
-  connection: local
+  delegate_to: localhost
 
 - name: "KIT / {{ inventory_hostname }} / Prepare execution list ..."
   set_fact:

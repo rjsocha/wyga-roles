@@ -4,7 +4,7 @@
     path: "{{ playbook_dir }}/{{ user_ssh_keys }}/{{ item }}"
   loop: "{{ pool.value.authorized }}"
   when: not item.startswith('BASE64')
-  connection: local
+  delegate_to: localhost
   register: keys_exists
 
 - name: "Verifying all keys are present..."
