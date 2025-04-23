@@ -7,7 +7,7 @@
 
 - block:
   - name: "Check if SSH_HOST_CA_PATH {{ SSH_HOST_CA_PATH }} exists..."
-    connection: local
+    delegate_to: localhost
     stat:
       path: "{{ SSH_HOST_CA_PATH }}"
     register: ssh_ca_path_exist
