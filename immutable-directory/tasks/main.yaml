@@ -1,0 +1,28 @@
+# There is error with file module: https://github.com/ansible/ansible/issues/48839
+# Not fixed in current version of ansible
+# So workaround follows ...
+- name: "Immutable Directory / Verify parameters ..."
+  assert:
+    that:
+      - immutable_path is defined
+      - immutable_path is string
+      - immutable_state is defined
+      - immutable_state is boolean
+
+- name: "Immutable Directory / Check if directory exists ..."
+  stat:
+    path: "{{ immutable_path }}"
+  register: immutable_stat
+
+- block:
+    - name: "Immutable Directory / Set immutable flag ..."
+      file:
+        path: "{{ immutable_path }}"
+        attributes: +i
+      when: immutable_state | bool and 'immutable' not in immutable_stat.stat.attributes
+    - name: "Immutable Directory / Remove immutable flag ..."
+      file:
+        path: "{{ immutable_path }}"
+        attributes: -i
+      when: not immutable_state | bool and 'immutable' in immutable_stat.stat.attributes
+  when: immutable_stat.stat.exists and immutable_stat.stat.isdir and immutable_stat.stat.attributes is defined
