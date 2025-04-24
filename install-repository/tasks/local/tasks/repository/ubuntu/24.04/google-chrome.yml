@@ -1,0 +1,14 @@
+- name: "Install google-chrome apt repository ..."
+  copy:
+    src: "repository/google-chrome/ubuntu/24.04/{{ repo_file.src }}"
+    dest: "{{ repo_file.dst }}"
+    group: root
+    owner: root
+    mode: 0644
+    force: yes
+  loop:
+    - { 'src': 'google-chrome.list', 'dst': '/etc/apt/sources.list.d/google-chrome.list' }
+    - { 'src': 'google-chrome.gpg',  'dst': '/usr/share/keyrings/google-chrome.gpg' }
+  loop_control:
+    loop_var: repo_file
+    label: "{{ repo_file }}"
