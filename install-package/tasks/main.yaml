@@ -135,9 +135,12 @@
   include_role:
     name: wyga/install-repository
   loop: "{{ repository_list }}"
-  when: repository_list | length > 0
   loop_control:
-    loop_var: repository_name
+    loop_var: repository_loop
+    label: "{{ repository_loop }}"
+  vars:
+    repository: "{{ repository_loop }}"
+  when: repository_list | length > 0
 
 - name: "."
   debug:
