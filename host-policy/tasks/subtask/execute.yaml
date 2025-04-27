@@ -47,8 +47,10 @@
     name: wyga/install-repository
   loop: "{{ host.package.repository }}"
   loop_control:
-    loop_var: repository
-    label: "{{ repository }}"
+    loop_var: repository_loop
+    label: "{{ repository_loop }}"
+  vars:
+    repository: "{{ repository_loop }}"
   when: host.package.repository is defined and not host.package.skip|default(false)
 
 - name: "Process packages ..."
