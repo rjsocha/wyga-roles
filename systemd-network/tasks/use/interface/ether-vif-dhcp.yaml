@@ -1,0 +1,3 @@
+- name: "Apply ether/vif/dhcp template ..."
+  set_fact:
+    interface: "{{ {} | combine({ 'match': { 'type': 'ether', 'driver': 'vif' }, 'method': 'dhcp' }) | combine(interface_entry) | combine({'use': omit}) }}"

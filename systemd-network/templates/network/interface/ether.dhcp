@@ -1,8 +1,14 @@
 #jinja2: trim_blocks: True, lstrip_blocks: True
 [Match]
 Type=ether
+{% if interface.match.drivers is defined %}
+{% for driver in interface.match.drivers %}
+Driver={{ driver }}
+{% endfor %}
+{% else %}
 {% if interface.match.driver != 'any' %}
 Driver={{ interface.match.driver }}
+{% endif %}
 {% endif %}
 
 [Network]

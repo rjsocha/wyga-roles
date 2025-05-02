@@ -10,7 +10,7 @@
       assert:
         that:
           - >
-            interface_entry.use in [ 'loopback', 'ether/dhcp', 'ether/virtio/dhcp', 'wlan/dhcp' ]
+            interface_entry.use in [ 'loopback', 'ether/dhcp', 'ether/vm/dhcp', 'ether/virtio/dhcp', 'ether/kvm/dhcp', 'ether/vif/dhcp', 'ether/xen/dhcp', 'ether/ena/dhcp', 'wlan/dhcp' ]
             or interface_entry.use is regex('(?i)^dummy/([a-z0-9@.+_-]){1,16}$')
             or interface_entry.use is regex('(?i)^dhcp/([a-f0-9]{2}:){5}[a-f0-9]{2}$')
             or interface_entry.use is regex('(?i)^dhcp/([a-z0-9@.+_-]){1,16}$')

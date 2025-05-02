@@ -53,6 +53,26 @@
   include_tasks: "use/interface/ether-virtio-dhcp.yaml"
   when: interface_entry.use == 'ether/virtio/dhcp'
 
+- name: "Load template for ether/kvm/dhcp ..."
+  include_tasks: "use/interface/ether-virtio-dhcp.yaml"
+  when: interface_entry.use == 'ether/kvm/dhcp'
+
+- name: "Load template for ether/vif/dhcp ..."
+  include_tasks: "use/interface/ether-vif-dhcp.yaml"
+  when: interface_entry.use == 'ether/vif/dhcp'
+
+- name: "Load template for ether/xen/dhcp ..."
+  include_tasks: "use/interface/ether-vif-dhcp.yaml"
+  when: interface_entry.use == 'ether/xen/dhcp'
+
+- name: "Load template for ether/ena/dhcp ..."
+  include_tasks: "use/interface/ether-ena-dhcp.yaml"
+  when: interface_entry.use == 'ether/ena/dhcp'
+
+- name: "Load template for ether/vm/dhcp ..."
+  include_tasks: "use/interface/ether-vm-dhcp.yaml"
+  when: interface_entry.use == 'ether/vm/dhcp'
+
 - name: "Load template for wlan/dhcp ..."
   include_tasks: "use/interface/wlan-dhcp.yaml"
   when: interface_entry.use == 'wlan/dhcp'
