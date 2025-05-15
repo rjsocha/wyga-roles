@@ -31,11 +31,19 @@
 
 - name: "Remove packages not intended for the {{ target_distribution }} distribution ..."
   set_fact:
-    __packages: "{{ __packages | reject('regex','^.+@(?!(' ~ target_distribution ~ '|' ~ target_distribution ~ '-' ~ target_distribution_version ~ ')$).+$') | list }}"
+    __packages: "{{ __packages | reject('regex','^.+@(?!(' ~ target_distribution ~ '|' ~ target_distribution ~ '-' ~ target_distribution_version ~ ')).+$') | list }}"
 
 - name: "Strip target distribution suffix ..."
   set_fact:
-    __packages: "{{ __packages | map('regex_replace', '@(' ~ target_distribution ~ '|' ~ target_distribution ~ '-' ~ target_distribution_version ~ ')$', '') | list }}"
+    __packages: "{{ __packages | map('regex_replace', '@(' ~ target_distribution ~ '|' ~ target_distribution ~ '-' ~ target_distribution_version ~ ')', '') | list }}"
+
+- name: "Remove packages not intended for the {{ target_arch }} architecture ..."
+  set_fact:
+    __packages: "{{ __packages | reject('regex','^.+%(?!(' ~ target_arch ~ ')$).+$') | list }}"
+
+- name: "Strip target architecture suffix ..."
+  set_fact:
+    __packages: "{{ __packages | map('regex_replace', '%' ~ target_arch ~ '$', '') | list }}"
 
 - name: "Select packages to purge ..."
   set_fact:
@@ -113,7 +121,7 @@
 - name: "Information ..."
   debug:
     msg:
-      - "TARGET:        {{ target_distribution | capitalize }} {{ target_distribution_version }}"
+      - "TARGET:        {{ target_distribution | capitalize }} {{ target_distribution_version }} / {{ target_arch }}"
       - "PACKAGES:      {{ __packages }}"
       - "REPOSITORIES:  {{ repository_list }}"
       - "PREREQUISITES: {{ prerequisite_list }}"
