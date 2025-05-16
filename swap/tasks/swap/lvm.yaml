@@ -19,13 +19,13 @@
       command: lvcreate --quiet --yes --wipesignatures y --zero y -n swap -L "{{ host.setup.swap.size | default('1GiB') }}" "{{ swap_vg_name }}"
 
     - name: "SWAP / Initialize swap device ..."
-      command: mkswap -qf -L SWAP "/dev/{{ swap_vg_name }}/swap"
+      command: mkswap -f -L SWAP "/dev/{{ swap_vg_name }}/swap"
   when: not swap_lv_present.stat.exists
 
 - name: "SWAP / Add swap device to /etc/fstab ..."
   mount:
     name: none
-    src: "/dev/mapper/{{ swap_vg_name }}-swap"
+    src: "/dev/{{ swap_vg_name }}/swap"
     fstype: swap
     opts: sw
     passno: "0"

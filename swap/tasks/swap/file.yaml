@@ -22,7 +22,7 @@
       command: fallocate -l "{{ host.setup.swap.size | default('1GiB') }}" "{{ swap_file }}"
 
     - name: "SWAP / Initialize swap file ..."
-      command: mkswap -qf "{{ swap_file }}"
+      command: mkswap -f "{{ swap_file }}"
   when: not swap_file_present.stat.exists
 
 - name: "SWAP / Add swap file to /etc/fstab ..."
