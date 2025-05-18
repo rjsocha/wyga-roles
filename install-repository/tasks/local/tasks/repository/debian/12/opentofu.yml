@@ -1,0 +1,15 @@
+- name: "Install opentofu apt repository ..."
+  copy:
+    src: "repository/opentofu/debian/12/{{ repo_file.src }}"
+    dest: "{{ repo_file.dst }}"
+    group: root
+    owner: root
+    mode: 0644
+    force: yes
+  loop:
+    - { 'src': 'opentofu.list', 'dst': '/etc/apt/sources.list.d/opentofu.list' }
+    - { 'src': 'opentofu.gpg',  'dst': '/usr/share/keyrings/opentofu.gpg' }
+    - { 'src': 'opentofu-repo.gpg',  'dst': '/usr/share/keyrings/opentofu-repo.gpg' }
+  loop_control:
+    loop_var: repo_file
+    label: "{{ repo_file }}"
