@@ -1,7 +1,7 @@
 ---
-- name: "Load manifest for {{ package.name }} ..."
+- name: "Load manifest for {{ ip_package.name }} ..."
   include_vars:
-    file: "{{ package.manifest }}"
+    file: "{{ ip_package.manifest }}"
     name: loaded_manifest
 
 - name: "Append prerequisite packages ..."

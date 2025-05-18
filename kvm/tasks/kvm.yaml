@@ -12,6 +12,16 @@
       - .kvm-system
       - guestfs-tools
 
+- name: "KVM / Install KVM subsystem (arm) ..."
+  include_role:
+    name: wyga/install-package-override
+  vars:
+    packages:
+      - qemu-system-arm
+      - qemu-efi-aarch64
+      - qemu-efi-arm
+  when: host.setup.kvm.emulation is defined and 'arm' in host.setup.kvm.emulation
+
 - name: "KVM / Configuration"
   file:
     path: "/etc/site/kvm"

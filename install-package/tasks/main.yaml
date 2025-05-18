@@ -52,21 +52,21 @@
 
 - name: "Prepare packages list ..."
   set_fact:
-     package_list: "{{ package_list + [ { 'name': package, 'manifest': playbook_dir + '/local/packages/' + target_distribution + '/' + target_distribution_version + '/' + package } ] + [ { 'name': package, 'manifest': role_path + '/files/packages/' + target_distribution + '/' + target_distribution_version + '/' + package } ] }}"
+     package_list: "{{ package_list + [ { 'name': ip_package, 'manifest': playbook_dir + '/local/packages/' + target_distribution + '/' + target_distribution_version + '/' + ip_package } ] + [ { 'name': ip_package, 'manifest': role_path + '/files/packages/' + target_distribution + '/' + target_distribution_version + '/' + ip_package } ] }}"
   loop: "{{ __packages }}"
   loop_control:
-    loop_var: package
-    label: "{{ package }}"
+    loop_var: ip_package
+    label: "{{ ip_package }}"
 
 - name: "Process packages ... (PASS 1) ..."
   include_tasks: "packages/process-package.yml"
   vars:
     process_require: true
   loop: "{{ package_list }}"
-  when: "package.manifest is exists"
+  when: "ip_package.manifest is exists"
   loop_control:
-    loop_var: package
-    label: "{{ package.name }}"
+    loop_var: ip_package
+    label: "{{ ip_package.name }}"
 
 - name: "Normalize require list ..."
   set_fact:
@@ -80,22 +80,22 @@
         package_list: []
     - name: "Prepare package list (require) ..."
       set_fact:
-        package_list: "{{ package_list + [ { 'name': package, 'manifest': playbook_dir + '/site/packages/' + target_distribution + '/' + target_distribution_version + '/' + package } ] + [ { 'name': package, 'manifest': role_path + '/files/packages/' + target_distribution + '/' + target_distribution_version + '/' + package } ] }}"
-        __packages: "{{ __packages + [ package ] }}"
+        package_list: "{{ package_list + [ { 'name': ip_package, 'manifest': playbook_dir + '/site/packages/' + target_distribution + '/' + target_distribution_version + '/' + ip_package } ] + [ { 'name': ip_package, 'manifest': role_path + '/files/packages/' + target_distribution + '/' + target_distribution_version + '/' + ip_package } ] }}"
+        __packages: "{{ __packages + [ ip_package ] }}"
       loop: "{{ require_list }}"
       loop_control:
-        loop_var: package
-      when: package not in __packages
+        loop_var: ip_package
+      when: ip_package not in __packages
 
     - name: "Process packages ... (PASS 2) ..."
       include_tasks: "packages/process-package.yml"
       vars:
         process_require: false
       loop: "{{ package_list }}"
-      when: "package.manifest is exists"
+      when: "ip_package.manifest is exists"
       loop_control:
-        loop_var: package
-        label: "{{ package.name }}"
+        loop_var: ip_package
+        label: "{{ ip_package.name }}"
   when: require_list | length > 0
 
 - name: "Normalize prerequisite list ..."
