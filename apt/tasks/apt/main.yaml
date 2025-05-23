@@ -25,10 +25,11 @@
       - "{{ role_path }}/tasks/apt/target/generic/apt.yaml"
 
 # Digitial Ocean's Debian
-- name: "Cleanup (Debian) ...."
-  file:
-    path: "/etc/apt/sources.list.d/debian.sources"
-    state: absent
+#- name: "Cleanup (Debian) ...."
+#  file:
+#    path: "/etc/apt/sources.list.d/debian.sources"
+#    state: absent
+#  when: "target_distribution != 'debian' and  target_distribution_version != '13'"
 
 - name: "Cleanup apt ..."
   shell: "find /var/lib/apt/lists /var/cache/apt -type f -delete && apt-get clean"

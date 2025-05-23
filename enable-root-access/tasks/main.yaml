@@ -42,4 +42,4 @@
       register: user_purge
       retries: 25
       until: user_purge is success
-  when: skip_user_purge is not defined
+  when: skip_user_purge is not defined and connected_user != "root"

@@ -3,11 +3,9 @@
     name:
       - netplan.io
       - libnetplan0
-      - libyaml-0-2
       - python3-dbus
       - python3-netifaces
       - python3-yaml
-      - python3-gi
     state: absent
     autoremove: yes
     purge: yes
@@ -21,7 +19,6 @@
     name:
       - netplan.io
       - libnetplan1
-      - libyaml-0-2
       - netplan-generator
       - python3-cffi-backend
       - python3-dbus

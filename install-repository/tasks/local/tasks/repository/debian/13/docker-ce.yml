@@ -1,0 +1,25 @@
+- name: "Install docker-ce apt repository ..."
+  copy:
+    src: "repository/docker-ce/debian/13/{{ repo_file.src }}"
+    dest: "{{ repo_file.dst }}"
+    group: root
+    owner: root
+    mode: 0644
+    force: yes
+  loop:
+    - { 'src': 'docker-ce.gpg',  'dst': '/usr/share/keyrings/docker-ce.gpg' }
+    - { 'src': '{{ target_arch }}/docker-ce.sources', 'dst': '/etc/apt/sources.list.d/docker-ce.sources' }
+  loop_control:
+    loop_var: repo_file
+    label: "{{ repo_file }}"
+
+- name: "Cleanup docker-ce apt repository ..."
+  file:
+    path: "{{ apt_cleanup_file }}"
+    state: absent
+  loop:
+     - "/etc/apt/sources.list.d/docker.list"
+     - "/usr/share/keyrings/docker.gpg"
+  loop_control:
+    loop_var: apt_cleanup_file
+    label: "{{ apt_cleanup_file }}"

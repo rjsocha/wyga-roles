@@ -1,0 +1,14 @@
+require:
+  - qemu-system-x86
+  - libvirt-daemon-system
+  - libvirt-clients
+  - virtinst
+  - ovmf
+  - swtpm-tools
+  - dnsmasq-base
+  - bridge-utils
+  - netfilter-persistent
+  - iptables-persistent
+  - python3-lxml
+  - qemu-utils
+  - jq

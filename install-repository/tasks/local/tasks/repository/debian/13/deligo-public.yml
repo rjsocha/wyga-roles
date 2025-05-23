@@ -1,0 +1,19 @@
+- name: "Install deligo-public apt repository ..."
+  copy:
+    src: "{{ playbook_dir }}/local/repository/deligo-public/generic/{{ repo.src }}"
+    dest: "{{ repo.dst }}"
+    group: root
+    owner: root
+    mode: 0644
+    force: yes
+  loop:
+    - { 'src': '{{ target_arch }}/deligo-public.sources', 'dst': '/etc/apt/sources.list.d/deligo-public.sources' }
+    - { 'src': 'deligo-public.gpg',  'dst': '/usr/share/keyrings/deligo-public.gpg' }
+  loop_control:
+    loop_var: repo
+    label: "{{ repo.src }}"
+
+- name: "Remove /etc/apt/sources.list.d/deligo-public.list ..."
+  file:
+    path: "/etc/apt/sources.list.d/deligo-public.list"
+    state: absent

@@ -11,6 +11,7 @@
       - python3-mdurl
       - python3-pygments
       - python3-rich
+      - dhcpcd-base
     state: absent
     autoremove: yes
     purge: yes
