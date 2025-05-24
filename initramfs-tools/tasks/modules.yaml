@@ -1,0 +1,22 @@
+---
+- name: "initramfs - modules / prepare ..."
+  set_fact:
+    _initramfs_modules: []
+
+- name: "initramfs - modules / select ..."
+  set_fact:
+    _initramfs_modules: "{{ _initramfs_modules + [ initramfs_module | replace('@' ~ target_distribution, '') ] }}"
+  loop: "{{ host.setup.initramfs.modules }}"
+  loop_control:
+    loop_var: initramfs_module
+    label: "{{ initramfs_module }}"
+  when: "'@' not in initramfs_module or initramfs_module.endswith('@' ~ target_distribution)"
+
+- name: "initramfs - modules / save configuration ..."
+  template:
+    dest: "/etc/initramfs-tools/modules"
+    src: "initramfs/modules"
+  vars:
+    modules: "{{ _initramfs_modules }}"
+  notify: update-initramfs
+  when: _initramfs_modules | length > 0
