@@ -39,14 +39,9 @@
     - name: "Prepare temporary directories..."
       include_tasks: "certificate/prepare-temp-dirs.yaml"
 
-    - name: "Generate serial number..."
-      shell: "date +%y%m%d%H%M%S"
-      register: _date_serial_out
-      changed_when: false
-
-    - name: "Set serial number fact..."
+    - name: "Set serial number ..."
       set_fact:
-        _date_serial: "{{ _date_serial_out.stdout }}"
+        _date_serial: "{{ '%y%m%d%H%M%S' | strftime }}"
 
     - name: "Generate new host keys"
       include_tasks: "certificate/generate-new-host-key.yaml"
