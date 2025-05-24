@@ -1,0 +1,75 @@
+---
+- name: "Canonicalization of group configuation ..."
+  include_tasks: "normalize-group.yaml"
+  loop: "{{ host.group }}"
+  loop_control:
+    loop_var: wum_target
+    label: "group"
+  when: host.group is defined
+
+- name: "Prepare users dictonary ..."
+  set_fact:
+    wum_users: {}
+
+- name: "Canonicalization of users configuation ..."
+  include_tasks: "normalize-user.yaml"
+  loop: "{{ host.user }}"
+  loop_control:
+    loop_var: wum_target
+    label: "user"
+  when: host.user is defined
+
+- block:
+  - name: "Load user CA certificate ..."
+    include_tasks: "load-user-cert.yaml"
+
+  - name: "Fail if there is no user_cert defined ..."
+    fail:
+      msg: "the 'user_cert' is not defined"
+    when: user_cert is not defined
+  when: host.setup.ssh.user.certificate | default(false)
+
+- name: "Enumerate groups ..."
+  include_tasks: "enumerate-groups.yaml"
+
+- name: "Group management ..."
+  include_tasks: "group.yaml"
+
+- name: "Enumerate users ..."
+  include_tasks: "enumerate-users.yaml"
+
+- name: "User management ..."
+  include_tasks: "user.yaml"
+
+- name: "Create required directiores ..."
+  file:
+    path: "{{ required_directory }}"
+    state: directory
+  loop:
+    - "{{ ssh_pool_dir }}"
+  loop_control:
+    loop_var: required_directory
+    label: "{{ required_directory }}"
+  when: host.user is defined
+# roles disabled
+#    - "{{ ca_ssh_ca_dir }}"
+#    - "{{ ca_ssh_role_dir }}"
+
+#- include_tasks: "update-ca-cert.yaml"
+#  when: host.setup.ssh.user.certificate | default(false)
+
+#- name: "Update roles ..."
+#  include_tasks: "update-roles.yaml"
+#  loop: "{{ wum_users | dict2items }}"
+#  loop_control:
+#    loop_var: target
+#    label: "{{ target.key }}"
+
+#- name: "Remove orphaned roles ..."
+#  include_tasks: "remove-roles.yaml"
+
+- name: "Manage ssh authorized keys ..."
+  include_tasks: "authorized.yaml"
+
+- name: "Configure /etc/ssh/sshd_config"
+  include_tasks: "update-ssh.yaml"

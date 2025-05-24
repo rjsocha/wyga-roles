@@ -1,5 +1,5 @@
 ---
-#- name: "Select users..." 
+#- name: "Select users..."
 #  set_fact:
 #    files_regexp: "^({{ pool.value.authorized | join('|') }})$"
 
@@ -10,14 +10,20 @@
   changed_when: false
   register: user_keys_directory
 
-#- name: "Selected keys for {{ pool.key }}"
-#  debug:
-#    msg: "{{ files_regexp }}"
-
 - include_tasks: "generate-user-key.yaml"
   loop: "{{pool.value.authorized}}"
   loop_control:
     loop_var: keyname
+
+- name: "Count user keys ..."
+  find:
+    path: "{{ user_keys_directory.path }}"
+    file_type: file
+  register: user_keys_find
+
+- name: "Set number of keys ..."
+  set_fact:
+    user_keys_count: "{{ user_keys_find.files | length }}"
 
 - name: "Update pool for {{pool.key}}"
   assemble:
@@ -27,6 +33,13 @@
     owner: "root"
     group: "root"
     mode: "0644"
+  when: user_keys_count | int > 0
+
+- name: "Purge empty pool for {{pool.key}}"
+  file:
+    path: "{{ ssh_pool_dir }}/{{ pool.key }}"
+    state: absent
+  when: user_keys_count | int == 0
 
 - name: "Cleanup temporary key directory"
   file:

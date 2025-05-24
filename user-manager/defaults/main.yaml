@@ -1,0 +1,10 @@
+ca_ssh_ca_dir:      "/etc/site/ssh/ca"
+ca_ssh_role_dir:    "/etc/site/ssh/role"
+wum_user_managed:   "/etc/site/iam/user/managed"
+wum_group_managed:  "/etc/site/iam/group/managed"
+ssh_pool_dir:       "/etc/ssh-pool"
+user_ca_key:        "key/ca/user/user-ca"
+user_ssh_keys:      "key/user"
+
+# eex3DeinieM3giev (force password change enforced)
+onboard_password: "$6$PpUuVvg7GhGhS.BF$v6ezEDaxvlK.VX77QVZWUPu2awEnH7Xhw16BcSbq6T2FADilhjphOMS.4l3kkgVqA2xjq.XxK4tfocgDfFxxS."

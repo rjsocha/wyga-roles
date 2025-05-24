@@ -1,6 +1,6 @@
 ---
 
-- include_tasks: "is-public-key-exist.yaml"
+- include_tasks: "public-key-exist.yaml"
   loop: "{{wum_users | dict2items}}"
   loop_control:
     loop_var: pool

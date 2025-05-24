@@ -8,9 +8,9 @@
     state: present
 
 - name: "Create managed group state directory ..."
-  include_tasks: "create-dir.yaml"
-  loop:
-    - "{{wum_group_managed}}"
+  file:
+    path: "{{wum_group_managed}}"
+    state: directory
 
 - name: "Mark group {{ target.key }} as managed ..."
   copy:

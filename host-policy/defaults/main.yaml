@@ -1,11 +1,1 @@
-ca_ssh_ca_dir:      "/etc/site/{{ whp_site }}/ssh/ca"
-ca_ssh_role_dir:    "/etc/site/{{ whp_site }}/ssh/role"
-wum_user_managed:   "/etc/site/{{ whp_site }}/user/managed"
-wum_group_managed:  "/etc/site/{{ whp_site }}/group/managed"
-ssh_pool_dir:       "/etc/ssh-pool"
-user_ca_key:        "key/ca/user/user-ca"
-user_ssh_keys:      "key/user"
 host_policy_dir:    "/var/opt/host-policy"
-
-# eex3DeinieM3giev (force password change enforced)
-onboard_password: "$6$PpUuVvg7GhGhS.BF$v6ezEDaxvlK.VX77QVZWUPu2awEnH7Xhw16BcSbq6T2FADilhjphOMS.4l3kkgVqA2xjq.XxK4tfocgDfFxxS."

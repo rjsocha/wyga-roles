@@ -1,0 +1,10 @@
+- name: "Check if host is defined ..."
+  assert:
+    that:
+      - host is defined
+
+- name: "Create empty group list ..."
+  set_fact:
+    wum_groups: {}
+
+- include_tasks: "subtask/execute.yaml"

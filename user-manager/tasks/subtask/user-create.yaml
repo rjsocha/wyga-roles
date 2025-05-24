@@ -34,9 +34,9 @@
   when: target.value.keygen is defined
 
 - name: "Create managed user state directory ..."
-  include_tasks: "create-dir.yaml"
-  loop:
-    - "{{wum_user_managed}}"
+  file:
+    path: "{{wum_user_managed}}"
+    state: directory
 
 - name: "Check if user is already managed ..."
   stat:
@@ -54,4 +54,10 @@
     mode: "0400"
     owner: "root"
     group: "root"
-  when: target.key != "root"
+  when: target.key != "root" and target.value.unmanaged | default(false) == false
+
+- name: "Remove managed mark for user {{ target.key }} ..."
+  file:
+    path: "{{wum_user_managed }}/{{target.key}}"
+    state: absent
+  when: target.key != "root" and target.value.unmanaged | default(false) == true
