@@ -25,6 +25,7 @@ require:
   - screen
   - sudo
   - sysstat
+  - systemd-resolved
   - tcpdump
   - tmux
   - unzip
