@@ -5,6 +5,8 @@ require:
   - curl
   - distro-info-data
   - dnsutils
+  - dosfstools
+  - fdisk
   - git
   - haveged
   - iptraf-ng
