@@ -110,6 +110,22 @@
   set_fact:
     purge_list: "{{ purge_list | difference(__packages) | difference(prerequisite_list) | unique }}"
 
+- name: "Remove packages not intended for the {{ target_distribution }} distribution ..."
+  set_fact:
+    __packages: "{{ __packages | reject('regex','^.+@(?!(' ~ target_distribution ~ '|' ~ target_distribution ~ '-' ~ target_distribution_version ~ ')).+$') | list }}"
+
+- name: "Strip target distribution suffix ..."
+  set_fact:
+    __packages: "{{ __packages | map('regex_replace', '@(' ~ target_distribution ~ '|' ~ target_distribution ~ '-' ~ target_distribution_version ~ ')', '') | list }}"
+
+- name: "Remove packages not intended for the {{ target_arch }} architecture ..."
+  set_fact:
+    __packages: "{{ __packages | reject('regex','^.+%(?!(' ~ target_arch ~ ')$).+$') | list }}"
+
+- name: "Strip target architecture suffix ..."
+  set_fact:
+    __packages: "{{ __packages | map('regex_replace', '%' ~ target_arch ~ '$', '') | list }}"
+
 - name: "Normalize packages list ..."
   set_fact:
     __packages: "{{ __packages | unique }}"

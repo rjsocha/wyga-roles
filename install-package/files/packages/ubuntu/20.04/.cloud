@@ -1,6 +1,5 @@
 require:
   - grub-pc-bin%amd64
-  - -ufw
   - netfilter-persistent
   - iptables-persistent
   - quota@debian
@@ -8,3 +7,5 @@ require:
   - pciutils
   - ethtool
   - isc-dhcp-client
+purge:
+  - ufw
