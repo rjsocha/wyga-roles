@@ -1,4 +1,4 @@
-- name: "Purge packages ..."
+- name: "Purge packages (Ubuntu 22.04) ..."
   apt:
     name:
       - netplan.io
@@ -7,6 +7,8 @@
       - python3-netifaces
       - python3-yaml
       - isc-dhcp-client
+      - libdns-export1110
+      - libisc-export1105
     state: absent
     autoremove: yes
     purge: yes
@@ -15,7 +17,7 @@
   until: _action is success or ('Failed to lock apt for exclusive operation' not in _action.msg and '/var/lib/dpkg/lock' not in _action.msg)
   when: target_distribution_version == '22.04'
 
-- name: "Purge packages ..."
+- name: "Purge packages (Ubuntu 24.04) ..."
   apt:
     name:
       - netplan.io

@@ -76,6 +76,18 @@ purge:
   - landscape-common
   - language-pack-en
   - laptop-detect
+  - libmbim-proxy
+  - libqmi-glib5
+  - libqmi-proxy
+  - libgcab-1.0-0
+  - libgcab-1.0-0
+  - libeatmydata1
+  - libxmlsec1
+  - libxmlsec1-openssl
+  - libdw1
+  - libtcl8.6
+  - liburcu8
+  - libinih1
   - libaccountsservice0
   - libapr1
   - libaprutil1
@@ -297,3 +309,24 @@ purge:
   - libopenblas0
   - libopenblas0-pthread
   - libquadmath0
+  - python3-attr
+  - python3-click
+  - python3-colorama
+  - python3-constantly
+  - python3-debconf
+  - python3-hamcrest
+  - python3-httplib2
+  - python3-importlib-metadata
+  - python3-incremental
+  - python3-jeepney
+  - python3-more-itertools
+  - python3-newt
+  - python3-pexpect
+  - python3-problem-report
+  - python3-ptyprocess
+  - python3-pyasn1
+  - python3-pyasn1-modules
+  - python3-pyparsing
+  - python3-systemd
+  - python3-zipp
+  - iotop
