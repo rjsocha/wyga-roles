@@ -371,6 +371,5 @@ purge:
   - libtext-wrapi18n-perl
   - libxmlb2
   - libxslt1.1
-  - libyaml-0-2
   - tpm-udev
   - whois

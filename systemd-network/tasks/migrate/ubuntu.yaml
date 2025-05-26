@@ -9,6 +9,7 @@
       - isc-dhcp-client
       - libdns-export1110
       - libisc-export1105
+      - libyaml-0-2
     state: absent
     autoremove: yes
     purge: yes
@@ -28,6 +29,7 @@
       - python3-netifaces
       - python3-netplan
       - python3-yaml
+      - libyaml-0-2
     state: absent
     autoremove: yes
     purge: yes
