@@ -312,3 +312,47 @@ purge:
   - python3-systemd
   - python3-zipp
   - iotop
+  - busybox-static
+  - kpartx
+  - libarchive13
+  - libassuan0
+  - libatasmart4
+  - libblockdev-loop2
+  - libblockdev-part-err2
+  - libblockdev-swap2
+  - libblockdev-utils2
+  - libblockdev2
+  - libestr0
+  - libfastjson4
+  - libgudev-1.0-0
+  - libisns0
+  - pinentry-curses
+  - rsyslog
+  - libjson-glib-1.0-0
+  - libjson-glib-1.0-common
+  - libksba8
+  - libmbim-glib4
+  - libmm-glib0
+  - libmspack0
+  - libnl-3-200
+  - libnpth0
+  - libnspr4
+  - libnss-nis
+  - libnss-nisplus
+  - libnss3
+  - libopeniscsiusr
+  - libpackagekit-glib2-18
+  - libpolkit-agent-1-0
+  - libpolkit-gobject-1-0
+  - libsgutils2-2
+  - libsmbios-c2
+  - libappstream4
+  - libstemmer0d
+  - libtext-charwidth-perl
+  - libtext-iconv-perl
+  - libtext-wrapi18n-perl
+  - libxmlb2
+  - libxslt1.1
+  - libyaml-0-2
+  - tpm-udev
+  - whois
