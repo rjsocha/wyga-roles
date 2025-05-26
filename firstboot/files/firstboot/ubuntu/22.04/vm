@@ -5,6 +5,7 @@ purge:
   - amd64-microcode
   - apache2-utils
   - apport
+  - apport-symptoms
   - at
   - bc
   - bcache-tools
@@ -48,7 +49,14 @@ purge:
   - gir1.2-glib-2.0
   - git
   - git-man
+  - gcc-10-base:amd64
+  - gdisk
   - gnupg
+  - gnupg-l10n
+  - gnupg-utils
+  - gpg-agent
+  - gpgconf
+  - gpgsm
   - gpg
   - gpg-wks-client
   - groff-base

@@ -4,6 +4,7 @@ purge:
   - acpid
   - apache2-utils
   - apport
+  - apport-symptoms
   - at
   - bc
   - bcache-tools
@@ -45,7 +46,13 @@ purge:
   - git
   - git-man
   - gnupg
+  - gnupg-l10n
+  - gnupg-utils
   - gpg
+  - gdisk
+  - gpg-agent
+  - gpgconf
+  - gpgsm
   - gpg-wks-client
   - groff-base
   - hdparm

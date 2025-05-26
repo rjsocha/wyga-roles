@@ -6,6 +6,7 @@
       - python3-dbus
       - python3-netifaces
       - python3-yaml
+      - isc-dhcp-client
     state: absent
     autoremove: yes
     purge: yes
