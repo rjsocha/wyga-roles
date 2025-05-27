@@ -460,3 +460,6 @@ purge:
   - fonts-dejavu-core
   - fonts-dejavu-mono
   - firmware-sof-signed
+  - irqbalance
+  - hibagent
+  - ec2-instance-connect
