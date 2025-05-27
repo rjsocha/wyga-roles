@@ -173,3 +173,5 @@ purge:
   - iptraf-ng
   - tcpdump
   - libpcap0.8t64
+  - liblocale-gettext-perl
+  - libtext-iconv-perl

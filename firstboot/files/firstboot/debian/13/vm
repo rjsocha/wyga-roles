@@ -203,3 +203,5 @@ purge:
   - wireless-regdb
   - smartmontools
   - lm-sensors
+  - liblocale-gettext-perl
+  - libtext-iconv-perl
