@@ -162,3 +162,5 @@ purge:
   - libgdbm6
   - iptraf-ng
   - eject
+  - tcpdump
+  - libpcap0.8
