@@ -31,3 +31,5 @@ require:
   - xz-utils
   - zstd
   - libpam-systemd
+  - tpm-udev
+  - time

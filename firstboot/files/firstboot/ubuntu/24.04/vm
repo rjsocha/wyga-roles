@@ -379,3 +379,8 @@ purge:
   - python3-markdown-it
   - python3-mdurl
   - python3-typing-extensions
+  - whois
+  - xdg-user-dirs
+  - libisns0t64
+  - libldap-common
+  - libmspack0t64
