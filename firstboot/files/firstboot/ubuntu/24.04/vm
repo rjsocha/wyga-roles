@@ -453,3 +453,10 @@ purge:
   - libheif-plugin-libde265
   - libdeflate0
   - libde265-0
+  - libaom3
+  - ieee-data
+  - hwdata
+  - fontconfig-config
+  - fonts-dejavu-core
+  - fonts-dejavu-mono
+  - firmware-sof-signed

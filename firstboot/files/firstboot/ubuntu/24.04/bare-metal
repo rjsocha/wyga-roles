@@ -445,4 +445,3 @@ purge:
   - fontconfig-config
   - fonts-dejavu-core
   - fonts-dejavu-mono
-  - firmware-sof-signed
