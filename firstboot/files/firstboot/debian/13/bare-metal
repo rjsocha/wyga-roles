@@ -159,3 +159,17 @@ purge:
   - bsd-mailx
   - traceroute
   - ncurses-term
+  - git-man
+  - libcurl3t64-gnutls
+  - libgdbm-compat4t64
+  - libgdbm6t64
+  - libngtcp2-16
+  - libngtcp2-crypto-gnutls8
+  - git
+  - liberror-perl
+  - libperl5.40
+  - perl
+  - perl-modules-5.40
+  - iptraf-ng
+  - tcpdump
+  - libpcap0.8t64

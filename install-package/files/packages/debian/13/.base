@@ -34,3 +34,20 @@ require:
   - wget
   - xz-utils
   - zstd
+  - libpam-systemd
+  - tpm-udev
+  - time
+  - grub-common
+  - grub2-common
+  - grub-efi-amd64%amd64
+  - grub-efi-amd64-bin%amd64
+  - grub-efi-amd64-signed%amd64
+  - grub-pc-bin%amd64
+  - grub-efi-arm64%arm64
+  - grub-efi-arm64-bin%arm64
+  - grub-efi-arm64-signed%arm64
+  - shim-signed
+  - mokutil
+  - efibootmgr
+  - apparmor
+  - perl-modules
