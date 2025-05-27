@@ -23,3 +23,8 @@
   set_fact:
     purge_list: "{{ purge_list + loaded_manifest.purge }}"
   when: loaded_manifest.purge is defined
+
+- name: "Append enabled services ..."
+  set_fact:
+    enable_services: "{{ enable_services + loaded_manifest.enable }}"
+  when: loaded_manifest.enable is defined
