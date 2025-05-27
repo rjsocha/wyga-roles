@@ -200,3 +200,6 @@ purge:
   - iptraf-ng
   - tcpdump
   - libpcap0.8t64
+  - wireless-regdb
+  - smartmontools
+  - lm-sensors
