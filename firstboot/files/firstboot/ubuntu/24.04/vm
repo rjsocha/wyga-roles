@@ -406,3 +406,4 @@ purge:
   - grub-pc
   - lsb-base
   - eject
+  - dmidecode
