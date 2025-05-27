@@ -31,3 +31,8 @@ require:
   - wget
   - xz-utils
   - zstd
+purge:
+  - dbus
+  - dbus-bin
+  - libdbus-1-3
+  - dbus-session-bus-common
