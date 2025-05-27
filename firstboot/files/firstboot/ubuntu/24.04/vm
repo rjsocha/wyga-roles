@@ -384,3 +384,6 @@ purge:
   - libisns0t64
   - libldap-common
   - libmspack0t64
+  - libnsl2
+  - libnss-nis
+  - libnss-nisplus
