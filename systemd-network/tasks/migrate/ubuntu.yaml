@@ -30,6 +30,7 @@
       - python3-netplan
       - python3-yaml
       - libyaml-0-2
+      - isc-dhcp-common
     state: absent
     autoremove: yes
     purge: yes

@@ -409,3 +409,16 @@ purge:
   - dmidecode
   - fwupd-signed
   - apt-transport-https
+  - numactl
+  - unminimize
+  - zip
+  - trace-cmd
+  - libtracefs1
+  - libtraceevent1
+  - libtraceevent1-plugin
+  - libpwquality1
+  - libpwquality-common
+  - libpam-pwquality
+  - cracklib-runtime
+  - libcrack2
+  - iputils-tracepath

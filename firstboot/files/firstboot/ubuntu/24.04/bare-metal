@@ -398,3 +398,15 @@ purge:
   - lsb-base
   - eject
   - apt-transport-https
+  - unminimize
+  - zip
+  - trace-cmd
+  - libtracefs1
+  - libtraceevent1
+  - libtraceevent1-plugin
+  - libpwquality1
+  - libpwquality-common
+  - libpam-pwquality
+  - cracklib-runtime
+  - libcrack2
+  - iputils-tracepath
