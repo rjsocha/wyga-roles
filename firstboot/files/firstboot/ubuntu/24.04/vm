@@ -369,3 +369,13 @@ purge:
   - publicsuffix
   - systemd-hwe-hwdb
   - shared-mime-info
+  - gcc-10-base
+  - iotop
+  - libatm1t64
+  - libdw1t64
+  - libestr0
+  - rsyslog
+  - libfastjson4
+  - python3-markdown-it
+  - python3-mdurl
+  - python3-typing-extensions
