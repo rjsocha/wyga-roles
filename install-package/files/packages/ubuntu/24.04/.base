@@ -3,6 +3,7 @@ require:
   - bash-completion
   - bzip2
   - curl
+  - dbus-broker
   - distro-info-data
   - dnsutils
   - dosfstools
