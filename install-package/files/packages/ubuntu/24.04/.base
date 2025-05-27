@@ -7,10 +7,8 @@ require:
   - dnsutils
   - dosfstools
   - fdisk
-  - git
   - haveged
   - iproute2
-  - iptraf-ng
   - less
   - lsb-release
   - lsof
@@ -26,7 +24,6 @@ require:
   - sudo
   - sysstat
   - systemd-resolved
-  - tcpdump
   - tmux
   - unzip
   - vim
