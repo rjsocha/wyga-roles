@@ -382,3 +382,13 @@ purge:
   - libnss-nis
   - libnss-nisplus
   - libnvme1t64
+  - libreiserfscore0t64
+  - libtss2-mu-4.0.1-0t64
+  - libtss2-esys-3.0.2-0t64
+  - libtss2-mu-4.0.1-0t64
+  - libtss2-sys1t64
+  - libtss2-tcti-cmd0t64
+  - libtss2-tcti-device0t64
+  - libtss2-tcti-mssim0t64
+  - libtss2-tcti-swtpm0t64
+  - liburcu8t64
