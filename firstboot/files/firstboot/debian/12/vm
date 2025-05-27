@@ -182,3 +182,10 @@ purge:
   - liblockfile1
   - libunbound8
   - bsd-mailx
+  - perl
+  - libperl5.36
+  - perl-modules-5.36
+  - libgdbm-compat4
+  - libgdbm6
+  - iptraf-ng
+  - eject
