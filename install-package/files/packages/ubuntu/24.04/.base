@@ -47,3 +47,4 @@ require:
   - efibootmgr
   - apparmor
   - perl-modules
+  - systemd-timesyncd

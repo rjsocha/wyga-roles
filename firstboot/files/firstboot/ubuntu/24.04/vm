@@ -422,3 +422,11 @@ purge:
   - cracklib-runtime
   - libcrack2
   - iputils-tracepath
+  - tzdata-legacy
+  - lsscsi
+  - libwbclient0
+  - libtss2-rc0t64
+  - libtalloc2
+  - keyutils
+  - cifs-utils
+  - chrony
