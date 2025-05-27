@@ -404,3 +404,4 @@ purge:
   - libgpg-error-l10n
   - grub-gfxpayload-lists
   - grub-pc
+  - lsb-base
