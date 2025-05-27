@@ -158,6 +158,7 @@ purge:
   - perl
   - libperl5.36
   - perl-modules-5.36
+  - liblocale-gettext-perl
   - libgdbm-compat4
   - libgdbm6
   - iptraf-ng
