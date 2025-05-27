@@ -392,3 +392,6 @@ purge:
   - libtss2-tcti-mssim0t64
   - libtss2-tcti-swtpm0t64
   - liburcu8t64
+  - libgpg-error-l10n
+  - grub-gfxpayload-lists
+  - grub-pc
