@@ -185,7 +185,6 @@
     enabled: true
     masked: false
     daemon_reload: true
-    state: started
   loop: "{{ enable_services }}"
   loop_control:
     loop_var: service
