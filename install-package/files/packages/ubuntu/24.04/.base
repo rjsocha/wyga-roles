@@ -46,3 +46,4 @@ require:
   - mokutil
   - efibootmgr
   - apparmor
+  - perl-modules
