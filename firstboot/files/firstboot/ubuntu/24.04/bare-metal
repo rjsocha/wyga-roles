@@ -397,3 +397,4 @@ purge:
   - grub-pc
   - lsb-base
   - eject
+  - apt-transport-https

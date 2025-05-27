@@ -42,3 +42,7 @@ require:
   - grub-efi-arm64%arm64
   - grub-efi-arm64-bin%arm64
   - grub-efi-arm64-signed%arm64
+  - shim-signed
+  - mokutil
+  - efibootmgr
+  - apparmor

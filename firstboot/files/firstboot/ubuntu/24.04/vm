@@ -407,3 +407,5 @@ purge:
   - lsb-base
   - eject
   - dmidecode
+  - fwupd-signed
+  - apt-transport-https
