@@ -405,3 +405,4 @@ purge:
   - grub-gfxpayload-lists
   - grub-pc
   - lsb-base
+  - eject
