@@ -381,3 +381,4 @@ purge:
   - libnsl2
   - libnss-nis
   - libnss-nisplus
+  - libnvme1t64
