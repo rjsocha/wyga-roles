@@ -65,6 +65,11 @@
     name: wyga/configure-package
   when: skip_packages is not defined and host.package.packages is defined and not host.package.skip|default(false)
 
+- name: "System upgrade ..."
+  include_role:
+    name: wyga/dist-upgrade
+  when: skip_upgrade is not defined and host.package.upgrade | default(true)
+
 - name: "INITRAMFS configuration ..."
   include_role:
     name: wyga/initramfs-tools
