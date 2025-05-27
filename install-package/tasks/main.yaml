@@ -178,3 +178,16 @@
 
 - name: "Install packages ..."
   include_tasks: "packages/install-packages.yml"
+
+- name: "Enable services ..."
+  systemd:
+    name: "{{ service }}"
+    enabled: true
+    masked: false
+    daemon_reload: true
+    state: started
+  loop: "{{ enable_services }}"
+  loop_control:
+    loop_var: service
+    label: "{{ service }}"
+  when: enable_services | length > 0
