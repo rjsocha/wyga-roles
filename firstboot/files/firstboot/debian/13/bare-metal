@@ -175,3 +175,9 @@ purge:
   - libpcap0.8t64
   - liblocale-gettext-perl
   - libtext-iconv-perl
+  - vim-tiny
+  - vim
+  - vim-common
+  - vim-runtime
+  - libsodium23
+  - mawk
