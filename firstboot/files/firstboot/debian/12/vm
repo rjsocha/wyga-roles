@@ -197,5 +197,4 @@ purge:
   - vim-common
   - vim-runtime
   - libsodium23
-  - mawk
   - nano

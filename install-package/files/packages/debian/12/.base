@@ -49,3 +49,5 @@ require:
   - efibootmgr
   - apparmor
   - perl-modules
+purge:
+  - mawk
