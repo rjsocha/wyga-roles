@@ -1,3 +1,5 @@
+prerequisite:
+  - gawk
 require:
   - apt-utils
   - bash-completion
@@ -7,7 +9,6 @@ require:
   - dnsutils
   - dosfstools
   - fdisk
-  - gawk
   - haveged
   - iproute2
   - less
