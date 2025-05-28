@@ -192,3 +192,10 @@ purge:
   - eject
   - tcpdump
   - libpcap0.8
+  - vim-tiny
+  - vim
+  - vim-common
+  - vim-runtime
+  - libsodium23
+  - mawk
+  - nano

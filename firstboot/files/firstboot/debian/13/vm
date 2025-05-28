@@ -211,3 +211,4 @@ purge:
   - vim-runtime
   - libsodium23
   - mawk
+  - nano
