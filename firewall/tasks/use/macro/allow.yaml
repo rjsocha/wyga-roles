@@ -80,6 +80,12 @@
     - name: "Extract config name ..."
       set_fact:
         ssh_firewall_file: "{{ rule.allow | split('/') | last | lower }}"
+      when: rule.allow is regex('(?i)^ssh/[a-z][a-z0-9-]{1,18}[a-z0-9]$')
+
+    - name: "Set anny config name ..."
+      set_fact:
+        ssh_firewall_file: "any"
+      when: rule.allow is regex('(?i)^ssh$')
 
     - name: "Load ssh hosts ..."
       include_vars:
@@ -94,4 +100,4 @@
       set_fact:
         fwrules: "{{ fwrules + [ { 'match': 'tcp', 'proto': 'tcp', 'src': ssh_firewall_hosts.hosts, 'dport': 22 } ] }}"
         rule_parsed: true
-  when: rule.allow is regex('(?i)^ssh/[a-z][a-z0-9-]{1,18}[a-z0-9]$')
+  when: rule.allow is regex('(?i)^ssh/[a-z][a-z0-9-]{1,18}[a-z0-9]$') or rule.allow is regex('(?i)^ssh$')
