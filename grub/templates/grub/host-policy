@@ -20,7 +20,7 @@
 {% endfor %}
 GRUB_TIMEOUT="{{ grub_timeout }}"
 GRUB_RECORDFAIL_TIMEOUT="{{ grub_timeout }}"
-GRUB_TIMEOUT_STYLE="menu"
+GRUB_TIMEOUT_STYLE="{{ 'menu' if grub_timeout | int > 0 else 'hidden' }}"
 GRUB_CMDLINE_LINUX=""
 GRUB_CMDLINE_LINUX_DEFAULT="{{ grub_cmdline|join(" ") }}{{ ' ' ~ (console | join(" ")) if console else '' }}"
 GRUB_DISABLE_SUBMENU="{{ grub_submenu }}"
