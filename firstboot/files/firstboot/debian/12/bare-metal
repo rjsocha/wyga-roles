@@ -66,7 +66,6 @@ purge:
   - libldap-common
   - liblsan0
   - libmpc3
-  - libmpfr6
   - libnsl-dev
   - libopenblas-dev
   - libopenblas-pthread-dev
