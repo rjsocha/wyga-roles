@@ -1,5 +1,9 @@
-- name: "Traefik Ingress / Install"
-  include_tasks: st/install.yaml
+- name: "Traefik Ingress / Install ..."
+  include_role:
+    name: wyga/install-package-override
+  vars:
+    packages:
+      - traefik-ingress
 
 - name: "Traefik Ingress / Setup"
   include_tasks: st/setup.yaml

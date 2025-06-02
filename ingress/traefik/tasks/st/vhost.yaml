@@ -44,7 +44,6 @@
     vh_tls_providers: "{{ vh_tls_providers + (IngressConfig.acme.dns | map(attribute='provider') | flatten | unique) }}"
   when: IngressConfig.acme.dns is defined
 
-
 - name: "Traefik Ingress / Vhost / HTTP Provider ..."
   set_fact:
     vh_tls_providers: "{{ ( vh_tls_providers + [ 'http' ] ) | flatten | unique }}"
@@ -72,7 +71,7 @@
 
 - name: "Traefik Ingress / Vhost / Generete list of vhosts files ..."
   set_fact:
-    ingress_runtime_files: "{{ ingress_runtime_files + [ 'vhost-' ~ vhost.url | join('-') | replace('://','-') | replace('*.','') | replace('.','-') ~ '.yaml'] }}"
+    ingress_runtime_files: "{{ ingress_runtime_files + [ 'vhost-' ~ ( vhost.url is string | ternary(vhost.url, vhost.url | first) ) | urlsplit('hostname') ~ '.yaml'] }}"
   loop: "{{ ingress_vhosts }}"
   loop_control:
     loop_var: vhost

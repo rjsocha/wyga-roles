@@ -23,9 +23,9 @@ http:
           - application/xml
           - text/xml
           - text/csv
-
 {% if IngressConfig.dashboard.url is defined %}
 {% if confidential.ingress.dashboard.users is defined %}
+
     auth4dashboard:
       basicAuth:
         realm: "[PROTECTED]"

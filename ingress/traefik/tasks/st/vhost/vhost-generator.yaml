@@ -6,7 +6,7 @@
     vh_https_sans: []
     vh_http2s_sans: []
     vh_id: "{{ vhost.url | join('-') | hash('md5') }}"
-    vh_file: "{{ vhost.url | join('-') | replace('://','-') | replace('*.','') | replace('.','-') }}"
+    vh_file: "{{ ( vhost.url is string | ternary(vhost.url, vhost.url | first) ) | urlsplit('hostname') }}"
 
 - debug:
     msg:
