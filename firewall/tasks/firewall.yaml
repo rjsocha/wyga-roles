@@ -199,5 +199,5 @@
       loop_control:
         loop_var: service
         label: "{{ service }}"
-      when: service in ansible_facts.services
+      when: "service in ansible_facts.services and ansible_facts.services[service].status != 'not-found'"
   when: firewall_restart and (host.firewall.restart is defined or firewall_profile == 'docker')
