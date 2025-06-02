@@ -72,7 +72,7 @@
 
 - name: "Traefik Ingress / Vhost / Generete list of vhosts files ..."
   set_fact:
-    ingress_runtime_files: "{{ ingress_runtime_files + [ 'vhost-' ~ vhost.url | join('-') | hash('md5') ~ '.yaml'] }}"
+    ingress_runtime_files: "{{ ingress_runtime_files + [ 'vhost-' ~ vhost.url | join('-') | replace('://','-') | replace('*.','') | replace('.','-') ~ '.yaml'] }}"
   loop: "{{ ingress_vhosts }}"
   loop_control:
     loop_var: vhost
