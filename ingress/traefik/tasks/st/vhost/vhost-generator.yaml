@@ -6,6 +6,13 @@
     vh_https_sans: []
     vh_http2s_sans: []
     vh_id: "{{ vhost.url | join('-') | hash('md5') }}"
+    vh_file: "{{ vhost.url | replace('://','-') | replace('*.','') | replace('.','-') }}"
+
+- debug:
+    msg:
+     - "INFO:"
+     - "{{ vh_id }}"
+     - "{{ vh_file }}"
 
 - name: "Traefik Ingress / Vhost / Generator / List of HTTP vhosts ..."
   set_fact:

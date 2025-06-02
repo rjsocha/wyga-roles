@@ -26,6 +26,18 @@
     name: "{{ target.key }}"
     group: "{{ target.value.group | default(target.key) }}"
 
+- name: "Disable linger for user {{ target.key }} ..."
+  ansible.builtin.command: loginctl disable-linger {{ target.key }}
+  args:
+    removes: "/var/lib/systemd/linger/{{ target.key }}"
+  when: not ((target.value.linger | default(false)) | bool)
+
+- name: "Enable linger for user {{ target.key }} ..."
+  ansible.builtin.command: loginctl enable-linger {{ target.key }}
+  args:
+    creates: "/var/lib/systemd/linger/{{ target.key }}"
+  when: (target.value.linger | default(false)) | bool
+
 - name: "Generate SSH key on demand ..."
   include_tasks: "ssh-keygen.yaml"
   loop: "{{ target.value.keygen }}"

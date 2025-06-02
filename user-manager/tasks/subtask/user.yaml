@@ -5,5 +5,38 @@
     loop_var: target
     label: "{{ target.key }}"
 
-- name: "Cleanup users ..."
+- name: "Removed user list ..."
+  set_fact:
+    remove_users: []
+
+- name: "Find removed users ..."
+  find:
+    path: "{{ wum_user_managed }}"
+    file_type: file
+    excludes: "{{ my_users }}"
+  register: removed_users
+
+- name: "Collect names of removed users ..."
+  set_fact:
+    remove_users: "{{ remove_users + [ rm_user.path | basename ] }}"
+  loop: "{{ removed_users['files'] }}"
+  loop_control:
+    loop_var: rm_user
+    label: "{{ rm_user.path | basename }}"
+  when: rm_user.path | basename != "root"
+
+- name: "List removed users ..."
+  debug:
+    msg: "{{ rm_user }}"
+    verbosity: 1
+  loop: "{{ remove_users }}"
+  loop_control:
+    loop_var: rm_user
+    label: "{{ rm_user }}"
+
+- name: "Remove user ..."
   include_tasks: "user-remove.yaml"
+  loop: "{{ remove_users }}"
+  loop_control:
+    loop_var: rm_user
+    label: "{{ rm_user }}"

@@ -1,40 +1,17 @@
 ---
-- name: "Remove user ..."
-  set_fact:
-    remove_users: []
+- name: "Disable linger for user {{ rm_user }} ..."
+  ansible.builtin.command: loginctl disable-linger {{ rm_user }}
+  args:
+    removes: "/var/lib/systemd/linger/{{ rm_user }}"
 
-- name: "Find removed users ..."
-  find:
-    path: "{{ wum_user_managed }}"
-    file_type: file
-    excludes: "{{ my_users }}"
-  register: removed_users
-
-- name: "Collect names of removed users ..."
-  set_fact:
-    remove_users: "{{ remove_users + [ rm_user.path | basename ] }}"
-  loop: "{{ removed_users['files'] }}"
-  loop_control:
-    loop_var: rm_user
-    label: "{{ rm_user.path | basename }}"
-  when: rm_user.path | basename != "root"
-
-- name: "List removed users ..."
-  debug:
-    msg: "{{ item }}"
-    verbosity: 1
-  loop: "{{ remove_users }}"
-
-- name: "Remove user {{ item }} ..."
+- name: "Remove user {{ rm_user }} ..."
   ansible.builtin.user:
-    name: "{{ item }}"
+    name: "{{ rm_user }}"
     state: absent
     force: true
     remove: true
-  loop: "{{ remove_users }}"
 
-- name: "Remove marker for user {{ item }} ..."
+- name: "Remove marker for user {{ rm_user }} ..."
   file:
-    path: "{{wum_user_managed }}/{{item}}"
+    path: "{{wum_user_managed }}/{{ rm_user }}"
     state: absent
-  loop: "{{ remove_users }}"
