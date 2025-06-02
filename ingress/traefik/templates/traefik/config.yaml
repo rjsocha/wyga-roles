@@ -65,8 +65,9 @@ certificatesResolvers:
 {% endif %}
       dnschallenge:
         provider: {{ provider.provider }}
-        disablePropagationCheck: {{ provider.disablepropagationcheck | default(true) | ternary('true','false') }}
-        delayBeforeCheck: {{ provider.delaybeforecheck | default(5) }}
+        propagation:
+          disablePropagationCheck: {{ provider.disablepropagationcheck | default(true) | ternary('true','false') }}
+          delayBeforeCheck: {{ provider.delaybeforecheck | default(5) }}
 {% if IngressConfig.resolvers is defined %}
         resolvers:
 {% for resolver in IngressConfig.resolvers %}
