@@ -6,7 +6,7 @@
     vh_https_sans: []
     vh_http2s_sans: []
     vh_id: "{{ vhost.url | join('-') | hash('md5') }}"
-    vh_file: "{{ vhost.url | replace('://','-') | replace('*.','') | replace('.','-') }}"
+    vh_file: "{{ vhost.url | join('-') | replace('://','-') | replace('*.','') | replace('.','-') }}"
 
 - debug:
     msg:
@@ -146,7 +146,7 @@
 - name: "Traefik Ingress / Vhost / Generator / Generate vhost config ..."
   template:
     src: "traefik/vhost"
-    dest: "/etc/site/ingress/runtime/vhost-{{ vh_id }}.yaml"
+    dest: "/etc/site/ingress/runtime/vhost-{{ vh_file }}.yaml"
     owner: root
     group: root
     mode: 0644
