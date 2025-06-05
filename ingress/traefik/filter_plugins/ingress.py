@@ -57,8 +57,15 @@ def noduplicates(lst):
   return result
 
 def process_ingress_config(ingress):
+  runtime_files = [ "config.yaml" ]
+
   if 'vhost' not in ingress:
+    ingress["files"] = runtime_files
+    if not ingress["acme"]:
+      ingress["acme"] = {}
+      ingress["acme"]["files"] = []
     return ingress
+
   vhosts = ingress.get("vhost", [])
 
   acme_files = {
@@ -81,7 +88,6 @@ def process_ingress_config(ingress):
   seen_redirect = set()
   chains = {}
   wildcard_provider = {}
-  runtime_files = [ "config.yaml" ]
   entry_count = 0
   for vhost in vhosts:
     entry_count = entry_count + 1
