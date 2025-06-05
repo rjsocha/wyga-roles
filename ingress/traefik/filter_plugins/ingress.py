@@ -59,14 +59,6 @@ def noduplicates(lst):
 def process_ingress_config(ingress):
   runtime_files = [ "config.yaml" ]
 
-  if 'vhost' not in ingress:
-    ingress["files"] = runtime_files
-    ingress.setdefault("acme", {})
-    ingress["acme"]["files"] = []
-    return ingress
-
-  vhosts = ingress.get("vhost", [])
-
   acme_files = {
     "acme.dns.%s.json" % entry.get("provider") for entry in ingress.get("acme", {}).get("dns", [])
   }
@@ -80,6 +72,15 @@ def process_ingress_config(ingress):
   if acme_http:
     providers.add("http")
     acme_files.add("acme.http.json")
+
+  ingress.setdefault("acme", {})
+  ingress["acme"]["files"] = list(acme_files)
+
+  if 'vhost' not in ingress:
+    ingress["files"] = runtime_files
+    return ingress
+
+  vhosts = ingress.get("vhost", [])
 
   config  = []
   seen_san = set()
@@ -334,7 +335,6 @@ def process_ingress_config(ingress):
   ingress["files"] = runtime_files
   ingress.setdefault("acme", {})
   ingress["acme"]["used"] = list(providers)
-  ingress["acme"]["files"] = list(acme_files)
   ingress["redirect"] = chains
   return ingress
 
