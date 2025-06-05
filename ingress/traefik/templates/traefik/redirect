@@ -1,0 +1,8 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+http:
+  middlewares:
+    redirect-{{ redirect.value.id }}:
+      redirectRegex:
+        regex: "{{ redirect.value.rule }}"
+        replacement: "{{ redirect.value.url }}"
+        permanent: true

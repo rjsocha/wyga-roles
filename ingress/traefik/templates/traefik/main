@@ -1,0 +1,82 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+global:
+  checkNewVersion: false
+  sendAnonymousUsage: false
+
+log:
+  level: "{{ IngressConfig.log | default('error') }}"
+
+providers:
+{% if IngressConfig.provider.docker is defined %}
+  docker:
+    exposedByDefault: false
+    watch: true
+{% endif %}
+{% if IngressConfig.provider.file is defined %}
+  file:
+    directory: "{{ IngressConfig.runtime }}/runtime"
+    watch: {{ IngressConfig.provider.file.watch | default(false) | ternary('true','false') }}
+{% endif %}
+
+entryPoints:
+  http:
+    address: ":80"
+    reusePort: true
+{% if IngressConfig.http2https | default(false) %}
+    http:
+      redirections:
+        entrypoint:
+          to: https
+          scheme: https
+{% endif %}
+
+  https:
+    address: ":443"
+    reusePort: true
+    http3: {}
+
+{% if IngressConfig.dashboard is defined %}
+api:
+  dashboard: true
+  disableDashboardAd: true
+
+{% endif %}
+{% if IngressConfig.acme is defined %}
+certificatesResolvers:
+  {% if IngressConfig.acme.http | default(false) %}
+  http:
+    acme:
+      storage: "/var/lib/traefik-ingress/acme.http.json"
+      keyType: "{{ IngressConfig.acme.key | default('RSA2048') }}"
+    {% if IngressConfig.acme.staging | default(false) %}
+      caServer: "https://acme-staging-v02.api.letsencrypt.org/directory"
+    {% endif %}
+      httpChallenge:
+        entryPoint: http
+  {% endif %}
+  {% if IngressConfig.acme.dns is defined %}
+    {% for provider in IngressConfig.acme.dns %}
+  {{ provider.name | default(provider.provider) }}:
+    acme:
+      storage: "/var/lib/traefik-ingress/acme.dns.{{ provider.provider }}.json"
+      keyType: "{{ IngressConfig.acme.key | default('RSA2048') }}"
+      {% if IngressConfig.acme.staging | default(false) %}
+      caServer: "https://acme-staging-v02.api.letsencrypt.org/directory"
+      {% endif %}
+      dnschallenge:
+        provider: {{ provider.provider }}
+        propagation:
+          disableChecks: {{ provider.check | default(false) | ternary('true','false') }}
+          delayBeforeChecks: {{ provider.delay | default(5) }}
+      {% if IngressConfig.resolvers is defined %}
+        resolvers:
+        {% for resolver in IngressConfig.resolvers %}
+          - "{{ resolver }}"
+        {% endfor %}
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+
+{% endif %}
+serversTransport:
+  insecureSkipVerify: true

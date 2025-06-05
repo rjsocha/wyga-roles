@@ -1,79 +1,73 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
 http:
+  middlewares:
+    middleware-{{ vhost.id }}:
+      chain:
+        middlewares:
+      {% if (vhost.redirects | default([])) | length > 0 %}
+        {% for redirect in vhost.redirects %}
+          {% if redirect.kind == "redirect" %}
+          - redirect-{{ redirect.id }}@file
+          {% endif %}
+          {% if redirect.kind == "http2s" %}
+          - http2https@file
+          {% endif %}
+        {% endfor %}
+      {% endif %}
+      {%if not vhost.redirect %}
+          - cleanup-headers@file
+      {% endif %}
+
   routers:
-{% if vtemplate.http | length > 0 %}
-    http-{{ vtemplate.id }}:
+{% if vhost.scheme.http | default(false) %}
+    http-{{ vhost.id }}:
       entryPoints:
         - http
       middlewares:
-        - cleanup-headers@file
-      service: srv-{{ vtemplate.id }}
-      rule: {{ vtemplate.rule }}
-      priority: {{ vtemplate.priority | default(0) }}
+        - middleware-{{ vhost.id }}@file
+  {% if vhost.redirect %}
+      service: {{ vhost.backend }}
+  {% else %}
+      service: service-{{ vhost.id }}
+  {% endif %}
+      rule: {{ vhost.rule }}
+      priority: {{ vhost.priority | default(0) }}
 
 {% endif %}
-{% if vtemplate.http2s | length > 0 %}
-    http2s-http-{{ vtemplate.id }}:
-      entryPoints:
-        - http
-      middlewares:
-        - cleanup-headers@file
-        - http2https@file
-      service: srv-{{ vtemplate.id }}
-      rule: {{ vtemplate.rule2s }}
-      priority: {{ vtemplate.priority | default(0) }}
-
-    http2s-https-{{ vtemplate.id }}:
+{% if vhost.scheme.https | default(false) %}
+    https-{{ vhost.id }}:
       entryPoints:
         - https
       middlewares:
-        - cleanup-headers@file
-      service: srv-{{ vtemplate.id }}
-      rule: {{ vtemplate.rule2s }}
-      priority: {{ vtemplate.priority | default(0) }}
-{% if vtemplate.vhost.tls == "none" %}
-      tls: {}
-{% else %}
+        - middleware-{{ vhost.id }}@file
+  {% if vhost.redirect %}
+      service: {{ vhost.backend }}
+  {% else %}
+      service: service-{{ vhost.id }}
+  {% endif %}
+      rule: {{ vhost.rule }}
+      priority: {{ vhost.priority | default(0) }}
       tls:
-        certResolver: {{ vtemplate.vhost.tls }}
-{% if vtemplate.san2s | default([]) | length > 0 %}
+  {% if vhost.tls != "none" %}
+        certResolver: {{ vhost.tls }}
+  {% endif %}
+  {% if vhost.san | length > 0 %}
         domains:
-          - main: '{{ vtemplate.san2s[0] }}'
-{% if vtemplate.san2s[1:] | length > 0 %}
+          - main: '{{ vhost.san[0] }}'
+    {% if vhost.san[1:] | length > 0 %}
             sans:
-{% for san in vtemplate.san2s[1:] %}
+      {% for san in vhost.san[1:] %}
               - '{{ san }}'
-{% endfor %}
-{% endif %}
-{% endif %}
-{% endif %}
+      {% endfor %}
+    {% endif %}
+  {% endif %}
 
 {% endif %}
-{% if vtemplate.https | length > 0 %}
-    https-{{ vtemplate.id }}:
-      entryPoints:
-        - https
-      middlewares:
-        - cleanup-headers@file
-      service: srv-{{ vtemplate.id }}
-      rule: {{ vtemplate.rules }}
-      priority: {{ vtemplate.priority | default(0) }}
-      tls:
-        certResolver: {{ vtemplate.vhost.tls }}
-{% if vtemplate.san | default([]) | length > 0 %}
-        domains:
-          - main: '{{ vtemplate.san[0] }}'
-{% if vtemplate.san[1:] | length > 0 %}
-            sans:
-{% for san in vtemplate.san[1:] %}
-              - '{{ san }}'
-{% endfor %}
-{% endif %}
-{% endif %}
-
-{% endif %}
+{%if not vhost.redirect %}
   services:
-    srv-{{ vtemplate.id }}:
+    service-{{ vhost.id }}:
       loadBalancer:
         servers:
-          - url: {{ vtemplate.vhost.backend }}
+          - url: {{ vhost.backend }}
         passHostHeader: true
+{% endif %}
