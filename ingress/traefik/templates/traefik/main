@@ -41,7 +41,7 @@ api:
   disableDashboardAd: true
 
 {% endif %}
-{% if IngressConfig.acme is defined %}
+{% if IngressConfig.acme is defined and (IngressConfig.acme.http is defined or IngressConfig.acme.dns is defined) %}
 certificatesResolvers:
   {% if IngressConfig.acme.http | default(false) %}
   http:
