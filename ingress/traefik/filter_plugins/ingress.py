@@ -61,9 +61,8 @@ def process_ingress_config(ingress):
 
   if 'vhost' not in ingress:
     ingress["files"] = runtime_files
-    if not ingress["acme"]:
-      ingress["acme"] = {}
-      ingress["acme"]["files"] = []
+    ingress.setdefault("acme", {})
+    ingress["acme"]["files"] = []
     return ingress
 
   vhosts = ingress.get("vhost", [])
@@ -333,8 +332,7 @@ def process_ingress_config(ingress):
 
   ingress["config"] = config
   ingress["files"] = runtime_files
-  if not ingress["acme"]:
-    ingress["acme"] = {}
+  ingress.setdefault("acme", {})
   ingress["acme"]["used"] = list(providers)
   ingress["acme"]["files"] = list(acme_files)
   ingress["redirect"] = chains
