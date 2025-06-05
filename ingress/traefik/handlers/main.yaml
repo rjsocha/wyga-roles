@@ -1,5 +1,5 @@
 - name: traefik-ingress-restart
-  command: /usr/bin/traefik-ingress-restart
+  command: /usr/bin/traefik-ingress-start 30
   async: 60
   poll: 0
 
