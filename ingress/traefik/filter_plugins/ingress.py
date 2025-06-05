@@ -57,6 +57,8 @@ def noduplicates(lst):
   return result
 
 def process_ingress_config(ingress):
+  if 'vhost' not in ingress:
+    return ingress
   vhosts = ingress.get("vhost", [])
 
   acme_files = {
