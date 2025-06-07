@@ -46,7 +46,7 @@ http:
 {% if IngressConfig.custom.middlewares is defined %}
 
 {% for custom in IngressConfig.custom.middlewares %}
-{{ custom | indent(4) }}
+{{ custom | indent(4, indentfirst=True) }}
 {% endfor %}
 
 {% endif %}
