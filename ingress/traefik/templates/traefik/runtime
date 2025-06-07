@@ -23,6 +23,12 @@ http:
           - application/xml
           - text/xml
           - text/csv
+{% if IngressConfig.custom.middlewares is defined %}
+
+{% for custom in IngressConfig.custom.middlewares %}
+{{ custom | indent(4, True) }}
+{% endfor %}
+{% endif %}
 {% if IngressConfig.dashboard.url is defined %}
 {% if confidential.ingress.dashboard.users is defined %}
 
@@ -39,12 +45,7 @@ http:
       redirectRegex:
         regex: "^/$"
         replacement: "/dashboard/"
-{% if IngressConfig.custom.middlewares is defined %}
 
-{% for custom in IngressConfig.custom.middlewares %}
-{{ custom | indent(4, True) }}
-{% endfor %}
-{% endif %}
   routers:
 {% if IngressConfig.dashboard.url | urlsplit('scheme') == 'http' %}
     traefik-dashboard-http:
