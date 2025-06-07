@@ -48,7 +48,6 @@ http:
 {% for custom in IngressConfig.custom.middlewares %}
 {{ custom | indent(4, True) }}
 {% endfor %}
-
 {% endif %}
   routers:
 {% if IngressConfig.dashboard.url | urlsplit('scheme') == 'http' %}
