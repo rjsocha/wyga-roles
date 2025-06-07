@@ -23,15 +23,14 @@ http:
           - application/xml
           - text/xml
           - text/csv
-{% if IngressConfig.custom.middlewares is defined %}
 
+{% if IngressConfig.custom.middlewares is defined %}
 {% for custom in IngressConfig.custom.middlewares %}
 {{ custom | indent(4, True) }}
 {% endfor %}
 {% endif %}
 {% if IngressConfig.dashboard.url is defined %}
 {% if confidential.ingress.dashboard.users is defined %}
-
     auth4dashboard:
       basicAuth:
         realm: "[PROTECTED]"
