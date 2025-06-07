@@ -31,7 +31,7 @@ http:
         realm: "[PROTECTED]"
         users:
 {% for dash_user in confidential.ingress.dashboard.users %}
-          - {{ dash_user }}
+          - '{{ dash_user }}'
 {% endfor %}
 {% endif %}
 
@@ -43,7 +43,13 @@ http:
       redirectRegex:
         regex: "^/$"
         replacement: "/dashboard/"
+{% if IngressConfig.custom.middlewares is defined %}
 
+{% for custom in IngressConfig.custom.middlewares %}
+{{ custom | indent(4) }}
+{% endfor %}
+
+{% endif %}
   routers:
 {% if IngressConfig.dashboard.url | urlsplit('scheme') == 'http' %}
     traefik-dashboard-http:
@@ -82,6 +88,7 @@ http:
       entryPoints:
         - http
       middlewares:
+        - redirect2dashboard
         - http2https
       service: noop@internal
       rule: Host(`{{ IngressConfig.dashboard.url | urlsplit('hostname') }}`)
