@@ -35,10 +35,6 @@ http:
 {% endfor %}
 {% endif %}
 
-    redirect4dashboard:
-      replacePath:
-        path: "/dashboard/"
-
     redirect2dashboard:
       redirectRegex:
         regex: "^/$"
@@ -87,7 +83,6 @@ http:
       entryPoints:
         - http
       middlewares:
-        - redirect2dashboard
         - http2https
       service: noop@internal
       rule: Host(`{{ IngressConfig.dashboard.url | urlsplit('hostname') }}`)
