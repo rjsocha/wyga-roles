@@ -16,7 +16,7 @@
 
 - name: "Traefik Ingress / Setup / Update runtime directory ..."
   set_fact:
-    IngressConfig: "{{ host.setup.ingress | combine( { 'runtime': { 'path': ingress_default_runtime_dir }} ) }}"
+    IngressConfig: "{{ host.setup.ingress | combine( { 'runtime': { 'path': ingress_default_runtime_dir }}, recursive=True ) }}"
   when: IngressConfig.runtime.path is not defined
 
 - name: "Traefik Ingress / Process ..."
@@ -109,7 +109,7 @@
   find:
     paths: "{{ IngressConfig.runtime.path }}/runtime"
     file_type: any
-    excludes: "{{ IngressConfig.files }}"
+    excludes: "{{ IngressConfig.files + IngressConfig.runtime.keep | default([]) }}"
   register: ingress_runtime_cleanup
 
 - name: "Traefik Ingress / Vhost / Remove unmanaged files ..."

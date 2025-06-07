@@ -14,7 +14,7 @@ providers:
 {% endif %}
 {% if IngressConfig.provider.file is defined %}
   file:
-    directory: "{{ IngressConfig.runtime }}/runtime"
+    directory: "{{ IngressConfig.runtime.path }}/runtime"
     watch: {{ IngressConfig.provider.file.watch | default(false) | ternary('true','false') }}
 {% endif %}
 
