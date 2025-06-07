@@ -16,18 +16,18 @@
 
 - name: "Traefik Ingress / Setup / Update runtime directory ..."
   set_fact:
-    IngressConfig: "{{ host.setup.ingress | combine( { 'runtime': ingress_default_runtime_dir } ) }}"
-  when: IngressConfig.runtime is not defined
+    IngressConfig: "{{ host.setup.ingress | combine( { 'runtime': { 'path': ingress_default_runtime_dir }} ) }}"
+  when: IngressConfig.runtime.path is not defined
 
 - name: "Traefik Ingress / Process ..."
   set_fact:
     IngressConfig: "{{ IngressConfig | process_ingress_config }}"
 
-#- debug: var=IngressConfig
+- debug: var=IngressConfig
 
 - name: "Traefik Ingress / Config / Create site directory ..."
   file:
-    path: "{{ IngressConfig.runtime }}"
+    path: "{{ IngressConfig.runtime.path }}"
     state: directory
     mode: 0750
     owner: root
@@ -35,7 +35,7 @@
 
 - name: "Traefik Ingress / Config / Create runtime directory ..."
   file:
-    path: "{{ IngressConfig.runtime }}/runtime"
+    path: "{{ IngressConfig.runtime.path }}/runtime"
     state: directory
     mode: 0750
     owner: root
@@ -44,7 +44,7 @@
 - name: "Traefik Ingress / Config / Main configuration ..."
   template:
     src: "traefik/main"
-    dest: "{{ IngressConfig.runtime }}/config.yaml"
+    dest: "{{ IngressConfig.runtime.path }}/config.yaml"
     owner: root
     group: traefik-ingress
     mode: 0640
@@ -54,7 +54,7 @@
 - name: "Traefik Ingress / Config / Runtime configuration ..."
   template:
     src: "traefik/runtime"
-    dest: "{{ IngressConfig.runtime }}/runtime/config.yaml"
+    dest: "{{ IngressConfig.runtime.path }}/runtime/config.yaml"
     owner: root
     group: traefik-ingress
     mode: 0640
@@ -65,14 +65,14 @@
   block:
     - name: "Traefik Ingress / Config / Create env directory ..."
       file:
-        path: "{{ IngressConfig.runtime }}/env"
+        path: "{{ IngressConfig.runtime.path }}/env"
         state: directory
         mode: 0750
         owner: root
         group: traefik-ingress
     - name: "Traefik Ingress / Config / Secret / Env ..."
       copy:
-        dest: "{{ IngressConfig.runtime }}/env/secret"
+        dest: "{{ IngressConfig.runtime.path }}/env/secret"
         content: "{{ ( confidential.ingress.dns | dict2items | map(attribute='key') | zip( confidential.ingress.dns | dict2items | map(attribute='value') | map('quote')) ) | map('join', '=') | join('\n') + '\n' }}"
         owner: root
         group: root
@@ -83,7 +83,7 @@
 
 - name: "Traefik Ingress / Config / Purge DNS Secrects ..."
   file:
-    path: "{{ IngressConfig.runtime }}/env"
+    path: "{{ IngressConfig.runtime.path }}/env"
     state: absent
   when: confidential.ingress.dns is not defined
 
@@ -107,7 +107,7 @@
 
 - name: "Traefik Ingress / Vhost / Create list of runtime files to remove ..."
   find:
-    paths: "{{ IngressConfig.runtime }}/runtime"
+    paths: "{{ IngressConfig.runtime.path }}/runtime"
     file_type: any
     excludes: "{{ IngressConfig.files }}"
   register: ingress_runtime_cleanup
@@ -126,7 +126,7 @@
 - name: "Traefik Ingress / Redirect / Generate configuration ..."
   template:
     src: "traefik/redirect"
-    dest: "/etc/site/ingress/runtime/{{ redirect.value.file }}"
+    dest: "{{ IngressConfig.runtime.path }}/runtime/{{ redirect.value.file }}"
     owner: root
     group: traefik-ingress
     mode: 0640
@@ -141,7 +141,7 @@
 - name: "Traefik Ingress / Vhost / Generate configuration ..."
   template:
     src: "traefik/vhost"
-    dest: "/etc/site/ingress/runtime/{{ vhost.file }}"
+    dest: "{{ IngressConfig.runtime.path }}/runtime/{{ vhost.file }}"
     owner: root
     group: traefik-ingress
     mode: 0640
@@ -155,7 +155,7 @@
 
 - name: "Traefik Ingress / ACME / Mode update ..."
   copy:
-    dest: "{{ IngressConfig.runtime }}/acme-mode"
+    dest: "{{ IngressConfig.runtime.path }}/acme-mode"
     content: "{{ IngressConfig.acme.staging | default(false) | ternary('staging','production') }}"
     mode: 0644
     owner: root
