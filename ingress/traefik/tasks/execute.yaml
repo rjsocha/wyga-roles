@@ -154,6 +154,17 @@
     label: "{{ vhost.file }}"
   when: IngressConfig.config is defined
 
+- name: "Traefik Ingress / Domains list ..."
+  template:
+    src: "traefik/domains"
+    dest: "{{ IngressConfig.runtime.path }}/domains"
+    owner: root
+    group: traefik-ingress
+    mode: 0640
+  vars:
+    domains: "{{ IngressConfig.domains }}"
+  when: IngressConfig.domains is defined
+
 - name: "Traefik Ingress / ACME / Mode update ..."
   copy:
     dest: "{{ IngressConfig.runtime.path }}/acme-mode"
