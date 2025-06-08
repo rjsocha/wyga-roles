@@ -324,7 +324,6 @@ def process_ingress_config(ingress):
     config.append(runtime)
 
   seen_san=list(seen_san)
-  ingress["tls_domains"] = list(tls_domains)
   ingress["wildcard"] = {}
   ingress["wildcard"]["domain"] = wildcard_domains(seen_san)
   ingress["wildcard"]["provider"] =  wildcard_provider
@@ -341,9 +340,11 @@ def process_ingress_config(ingress):
         update = False
         break
     if update:
+      tls_domains.discard(san)
       entry['tls'] = wildcard_provider[wildcard]
       entry['san'] = [ wildcard, '*.' + wildcard ]
 
+  ingress["tls_domains"] = list(tls_domains)
   ingress["config"] = config
   ingress["files"] = runtime_files
   ingress.setdefault("acme", {})

@@ -163,7 +163,7 @@
     mode: 0640
   vars:
     domains: "{{ IngressConfig.tls_domains }}"
-  when: IngressConfig.tsl_domains is defined
+  when: IngressConfig.tls_domains is defined
 
 - name: "Traefik Ingress / ACME / Mode update ..."
   copy:
