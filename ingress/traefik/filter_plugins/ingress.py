@@ -312,6 +312,7 @@ def process_ingress_config(ingress):
     config.append(runtime)
 
   seen_san=list(seen_san)
+  ingress["domains"] = seen_san
   ingress["wildcard"] = {}
   ingress["wildcard"]["domain"] = wildcard_domains(seen_san)
   ingress["wildcard"]["provider"] =  wildcard_provider
