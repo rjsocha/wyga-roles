@@ -23,7 +23,8 @@
   set_fact:
     IngressConfig: "{{ IngressConfig | process_ingress_config }}"
 
-#- debug: var=IngressConfig
+- debug: var=IngressConfig
+  when: ingress_dump_config is defined
 
 - name: "Traefik Ingress / Config / Create site directory ..."
   file:
