@@ -58,6 +58,7 @@ def noduplicates(lst):
 
 def process_ingress_config(ingress):
   runtime_files = [ "config.yaml" ]
+  tls_domains = set()
 
   acme_files = {
     "acme.dns.%s.json" % entry.get("provider") for entry in ingress.get("acme", {}).get("dns", [])
@@ -76,8 +77,15 @@ def process_ingress_config(ingress):
   ingress.setdefault("acme", {})
   ingress["acme"]["files"] = list(acme_files)
 
+  dashboard_url = ingress.get("dashboard",{}).get("url")
+  if dashboard_url:
+    dashboard_scheme = urlsplit(dashboard_url).scheme
+    if dashboard_scheme in [ 'https', 'http2s' ]:
+      tls_domains.add(urlsplit(dashboard_url).hostname)
+
   if 'vhost' not in ingress:
     ingress["files"] = runtime_files
+    ingress["tls_domains"] = list(tls_domains)
     return ingress
 
   vhosts = ingress.get("vhost", [])
@@ -211,10 +219,12 @@ def process_ingress_config(ingress):
       if scheme == "http2s":
         http = https = True
         cfg['redirect'].append("http2s://" + host)
+        tls_domains.add(host)
       if scheme == "https":
         https = True
         if redirect:
           cfg['redirect'].append("https://" + host)
+        tls_domains.add(host)
       if scheme == "http":
         http = True
         if redirect:
@@ -270,11 +280,13 @@ def process_ingress_config(ingress):
           if sans_empty:
             sans.append(host)
           create_chain = False
+          tls_domains.add(host)
         else:
           if scheme == "http":
             http = True
           if scheme == "https":
             https = True
+            tls_domains.add(host)
           url = scheme + "://" + host
           if url in seen_redirect:
             raise AnsibleFilterError("redirect url already defined %s (%s) ..." % (url, entry_count))
@@ -312,7 +324,7 @@ def process_ingress_config(ingress):
     config.append(runtime)
 
   seen_san=list(seen_san)
-  ingress["domains"] = seen_san
+  ingress["tls_domains"] = list(tls_domains)
   ingress["wildcard"] = {}
   ingress["wildcard"]["domain"] = wildcard_domains(seen_san)
   ingress["wildcard"]["provider"] =  wildcard_provider

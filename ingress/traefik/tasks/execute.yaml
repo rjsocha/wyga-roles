@@ -156,14 +156,14 @@
 
 - name: "Traefik Ingress / Domains list ..."
   template:
-    src: "traefik/domains"
-    dest: "{{ IngressConfig.runtime.path }}/domains"
+    src: "traefik/tls-domains"
+    dest: "{{ IngressConfig.runtime.path }}/tls-domains"
     owner: root
     group: traefik-ingress
     mode: 0640
   vars:
-    domains: "{{ IngressConfig.domains }}"
-  when: IngressConfig.domains is defined
+    domains: "{{ IngressConfig.tls_domains }}"
+  when: IngressConfig.tsl_domains is defined
 
 - name: "Traefik Ingress / ACME / Mode update ..."
   copy:
