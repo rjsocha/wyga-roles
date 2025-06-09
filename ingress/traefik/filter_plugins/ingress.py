@@ -115,7 +115,7 @@ def process_ingress_config(ingress):
 
     if has_upstream or has_backend:
       backend = cfg['upstream'] if has_upstream else cfg['backend']
-      if isinstance(backend, string_types):
+      if isinstance(backend, str):
         if not urlsplit(backend).scheme in [ "http", "https" ]:
           raise AnsibleFilterError("Neither http:// nor https:// scheme is set for the backend: %s (%s) ..." % (backend, entry_count))
         backend = { 'servers': [ { 'url': backend } ] }
