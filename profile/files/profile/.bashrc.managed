@@ -52,14 +52,14 @@ __history_append__() {
 # Default .bashrc (+/-)
 
 # don't put duplicate lines or lines starting with space in the history.
-HISTCONTROL=ignorespace:ignoredups
+HISTCONTROL=ignoreboth:erasedups
 
 # append to the history file, don't overwrite it
 shopt -s histappend
 
 # for setting history length see HISTSIZE and HISTFILESIZE in bash(1)
-HISTSIZE=5000
-HISTFILESIZE=50000
+HISTSIZE=100000
+HISTFILESIZE=200000
 
 # check the window size after each command and, if necessary,
 # update the values of LINES and COLUMNS.
@@ -91,10 +91,6 @@ export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quo
 alias ll='ls -alF'
 alias la='ls -A'
 alias l='ls -CF'
-
-# Add an "alert" alias for long running commands.  Use like so:
-#   sleep 10; alert
-#alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
 
 [[ -f ~/.bash_aliases ]] && source ~/.bash_aliases || true
 
@@ -131,13 +127,13 @@ bind "set show-all-if-ambiguous on"
 # Exclude some commands from history
 HISTIGNORE="&:ls:echo:pwd:exit:mount:clear:alias:ll:history"
 
-# This is used as the number of trailing directory components to retain when  exapanding working directory
+# This is used as the number of trailing directory components to retain when exapanding working directory
 PROMPT_DIRTRIM=3
 
 PS1='\[\e]0;\u@\H \w\a\]\[\e[0;92m\]\u\[\e[0;1;38;5;87m\]@\[\e[0;1;38;5;214m\]\H \[\e[0;1;38;5;231m\]\w \[\e[0;93m\][\[\e[0;92m\]$?\[\e[0;93m\]]\[\e[0;1;91m\]\$ \[\e[0m\]'
 
 unset PROMPT_COMMAND
-PROMPT_COMMAND="__history_append__"
+PROMPT_COMMAND=( "__history_reload__" )
 
 # Hide kernel threads
 export LIBPROC_HIDE_KERNEL=TRUE
