@@ -67,7 +67,21 @@ http:
   services:
     service-{{ vhost.id }}:
       loadBalancer:
+        {% if vhost.backend.health is defined %}
+        healthCheck:
+          path: "{{ vhost.backend.health.path | default('/') }}"
+          interval: "{{ vhost.backend.health.interval | default(10) }}"
+          timeout: "{{ vhost.backend.health.timeout | default(2) }}"
+          {% if vhost.backend.health.host is defined %}
+          hostname: "{{ vhost.backend.health.host }}"
+          {% endif %}
+        {% endif %}
         servers:
-          - url: {{ vhost.backend }}
+          {% for backend in vhost.backend.servers %}
+          - url: {{ backend.url }}
+            {% if backend.weight is defined %}
+            weight: {{ backend.weight }}
+            {% endif %}
+          {% endfor %}
         passHostHeader: true
 {% endif %}

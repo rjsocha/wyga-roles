@@ -115,10 +115,22 @@ def process_ingress_config(ingress):
 
     if has_upstream or has_backend:
       backend = cfg['upstream'] if has_upstream else cfg['backend']
-      if not isinstance(backend, string_types):
-        raise AnsibleFilterError("backend must be string, got %s instead." % type(backend))
-      if not urlsplit(backend).scheme in [ "http", "https" ]:
-        raise AnsibleFilterError("Neither http:// nor https:// scheme is set for the backend: %s ..." % backend)
+      if isinstance(backend, str):
+        if not urlsplit(backend).scheme in [ "http", "https" ]:
+          raise AnsibleFilterError("Neither http:// nor https:// scheme is set for the backend: %s (%s) ..." % (backend, entry_count))
+        backend = { 'servers': [ { 'url': backend } ] }
+      if isinstance(backend, dict):
+        if 'servers' not in backend:
+          raise AnsibleFilterError("missing servers key for backend (%s) ..." % (entry_count))
+        if isinstance(backend['servers'], list):
+          raise AnsibleFilterError("servers key for backend is not a list (%s) ..." % (entry_count))
+        for srv in backend['servers']:
+          if 'url' not in srv:
+            raise AnsibleFilterError("missing url for backend servers (%s) ..." % (entry_count))
+          if not urlsplit(srv.url).scheme in [ "http", "https" ]:
+            raise AnsibleFilterError("Neither http:// nor https:// scheme is set for the backend: %s (%s) ..." % (srv.url, entry_count))
+      else:
+        raise AnsibleFilterError("backend must be string or dictonary, got %s instead (%s) ..." % (type(backend), entry_count))
       runtime["backend"] = backend
       redirect = False
     elif 'url' in cfg:
