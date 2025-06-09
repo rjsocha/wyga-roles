@@ -125,10 +125,9 @@ def process_ingress_config(ingress):
         if not isinstance(backend['servers'], list):
           raise AnsibleFilterError("backend servers should be a list, got %s instead (%s) ..." % (type(backend['servers']), entry_count))
         for srv in backend['servers']:
-          raise AnsibleFilterError("xxx: %s" % (srv))
           if 'url' not in srv:
             raise AnsibleFilterError("missing url for backend servers (%s) ..." % (entry_count))
-          if not urlsplit(srv.url).scheme in [ "http", "https" ]:
+          if not urlsplit(srv['url']).scheme in [ "http", "https" ]:
             raise AnsibleFilterError("Neither http:// nor https:// scheme is set for the backend: %s (%s) ..." % (srv.url, entry_count))
       else:
         raise AnsibleFilterError("backend must be string or dictonary, got %s instead (%s) ..." % (type(backend), entry_count))
