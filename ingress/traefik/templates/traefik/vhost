@@ -69,9 +69,9 @@ http:
       loadBalancer:
         {% if vhost.backend.health is defined %}
         healthCheck:
-          path: "{{ vhost.backend.health.path | default('/') }}"
-          interval: "{{ vhost.backend.health.interval | default(10) }}"
-          timeout: "{{ vhost.backend.health.timeout | default(2) }}"
+          path: "{{ vhost.backend.health.path | default('/.alive') }}"
+          interval: "{{ vhost.backend.health.interval | default(4) }}"
+          timeout: "{{ vhost.backend.health.timeout | default(1) }}"
           {% if vhost.backend.health.host is defined %}
           hostname: "{{ vhost.backend.health.host }}"
           {% endif %}
