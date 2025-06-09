@@ -119,11 +119,11 @@ def process_ingress_config(ingress):
         if not urlsplit(backend).scheme in [ "http", "https" ]:
           raise AnsibleFilterError("Neither http:// nor https:// scheme is set for the backend: %s (%s) ..." % (backend, entry_count))
         backend = { 'servers': [ { 'url': backend } ] }
-      if isinstance(backend, dict):
+      elif isinstance(backend, dict):
         if 'servers' not in backend:
           raise AnsibleFilterError("missing servers key for backend (%s) ..." % (entry_count))
         if isinstance(backend['servers'], list):
-          raise AnsibleFilterError("servers key for backend is not a list (%s) ..." % (entry_count))
+          raise AnsibleFilterError("backend servers should be a list, got %s instead (%s) ..." % (type(backend['servers']), entry_count))
         for srv in backend['servers']:
           if 'url' not in srv:
             raise AnsibleFilterError("missing url for backend servers (%s) ..." % (entry_count))
