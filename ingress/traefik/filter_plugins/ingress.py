@@ -122,7 +122,7 @@ def process_ingress_config(ingress):
       elif isinstance(backend, dict):
         if 'servers' not in backend:
           raise AnsibleFilterError("missing servers key for backend (%s) ..." % (entry_count))
-        if isinstance(backend['servers'], list):
+        if not isinstance(backend['servers'], list):
           raise AnsibleFilterError("backend servers should be a list, got %s instead (%s) ..." % (type(backend['servers']), entry_count))
         for srv in backend['servers']:
           if 'url' not in srv:
