@@ -1,6 +1,6 @@
-- name: "Docker Configuration ..."
+- name: "Docker / Configuration ..."
   block:
-    - name: "Load docker/use template ..."
+    - name: "Docker / Load use template ..."
       include_vars:
         file: "{{ docker_template }}"
         name: docker_use_template
@@ -15,20 +15,20 @@
             - "{{ role_path }}/docker/{{ host.setup.docker.use }}"
       when: host.setup.docker.use is defined
 
-    - name: "Prepare docker configuration (use) ..."
+    - name: "Docker / Prepare configuration (use) ..."
       set_fact:
         docker_config: "{{ docker_use_template.docker | combine(host.setup.docker) | combine({'use': omit}) }}"
       when: host.setup.docker.use is defined and docker_use_template.docker is defined
 
-    - name: "Prepare docker configuration ..."
+    - name: "Docker / Prepare configuration ..."
       set_fact:
         docker_config: "{{ host.setup.docker }}"
       when: host.setup.docker.use is not defined
 
-    - name: "Collect services facts ..."
+    - name: "Docker / Collect services facts ..."
       ansible.builtin.service_facts:
 
-    - name: "Create /etc/docker ..."
+    - name: "Docker / Create /etc/docker ..."
       file:
         path: /etc/docker
         state: directory
@@ -36,7 +36,7 @@
         owner: root
         mode: 0755
 
-    - name: "Docker Configuration ..."
+    - name: "Docker / Configuration ..."
       template:
         src: "docker/daemon.json"
         dest: "/etc/docker/daemon.json"
@@ -44,16 +44,26 @@
         owner: root
         mode: 0600
       vars:
-        config: "{{ docker_config }}"
+        config: "{{ docker_config | dict2items | selectattr('key', 'ne', 'setup') | items2dict }}"
       register: docker_updated
 
-    - name: "Restart docker service ..."
+    - name: "Docker / Restart service ..."
       systemd:
         name: docker
         enabled: true
         daemon_reload: true
         state: restarted
         masked: no
-      when: docker_updated.changed and 'docker.service' in ansible_facts.services
+      when: "docker_updated.changed and 'docker.service' in ansible_facts.services and ansible_facts.services['docker.service'].status != 'not-found'"
 
+    - name: "Docker / Create networks ..."
+      community.docker.docker_network:
+        name: "{{ docker_network.name }}"
+        driver_options:
+          com.docker.network.bridge.name: "{{ docker_network.bridge | default(omit) }}"
+      loop: "{{ host.setup.docker.setup.networks }}"
+      loop_control:
+        loop_var: docker_network
+        label: "{{ docker_network.name }}"
+      when: "'docker.service' in ansible_facts.services and ansible_facts.services['docker.service'].status != 'not-found' and host.setup.docker.setup.networks is defined"
   when: host.setup.docker is defined

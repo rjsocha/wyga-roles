@@ -162,7 +162,7 @@
     group: traefik-ingress
     mode: 0640
   vars:
-    domains: "{{ IngressConfig.tls_domains }}"
+    domains: "{{ IngressConfig.tls_domains | sort }}"
   when: IngressConfig.tls_domains is defined
 
 - name: "Traefik Ingress / ACME / Mode update ..."
