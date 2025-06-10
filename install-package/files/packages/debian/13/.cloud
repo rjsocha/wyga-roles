@@ -6,6 +6,5 @@ require:
   - mdadm
   - pciutils
   - ethtool
-  - isc-dhcp-client
 purge:
   - ufw
