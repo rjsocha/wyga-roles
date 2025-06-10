@@ -1,3 +1,5 @@
+prerequisite:
+  - gawk
 require:
   - apt-utils
   - bash-completion
@@ -48,3 +50,8 @@ require:
   - apparmor
   - perl-modules
   - systemd-timesyncd
+  - psmisc
+  - netcat-openbsd
+purge:
+  - mawk
+  - netcat-traditional

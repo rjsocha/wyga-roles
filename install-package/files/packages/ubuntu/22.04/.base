@@ -1,3 +1,5 @@
+prerequisite:
+  - gawk
 require:
   - apt-utils
   - bash-completion
@@ -32,3 +34,8 @@ require:
   - wget
   - xz-utils
   - zstd
+  - psmisc
+  - netcat-openbsd
+purge:
+  - mawk
+  - netcat-traditional

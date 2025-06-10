@@ -50,5 +50,8 @@ require:
   - efibootmgr
   - apparmor
   - perl-modules
+  - psmisc
+  - netcat-openbsd
 purge:
   - mawk
+  - netcat-traditional
