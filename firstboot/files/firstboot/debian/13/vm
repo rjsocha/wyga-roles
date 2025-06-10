@@ -210,7 +210,6 @@ purge:
   - vim-common
   - vim-runtime
   - libsodium23
-  - mawk
   - nano
   - netcat-traditional
   - util-linux-extra
