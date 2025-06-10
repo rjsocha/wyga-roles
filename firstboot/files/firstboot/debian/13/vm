@@ -212,3 +212,9 @@ purge:
   - libsodium23
   - mawk
   - nano
+  - netcat-traditional
+  - util-linux-extra
+  - wtmpdb
+  - libpam-wtmpdb
+  - libnss-systemd
+  - eject

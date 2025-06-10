@@ -49,3 +49,4 @@ require:
   - efibootmgr
   - apparmor
   - perl-modules
+  - psmisc
