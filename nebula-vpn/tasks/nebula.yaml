@@ -46,7 +46,7 @@
   vars:
     ip: "{{ vpn_instance.ip }}"
     name: "{{ vpn_instance.hostname }}"
-    subnets: "{{ node_subnets | sort }}"
+    subnets: "{{ (vpn.subnets if vpn.subnets is defined else node_subnets) | sort }}"
     domain: "{{ vpn.domain | default('vpn') }}"
   check_mode: true
   register: certificate_changed
@@ -112,6 +112,8 @@
       copy:
         src: "{{ playbook_dir }}/vpn/inbox/{{ vpn_instance.name }}-{{ vpn_instance.hostname }}.crt"
         dest: "/etc/site/vpn/{{ vpn_instance.name }}/host.crt"
+      notify:
+        - nebula-vpn-restart
 
     - name: "Cleanup ..."
       file:
@@ -137,7 +139,7 @@
   vars:
     ip: "{{ vpn_instance.ip }}"
     name: "{{ vpn_instance.hostname }}"
-    subnets: "{{ node_subnets | sort }}"
+    subnets: "{{ (vpn.subnets if vpn.subnets is defined else node_subnets) | sort }}"
     domain: "{{ vpn.domain | default('vpn') }}"
   register: state_changed
   notify:
@@ -174,6 +176,7 @@
     use_relays: "{{ vpn_instance.relay | default(false) }}"
     vpn: "{{ vpn }}"
     port: "{{ vpn_instance.port if vpn_instance.port is defined else 4242 }}"
+    systemroute: "{{ true if vpn_instance.route is defined and vpn_instance.route == 'system' else flase }}"
   register: state_changed
   notify:
     - nebula-vpn-restart

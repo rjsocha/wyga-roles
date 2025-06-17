@@ -8,7 +8,7 @@
     ip: "{{ vpn_instance.ip }}"
     name: "{{ vpn_instance.name }}"
     hostname: "{{ vpn_instance.hostname }}"
-    subnets: "{{ node_subnets | sort }}"
+    subnets: "{{ (vpn.subnets if vpn.subnets is defined else node_subnets) | sort }}"
     domain: "{{ vpn.domain | default('vpn') }}"
   deleagate_to: localhost
 

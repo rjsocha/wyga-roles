@@ -86,6 +86,8 @@ tun:
       install: true
     {% endfor %}
     {% endfor %}
+{% endif %}
+{%if systemroute %}
   use_system_route_table: true
 {% endif %}
 
