@@ -176,7 +176,7 @@
     use_relays: "{{ vpn_instance.relay | default(false) }}"
     vpn: "{{ vpn }}"
     port: "{{ vpn_instance.port if vpn_instance.port is defined else 4242 }}"
-    systemroute: "{{ true if vpn_instance.route is defined and vpn_instance.route == 'system' else flase }}"
+    systemroute: "{{ true if vpn_instance.route is defined and vpn_instance.route == 'system' else false }}"
   register: state_changed
   notify:
     - nebula-vpn-restart
