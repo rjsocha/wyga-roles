@@ -9,6 +9,8 @@ require:
   - bridge-utils
   - netfilter-persistent
   - iptables-persistent
+  - qemu-system-modules-spice
+  - guestfs-tools
   - python3-lxml
   - qemu-utils
   - jq
