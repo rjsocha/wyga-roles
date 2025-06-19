@@ -76,7 +76,7 @@ tun:
   drop_multicast: true
   tx_queue: 500
   mtu: 1300
-{% if vpn.routing is defined %}
+{% if vpn.routing is defined or vpn_instance.routing is defined %}
   unsafe_routes:
     {% for via in vpn.routing.keys() if not via == ip %}
     {% for route in vpn.routing[via] %}
@@ -86,6 +86,16 @@ tun:
       install: true
     {% endfor %}
     {% endfor %}
+    {% if vpn_instance.routing is defined %}
+    {% for via in vpn_instance.routing.keys() %}
+    {% for route in vpn_instance.routing[via] %}
+    - route: {{ route.to }}
+      via: {{ via }}
+      metric: {{ route.metric | default(1000) }}
+      install: true
+    {% endfor %}
+    {% endfor %}
+    {% endif %}
 {% endif %}
 {%if systemroute %}
   use_system_route_table: true
