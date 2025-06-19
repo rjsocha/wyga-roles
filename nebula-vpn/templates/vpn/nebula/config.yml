@@ -1,8 +1,8 @@
 #jinja2: trim_blocks: True, lstrip_blocks: True
 pki:
-  ca: /etc/site/vpn/{{ name }}/ca.crt
-  cert: /etc/site/vpn/{{ name }}/host.crt
-  key: /etc/site/vpn/{{ name }}/host.key
+  ca: /etc/site/vpn/{{ vpn_name }}/ca.crt
+  cert: /etc/site/vpn/{{ vpn_name }}/host.crt
+  key: /etc/site/vpn/{{ vpn_name }}/host.key
   disconnect_invalid: true
 {% if vpn.blocklist is defined %}
   blocklist:
@@ -25,16 +25,16 @@ static_map:
   lookup_timeout: 250ms
 
 lighthouse:
-  am_lighthouse: {{ 'true' if am_lighthouse else 'false' }}
+  am_lighthouse: {{ 'true' if vpn_am_lighthouse else 'false' }}
   {% if am_lighthouse and vpn.lighthouse.dns.enable | default(true) %}
   serve_dns: true
   dns:
-    host: {{ ip }}
+    host: {{ vpn_ip }}
     port: 53
   {% endif %}
   interval: 60
   hosts:
-    {% if not am_lighthouse %}
+    {% if not vpn_am_lighthouse %}
     {% for host in vpn.lighthouse.hosts.keys() %}
     - {{ host }}
     {% endfor %}
@@ -42,7 +42,7 @@ lighthouse:
 
 listen:
   host: 0.0.0.0
-  port: {{ port }}
+  port: {{ vpn_port }}
 
 punchy:
   punch: true
@@ -51,23 +51,23 @@ punchy:
   respond_delay: 5s
 
 cipher: {{ vpn.cipher | default('aes') }}
-{% if adjacent | length > 0 %}
+{% if vpn_adjacent | length > 0 %}
 
 preferred_ranges:
-{% for neig in adjacent %}
+{% for neig in vpn_adjacent %}
   - "{{ neig }}"
 {% endfor %}
 {% endif %}
 
 relay:
-  {% if not am_lighthouse %}
+  {% if not vpn_am_lighthouse %}
   relays:
   {% for relay in vpn.lighthouse.hosts.keys() %}
     - "{{ relay }}"
   {% endfor %}
   {% endif %}
-  am_relay: {{ 'true' if am_lighthouse else 'false' }}
-  use_relays: {{ 'true' if use_relays else 'false' }}
+  am_relay: {{ 'true' if vpn_am_lighthouse else 'false' }}
+  use_relays: {{ 'true' if vpn_use_relays else 'false' }}
 
 tun:
   disabled: false
@@ -76,9 +76,10 @@ tun:
   drop_multicast: true
   tx_queue: 500
   mtu: 1300
-{% if vpn.routing is defined or vpn_instance.routing is defined %}
+{% if vpn.routing is defined or instance.routing is defined %}
   unsafe_routes:
-    {% for via in vpn.routing.keys() if not via == ip %}
+    {% if vpn.routing is defined %}
+    {% for via in vpn.routing.keys() if not via == vpn_ip %}
     {% for route in vpn.routing[via] %}
     - route: {{ route.to }}
       via: {{ via }}
@@ -86,9 +87,10 @@ tun:
       install: true
     {% endfor %}
     {% endfor %}
-    {% if vpn_instance.routing is defined %}
-    {% for via in vpn_instance.routing.keys() %}
-    {% for route in vpn_instance.routing[via] %}
+    {% endif %}
+    {% if instance.routing is defined %}
+    {% for via in instance.routing.keys() %}
+    {% for route in instance.routing[via] %}
     - route: {{ route.to }}
       via: {{ via }}
       metric: {{ route.metric | default(1000) }}
@@ -97,7 +99,7 @@ tun:
     {% endfor %}
     {% endif %}
 {% endif %}
-{%if systemroute %}
+{%if vpn_systemroute %}
   use_system_route_table: true
 {% endif %}
 

@@ -44,10 +44,10 @@
     owner: root
     mode: 0600
   vars:
-    ip: "{{ vpn_instance.ip }}"
-    name: "{{ vpn_instance.hostname }}"
-    subnets: "{{ (vpn.subnets if vpn.subnets is defined else node_subnets) | sort }}"
-    domain: "{{ vpn.domain | default('vpn') }}"
+    vpn_ip: "{{ vpn_instance.ip }}"
+    vpn_name: "{{ vpn_instance.hostname }}"
+    vpn_subnets: "{{ (vpn.subnets if vpn.subnets is defined else node_subnets) | sort }}"
+    vpn_domain: "{{ vpn.domain | default('vpn') }}"
   check_mode: true
   register: certificate_changed
 
@@ -137,10 +137,10 @@
     owner: root
     mode: 0600
   vars:
-    ip: "{{ vpn_instance.ip }}"
-    name: "{{ vpn_instance.hostname }}"
-    subnets: "{{ (vpn.subnets if vpn.subnets is defined else node_subnets) | sort }}"
-    domain: "{{ vpn.domain | default('vpn') }}"
+    vpn_ip: "{{ vpn_instance.ip }}"
+    vpn_name: "{{ vpn_instance.hostname }}"
+    vpn_subnets: "{{ (vpn.subnets if vpn.subnets is defined else node_subnets) | sort }}"
+    vpn_domain: "{{ vpn.domain | default('vpn') }}"
   register: state_changed
   notify:
     - nebula-vpn-restart
@@ -169,14 +169,15 @@
     owner: root
     mode: 0600
   vars:
-    ip: "{{ vpn_instance.ip | ipaddr('address') }}"
-    name: "{{ vpn_instance.name }}"
-    adjacent: "{{ vpn_instance.adjacents | default([]) }}"
-    am_lighthouse: "{{ am_lighthouse }}"
-    use_relays: "{{ vpn_instance.relay | default(false) }}"
+    vpn_ip: "{{ vpn_instance.ip | ipaddr('address') }}"
+    vpn_name: "{{ vpn_instance.name }}"
+    vpn_adjacent: "{{ vpn_instance.adjacents | default([]) }}"
+    vpn_am_lighthouse: "{{ am_lighthouse }}"
+    vpn_use_relays: "{{ vpn_instance.relay | default(false) }}"
+    vpn_port: "{{ vpn_instance.port if vpn_instance.port is defined else 4242 }}"
+    vpn_systemroute: "{{ true if vpn_instance.route is defined and vpn_instance.route == 'system' else false }}"
     vpn: "{{ vpn }}"
-    port: "{{ vpn_instance.port if vpn_instance.port is defined else 4242 }}"
-    systemroute: "{{ true if vpn_instance.route is defined and vpn_instance.route == 'system' else false }}"
+    instance: "{{ vpn_instance }}"
   register: state_changed
   notify:
     - nebula-vpn-restart
