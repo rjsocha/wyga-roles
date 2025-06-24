@@ -1,0 +1,13 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+[Match]
+{% if interface.match.name is defined %}
+Name={{ interface.match.name }}
+{% endif %}
+{% if interface.match.mac is defined %}
+MACAddress={{ interface.match.mac | upper }}
+{% endif %}
+
+[Network]
+IPv6AcceptRA=no
+LinkLocalAddressing=no
+KeepConfiguration=static

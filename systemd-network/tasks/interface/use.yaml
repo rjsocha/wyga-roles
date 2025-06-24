@@ -33,6 +33,12 @@
     ifparam: "{{ interface_entry.use[7:] }}"
   when: interface_entry.use is regex('(?i)^static/([a-z0-9@.+_-]){1,16}$')
 
+- name: "Load template for up/interface ..."
+  include_tasks: "use/interface/up-name.yaml"
+  vars:
+    ifparam: "{{ interface_entry.use[3:] }}"
+  when: interface_entry.use is regex('(?i)^up/([a-z0-9@.+_-]){1,16}$')
+
 - name: "Load template for dns/interface/domains ..."
   block:
     - name: "Extract parameters ..."
