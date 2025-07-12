@@ -39,12 +39,12 @@
 
 - name: "KVM / Configure defualt network ..."
   block:
-    - name: "KVM / Define default network ..."
+    - name: "KVM / Destroy default network ..."
       community.libvirt.virt_net:
         command: destroy
         name: default
 
-    - name: "KVM / Define default network ..."
+    - name: "KVM / Undefine default network ..."
       community.libvirt.virt_net:
         command: undefine
         name: default
@@ -70,7 +70,6 @@
       community.libvirt.virt_net:
         name: default
         autostart: true
-  when: host.setup.kvm.network is not string
 
 - name: "KVM / Network configuration marker ..."
   template:

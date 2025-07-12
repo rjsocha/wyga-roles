@@ -3,14 +3,20 @@ APT::Get::Always-Include-Phased-Updates "{{ host.setup.apt.includephasedupdates|
 {% if not host.setup.apt.acquirelanguages|default(false) %}
 Acquire::Languages "none";
 {% endif %}
-APT::Install-Recommends "{{ host.setup.apt.installrecommends|default(false) | string | lower }}";
-APT::Install-Suggests "{{ host.setup.apt.installsuggests|default(false) | string | lower }}";
+APT::Install-Recommends "{{ host.setup.apt.install.recommended|default(false) | string | lower }}";
+APT::Install-Suggests "{{ host.setup.apt.install.suggested|default(false) | string | lower }}";
 Acquire::GzipIndexes  "{{ host.setup.apt.acquiregzipindexes|default(true) | string | lower }}";
-APT::Keep-Downloaded-Packages "{{ host.setup.apt.keepdownloadedpackages|default(false) | string | lower }}";
-{% if host.setup.apt.disablesrcpkgcache|default(true) %}
+{% if  host.setup.apt.cache.keep | default(false) %}
+APT::Keep-Downloaded-Packages "true";
+Binary::apt::APT::Keep-Downloaded-Packages "true";
+{% else %}
+APT::Keep-Downloaded-Packages "false";
+Binary::apt::APT::Keep-Downloaded-Packages "false";
+{% endif %}
+{% if not host.setup.apt.cache.src | default(false) %}
 Dir::Cache::srcpkgcache "";
 {% endif %}
-{% if host.setup.apt.disablepkgcache|default(false) %}
+{% if not host.setup.apt.cache.bin|default(true) %}
 Dir::Cache::pkgcache "";
 {% endif %}
 {% if host.setup.apt.forceipv4|default(true) %}

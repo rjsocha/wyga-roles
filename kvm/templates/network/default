@@ -1,6 +1,10 @@
 #jinja2: trim_blocks: True, lstrip_blocks: True
 {% if host.setup.kvm.network is string %}
-NETWORK: {{ host.setup.kvm.network }}
+<network>
+  <name>default</name>
+  <forward mode="bridge"/>
+  <bridge name='{{ host.setup.kvm.network }}'/>
+</network>
 {% else %}
 {% set vm_if = host.setup.kvm.network.interface | default('vm0') %}
 {% set vm_domain = host.setup.kvm.network.domain | default('vm') %}
