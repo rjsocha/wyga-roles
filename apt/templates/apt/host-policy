@@ -13,7 +13,7 @@ Binary::apt::APT::Keep-Downloaded-Packages "true";
 APT::Keep-Downloaded-Packages "false";
 Binary::apt::APT::Keep-Downloaded-Packages "false";
 {% endif %}
-{% if not host.setup.apt.cache.src | default(false) %}
+{% if not host.setup.apt.cache.src | default(true) %}
 Dir::Cache::srcpkgcache "";
 {% endif %}
 {% if not host.setup.apt.cache.bin|default(true) %}
