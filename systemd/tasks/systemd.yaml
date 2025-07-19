@@ -15,12 +15,12 @@
   include_tasks: "task/journal.yaml"
   when: systemdConfig.journal is defined
 
-- name: "SYSTEMD / NTP ..."
-  include_tasks: "task/timesyncd.yaml"
-
 - name: "SYSTEMD / resolved ..."
   include_tasks: "task/resolved.yaml"
   when: systemdConfig is defined
+
+- name: "SYSTEMD / NTP ..."
+  include_tasks: "task/timesyncd.yaml"
 
 - name: "SYSTEMD / Service / sysstat ..."
   include_tasks: "task/service-sysstat.yaml"

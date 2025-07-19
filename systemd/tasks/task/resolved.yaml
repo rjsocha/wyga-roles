@@ -1,4 +1,16 @@
 ---
+- name: "SYSTEMD / Resolved / Gather installed package facts ..."
+  ansible.builtin.package_facts:
+    manager: auto
+
+- name: "SYSTEMD / Resolved / install systemd-resolved ..."
+  include_role:
+    name: wyga/install-package-override
+  vars:
+    packages:
+      - systemd-resolved
+  when: "'systemd-resolved' is not in ansible_facts.packages"
+
 - name: "SYSTEMD / Resolved ..."
   file:
     path: "/etc/systemd/resolved.conf.d"

@@ -25,7 +25,6 @@ require:
   - screen
   - sudo
   - sysstat
-  - systemd-resolved
   - systemd-timesyncd
   - tmux
   - unzip

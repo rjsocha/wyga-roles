@@ -1,0 +1,7 @@
+- name: "Workstation / GDM Configuration ..."
+  template:
+    src: gdm-daemon.conf
+    dest: /etc/gdm3/daemon.conf
+    group: root
+    owner: root
+    mode: 0644

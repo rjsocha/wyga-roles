@@ -1,0 +1,3 @@
+- name: "Workstation / Configuration ..."
+  include_tasks: workstation.yaml
+  when: host.setup.workstation is defined
