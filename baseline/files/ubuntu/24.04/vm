@@ -1,0 +1,5 @@
+baseline:
+  - .common
+  - qemu-guest-agent
+  - liburing2
+  - libnuma1

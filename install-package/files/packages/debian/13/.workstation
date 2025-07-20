@@ -16,6 +16,10 @@ require:
   - firmware-iwlwifi
   - firmware-intel-sound
   - firmware-amd-graphics
+  - firmware-intel-graphics
+  - firmware-nvidia-graphics
+  - firmware-sof-signed
+  - firmware-intel-misc
   - man-db
   - manpages
   - btrfs-progs
@@ -115,3 +119,4 @@ require:
   - zenity
   - gnome-remote-desktop
   - cups-pk-helper
+  - konsole

@@ -1,3 +1,8 @@
+{% if leftovers | length > 0 %}
+leftovers:
+  {{ leftovers | sort | join('\n') | indent(2) }}
+
+{% endif %}
 {% if ((installed_packages | difference(final_packages)) | difference(purge_packages)) | length > 0 %}
 difference:
   {{ ((installed_packages | difference(final_packages)) | difference(purge_packages)) | sort | join('\n') | indent(2) }}

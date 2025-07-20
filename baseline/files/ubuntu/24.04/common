@@ -13,7 +13,7 @@ baseline:
   - bsdextrautils
   - bsdutils
   - btrfs-progs
-  - busybox
+  - busybox-initramfs
   - bzip2
   - ca-certificates
   - coreutils
@@ -30,7 +30,6 @@ baseline:
   - dbus-system-bus-common
   - dbus-user-session
   - debconf
-  - debian-archive-keyring
   - debianutils
   - dhcpcd-base
   - diffutils
@@ -51,19 +50,17 @@ baseline:
   - gawk
   - gcc-14-base
   - gettext-base
+  - gpgv
   - grep
   - grub2-common
   - grub-common
   - grub-efi-amd64
   - grub-efi-amd64-bin
   - grub-efi-amd64-signed
-  - grub-efi-amd64-unsigned
   - grub-pc-bin
-  - grub2-common
   - gzip
   - haveged
   - hostname
-  - ifupdown
   - init
   - init-system-helpers
   - initramfs-tools
@@ -80,8 +77,9 @@ baseline:
   - libacl1
   - libaio1t64
   - libapparmor1
-  - libapt-pkg7.0
-  - libatomic1
+  - libapt-pkg6.0t64
+  - libargon2-1
+  - libassuan0
   - libattr1
   - libaudit1
   - libaudit-common
@@ -91,14 +89,15 @@ baseline:
   - libbsd0
   - libbz2-1.0
   - libc-bin
-  - libc-l10n
   - libc6
+  - libcap-ng0
   - libcap2
   - libcap2-bin
-  - libcap-ng0
   - libcbor0.10
   - libcom-err2
   - libcrypt1
+  - libcryptsetup12
+  - libcurl3t64-gnutls
   - libcurl4t64
   - libdb5.3t64
   - libdbus-1-3
@@ -116,25 +115,25 @@ baseline:
   - libffi8
   - libfido2-1
   - libfreetype6
-  - libfstrm0
-  - libfuse3-4
+  - libfuse3-3
   - libgcc-s1
-  - libgdbm6t64
+  - libgcrypt20
   - libgdbm-compat4t64
+  - libgdbm6t64
   - libglib2.0-0t64
   - libgmp10
   - libgnutls30t64
+  - libgpg-error0
   - libgpm2
   - libgssapi-krb5-2
   - libhavege2
   - libhogweed6t64
-  - libicu76
-  - libidn2-0
+  - libicu74
   - libinih1
+  - libidn2-0
   - libip4tc2
   - libip6tc2
   - libjansson4
-  - libjemalloc2
   - libjson-c5
   - libk5crypto3
   - libkeyutils1
@@ -142,16 +141,14 @@ baseline:
   - libkmod2
   - libkrb5-3
   - libkrb5support0
-  - liblastlog2-2
   - libldap2
   - liblmdb0
-  - liblsof0
   - liblvm2cmd2.03
   - liblz4-1
   - liblzma5
   - liblzo2-2
-  - libmagic1t64
   - libmagic-mgc
+  - libmagic1t64
   - libmaxminddb0
   - libmd0
   - libmnl0
@@ -160,43 +157,45 @@ baseline:
   - libncurses6
   - libncursesw6
   - libnetfilter-conntrack3
+  - libnetplan1
   - libnettle8t64
   - libnewt0.52
   - libnfnetlink0
   - libnftables1
   - libnftnl11
   - libnghttp2-14
-  - libnghttp3-9
-  - libnl-3-200
-  - libnl-genl-3-200
+  - libnpth0t64
+  - libnss-systemd
+  - libnuma1
   - libp11-kit0
-  - libpam0g
   - libpam-modules
   - libpam-modules-bin
   - libpam-runtime
   - libpam-systemd
-  - libpam-wtmpdb
+  - libpam0g
   - libpci3
   - libpcre2-8-0
+  - libperl5.38t64
   - libpng16-16t64
   - libpopt0
   - libproc2-0
-  - libprotobuf-c1
   - libpsl5t64
-  - libpython3.13-minimal
-  - libpython3.13-stdlib
   - libpython3-stdlib
-  - libreadline8t64
+  - libpython3.12-minimal
+  - libpython3.12-stdlib
+  - libpython3.12t64
   - libreiserfscore0t64
+  - libreadline8t64
   - librtmp1
   - libsasl2-2
+  - libsasl2-modules
   - libsasl2-modules-db
   - libseccomp2
   - libselinux1
   - libsemanage2
   - libsemanage-common
-  - libsensors-config
   - libsensors5
+  - libsensors-config
   - libsepol2
   - libsigsegv2
   - libslang2
@@ -204,47 +203,35 @@ baseline:
   - libsodium23
   - libsqlite3-0
   - libss2
+  - libssh-4
   - libssh2-1t64
   - libssl3t64
   - libstdc++6
   - libsystemd0
   - libsystemd-shared
   - libtasn1-6
-  - libtext-charwidth-perl
-  - libtext-iconv-perl
-  - libtext-wrapi18n-perl
   - libtinfo6
-  - libtirpc3t64
   - libtirpc-common
+  - libtirpc3t64
   - libudev1
   - libunistring5
-  - liburcu8t64
   - libusb-1.0-0
+  - libutempter0
   - libuuid1
+  - liburcu8t64
   - libuv1t64
   - libwrap0
-  - libwtmpdb0
-  - libxencall1
-  - libxendevicemodel1
-  - libxenevtchn1
-  - libxenforeignmemory1
-  - libxengnttab1
-  - libxenhypfs1
-  - libxenmisc4.20
-  - libxenstore4
-  - libxentoolcore1
-  - libxentoollog1
   - libxml2
   - libxtables12
   - libxxhash0
-  - libyajl2
+  - libyaml-0-2
   - libzstd1
   - linux-base
   - linux-image-*
-  - linux-sysctl-defaults
+  - linux-modules-*
+  - linux-modules-extra-*
   - locales
   - login
-  - login.defs
   - logrotate
   - logsave
   - lsb-release
@@ -257,71 +244,74 @@ baseline:
   - media-types
   - mokutil
   - mount
-  - nano
   - mtr-tiny
+  - nano
   - ncurses-base
   - ncurses-bin
+  - ncurses-term
   - netbase
   - netcat-openbsd
+  - netplan-generator
+  - netplan.io
   - netfilter-persistent
   - nftables
+  - numactl
   - openssh-client
   - openssh-server
   - openssh-sftp-server
   - openssl
-  - openssl-provider-legacy
   - passwd
   - pci.ids
   - pciutils
   - perl
   - perl-base
-  - libperl5.40
-  - perl-modules-5.40
+  - perl-modules-5.38
   - procps
   - psmisc
-  - python3
-  - python3.13
-  - python3-minimal
-  - python3.13-minimal
-  - python3-apt
   - python-apt-common
-  - python3-dbus
-  - quota
+  - python3
+  - python3.12
+  - python3.12-minimal
+  - python3-apt
+  - python3-minimal
+  - python3-netplan
+  - python3-cffi-backend
+  - python3-yaml
   - readline-common
   - rsync
-  - runit-helper
+  - sbsigntool
   - screen
+  - secureboot-db
   - sed
   - sensible-utils
-  - shim-helpers-amd64-signed
   - shim-signed
-  - shim-signed-common
-  - shim-unsigned
-  - sqv
   - sudo
   - sysstat
   - systemd
+  - systemd-dev
+  - systemd-hwe-hwdb
   - systemd-resolved
   - systemd-sysv
   - systemd-timesyncd
   - sysvinit-utils
   - tar
+  - thin-provisioning-tools
   - time
   - tmux
   - tpm-udev
   - tzdata
+  - ubuntu-keyring
   - ucf
   - udev
+  - usb.ids
   - usbutils
   - unzip
   - util-linux
-  - util-linux-extra
   - vim
   - vim-common
   - vim-runtime
   - wget
   - whiptail
-  - wtmpdb
   - xfsprogs
   - xz-utils
   - zlib1g

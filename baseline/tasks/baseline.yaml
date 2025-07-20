@@ -2,8 +2,8 @@
 - name: "Packages Baseline / Check if OS is supported ..."
   assert:
     that:
-      - target_distribution in [ 'debian' ]
-      - target_distribution_version in [ '13' ]
+      - target_distribution in [ 'debian', 'ubuntu' ]
+      - target_distribution_version in [ '13','24.04' ]
     fail_msg: "Unsupported distribution: {{ target_distribution | capitalize }} {{ target_distribution_version }}"
     quiet: true
 

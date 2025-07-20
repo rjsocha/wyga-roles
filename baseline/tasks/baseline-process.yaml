@@ -64,11 +64,14 @@
   set_fact:
     baseline_packages: "{{ baseline_list | map(attribute='name') | unique }}"
     baseline_packages_rx: "^({{ baseline_list | map(attribute='name') | unique | map('regex_escape') | map('replace', '\\*', '.+') | join('|') }})$"
-    baseline_pin: "{{ baseline_pin | unique | intersect(baseline_installed_packages) }}"
+
+- name: "Packages Baseline / Prepare pin list  ..."
+  set_fact:
+    baseline_pin: "{{ baseline_packages | unique | intersect(baseline_installed_packages) }}"
 
 - name: "Packages Baseline / Purge list ..."
   set_fact:
-      baseline_purge_packages: "{{ baseline_installed_packages | reject('match', baseline_packages_rx) }}"
+    baseline_purge_packages: "{{ baseline_installed_packages | reject('match', baseline_packages_rx) }}"
 
 - name: "Packages Baseline / Safeguard ..."
   fail: msg="Baseline packages list is too short ({{ baseline_packages | length }} entires) ..."
@@ -138,4 +141,5 @@
     final_packages: "{{ baseline_final_installed_packages }}"
     purge_packages: "{{ baseline_purge_packages }}"
     pinned_packages: "{{ baseline_pin }}"
+    leftovers: "{{ baseline_final_installed_packages | reject('match', baseline_packages_rx) }}"
     baseline: "{{ baseline_packages }}"
