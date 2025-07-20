@@ -15,6 +15,7 @@ require:
   - firmware-realtek
   - firmware-iwlwifi
   - firmware-intel-sound
+  - firmware-amd-graphics
   - man-db
   - manpages
   - btrfs-progs
