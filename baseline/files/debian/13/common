@@ -8,6 +8,8 @@ pin:
   - python3-dbus
   - lsb-release
   - distro-info-data
+  - kexec-tools
+  - curl
 baseline:
   - adduser
   - apparmor

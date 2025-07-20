@@ -94,6 +94,9 @@
   until: _action is success or ('Failed to lock apt for exclusive operation' not in _action.msg and '/var/lib/dpkg/lock' not in _action.msg)
   when: baseline_pin | length > 0
 
+- name: "Packages Baseline / Purge started ..."
+  debug: msg='.'
+
 - name: "Packages Baseline / Purge packages ..."
   apt:
     name: "{{ baseline_purge_packages }}"
