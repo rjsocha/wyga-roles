@@ -25,6 +25,11 @@
     path: "{{ host_policy_dir }}/firstboot"
   register: firstboot_setup
 
+- name: "Check if {{ host_policy_dir }}/baseline is present ..."
+  stat:
+    path: "{{ host_policy_dir }}/baseline"
+  register: baseline_marker
+
 - name: "Execute firstboot process ..."
   include_tasks: "firstboot.yaml"
-  when: not firstboot_setup.stat.exists or firstboot_do_it_anyway is defined
+  when: '(not firstboot_setup.stat.exists and not baseline_marker.stat.exists) or firstboot_do_it_anyway is defined'

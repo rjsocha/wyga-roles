@@ -1,0 +1,3 @@
+- name: "Packages Baseline / Execute ..."
+  include_tasks: "baseline.yaml"
+  when: host.package.baseline is defined

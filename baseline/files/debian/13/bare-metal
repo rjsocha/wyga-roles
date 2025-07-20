@@ -1,0 +1,11 @@
+baseline:
+  - .common
+  - amd64-microcode
+  - firmware-amd-graphics
+  - firmware-iwlwifi
+  - firmware-linux-free
+  - firmware-misc-nonfree
+  - firmware-realtek
+  - intel-microcode
+  - iucode-tool
+  - wireless-regdb

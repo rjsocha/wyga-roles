@@ -1,0 +1,8 @@
+---
+- name: "Packages Baseline / Include / Prepare ..."
+  set_fact:
+    baseline_include_count: 0
+    baseline_include_seen: {}
+
+- name: "Packages Baseline / Include / Load ..."
+  include_tasks: baseline-include-load.yaml

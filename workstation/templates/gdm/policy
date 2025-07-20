@@ -1,0 +1,11 @@
+[org/gnome/login-screen]
+disable-user-list=false
+disable-restart-buttons=false
+banner-message-enable=false
+
+# 'blank', 'suspend', 'shutdown', 'hibernate', 'interactive' or 'nothing'
+[org/gnome/settings-daemon/plugins/power]
+sleep-inactive-ac-timeout={{ host.setup.workstation.gdm.power.timeout | default(1200) }}
+sleep-inactive-ac-type='{{ host.setup.workstation.gdm.power.type | default("suspend") }}'
+sleep-inactive-battery-timeout={{ host.setup.workstation.gdm.power.timeout | default(1200) }}
+sleep-inactive-battery-type='{{ host.setup.workstation.gdm.power.type | default("suspend") }}'

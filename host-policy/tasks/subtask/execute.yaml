@@ -40,7 +40,12 @@
     name: wyga/firstboot
   vars:
     firstboot: "{{ host.package.firstboot }}"
-  when: skip_firstboot is not defined and host.package.firstboot.profile is defined and not host.package.firstboot.skip|default(false) and not host.package.skip|default(false)
+  when: skip_firstboot is not defined and host.package.firstboot.profile is defined and not host.package.firstboot.skip|default(false) and not host.package.skip|default(false) and not host.package.baseline is defined
+
+- name: "Packages Baseline ..."
+  include_role:
+    name: wyga/baseline
+  when: host.package.baseline is defined
 
 - name: "Process repositories ..."
   include_role:

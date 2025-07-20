@@ -1,0 +1,80 @@
+---
+- name: "Packages Baseline / Include / {{ baseline_include_count }} / Load Loop Item ..."
+  set_fact:
+    baseline_load: "{{ lookup('vars', ansible_loop_var) }}"
+
+- name: "Packages Baseline / Include / {{ baseline_include_count }} / Load name ..."
+  set_fact:
+    baseline_load: "{{ baseline_load.name }}"
+
+- name: "Packages Baseline / Include / {{ baseline_include_count }} / Loop detected ..."
+  fail: msg="Loop detected, {{ baseline_load }} already seen ..."
+  when: baseline_load in baseline_include_seen
+
+- name: "Packages Baseline / Include / {{ baseline_include_count }} / Loop detection ..."
+  set_fact:
+    baseline_include_seen: "{{ baseline_include_seen | combine({ baseline_load: 'seen' }) }}"
+
+- name: "Packages Baseline / Include / {{ baseline_include_count }} / Count ..."
+  set_fact:
+    baseline_include_count: "{{ baseline_include_count | int + 1 }}"
+
+- name: "Packages Baseline / Include / {{ baseline_include_count }} / Prepeare list of files  ..."
+  set_fact:
+    baseline_search_files:
+      - "{{ playbook_dir }}/local/baseline/{{ target_distribution }}/{{ target_distribution_version  }}/{{ target_arch }}/{{ baseline_load }}"
+      - "{{ playbook_dir }}/local/baseline/{{ target_distribution }}/{{ target_distribution_version  }}/{{ baseline_load }}"
+      - "{{ role_path }}/files/{{ target_distribution }}/{{ target_distribution_version  }}/{{ target_arch }}/{{ baseline_load }}"
+      - "{{ role_path }}/files/{{ target_distribution }}/{{ target_distribution_version  }}/{{ baseline_load }}"
+
+- name: "Packages Baseline / Include / {{ baseline_include_count }} / Check if include is defined ..."
+  set_fact:
+    baseline_include_path: "{{ query('first_found', params) }}"
+  vars:
+    params:
+      skip: true
+      files: "{{ baseline_search_files }}"
+
+- name: "Packages Baseline / Include / {{ baseline_include_count }} / Unable to locate include file ..."
+  block:
+    - debug:
+        msg:
+          - "Unable to locate include named: {{ baseline_load }}"
+          - "CHECKED:"
+          - "{{ baseline_search_files }}"
+    - fail:
+  when: baseline_include_path | length != 1
+
+- name: "Packages Baseline / Include / {{ baseline_include_count }} / Load file ..."
+  include_vars:
+    file: "{{ baseline_include_path | first }}"
+    name: basefile_profile
+
+- name: "Packages Baseline / Include / {{ baseline_include_count }} / Verify ..."
+  fail: msg="Wrong format of {{ baseline_load }} profile ..."
+  when: basefile_profile.baseline is not defined
+
+- name: "Packages Baseline / Include / {{ baseline_include_count }} / Enumerate ..."
+  set_fact:
+    baseline_included_list: "{{ basefile_profile.baseline | unique | parsepackage }}"
+
+- name: "Packages Baseline / Include / {{ baseline_include_count }} / Append pinned packages ..."
+  set_fact:
+    baseline_pin: "{{ baseline_pin + basefile_profile.pin }}"
+  when: basefile_profile.pin is defined
+
+- name: "Packages Baseline / Include / {{ baseline_include_count }} / Prepare include list ..."
+  set_fact:
+    baseline_included_include: "{{ baseline_included_list | selectattr('include', 'eq', True ) }}"
+    baseline_list: "{{ baseline_list + baseline_included_list | selectattr('include', 'eq', False ) }}"
+
+- name: "Packages Baseline / Include / {{ baseline_include_count }} / Include nested ..."
+  fail: msg="Too much nesting for include ..."
+  when: baseline_include_count | int > 3
+
+- name: "Packages Baseline / Include / {{ baseline_include_count }} / Process includes ..."
+  include_tasks: baseline-include-load.yaml
+  loop: "{{ baseline_included_include }}"
+  loop_control:
+    loop_var: "sub_include{{ baseline_include_count }}"
+    label: "subinclude"

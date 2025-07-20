@@ -1,7 +1,15 @@
 - name: "Workstation / GDM Configuration ..."
   template:
-    src: gdm-daemon.conf
+    src: gdm/daemon.conf
     dest: /etc/gdm3/daemon.conf
+    group: root
+    owner: root
+    mode: 0644
+
+- name: "Workstation / GDM Configuration ..."
+  template:
+    src: gdm/policy
+    dest: /usr/share/gdm/dconf/99-host-policy
     group: root
     owner: root
     mode: 0644

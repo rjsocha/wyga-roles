@@ -1,0 +1,25 @@
+{% if ((installed_packages | difference(final_packages)) | difference(purge_packages)) | length > 0 %}
+difference:
+  {{ ((installed_packages | difference(final_packages)) | difference(purge_packages)) | sort | join('\n') | indent(2) }}
+
+{% endif %}
+{% if purge_packages | length > 0 %}
+purge:
+  {{ purge_packages | sort |  join('\n') | indent(2) }}
+
+{% endif %}
+{% if (installed_packages | difference(final_packages)) | length > 0 %}
+purged:
+  {{ (installed_packages | difference(final_packages)) | sort | join('\n') | indent(2) }}
+
+{% endif %}
+{% if pinned_packages | length > 0 %}
+pinned:
+  {{ pinned_packages | sort | join('\n') | indent(2) }}
+
+{% endif %}
+baseline:
+  {{ baseline | sort | join('\n') | indent(2) }}
+
+installed:
+  {{ installed_packages | sort | join('\n') | indent(2) }}
