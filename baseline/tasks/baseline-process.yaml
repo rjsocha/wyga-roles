@@ -94,6 +94,15 @@
   until: _action is success or ('Failed to lock apt for exclusive operation' not in _action.msg and '/var/lib/dpkg/lock' not in _action.msg)
   when: baseline_pin | length > 0
 
+- name: "Packages Baseline / Abort? ..."
+  block:
+    - name: "Packages Baseline / Info ..."
+      debug:
+        msg:
+          - "Please run me with -econfirm=baseline"
+    - fail:
+  when: "confirm is not defined or 'baseline' not in confirm"
+
 - name: "Packages Baseline / Purge started ..."
   debug: msg='.'
 
