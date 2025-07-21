@@ -22,6 +22,17 @@ entryPoints:
   http:
     address: ":80"
     reusePort: true
+{% if IngressConfig.runtime.forwarded is defined %}
+    forwardedHeaders:
+  {% if IngressConfig.runtime.forwarded.insecure is defined %}
+      insecure: {{ 'true' if IngressConfig.runtime.forwarded.insecure | default(false) else 'false' }}
+  {% elif IngressConfig.runtime.forwarded.trust is defined %}
+      trustedIPs:
+    {% for trust in IngressConfig.runtime.forwarded.trust %}
+        - "{{ trust }}"
+    {% endfor %}
+  {% endif %}
+{% endif %}
 {% if IngressConfig.http2https | default(false) %}
     http:
       redirections:
@@ -33,6 +44,17 @@ entryPoints:
   https:
     address: ":443"
     reusePort: true
+{% if IngressConfig.runtime.forwarded is defined %}
+    forwardedHeaders:
+  {% if IngressConfig.runtime.forwarded.insecure is defined %}
+      insecure: {{ 'true' if IngressConfig.runtime.forwarded.insecure | default(false) else 'false' }}
+  {% elif IngressConfig.runtime.forwarded.trust is defined %}
+      trustedIPs:
+    {% for trust in IngressConfig.runtime.forwarded.trust %}
+        - "{{ trust }}"
+    {% endfor %}
+  {% endif %}
+{% endif %}
     http3: {}
 
 {% if IngressConfig.dashboard is defined %}
