@@ -73,8 +73,6 @@ require:
   - yaru-theme-gtk
   - yaru-theme-icon
   - yaru-theme-sound
-# for input-leap
-  - libei1
 # gnome-core
   - gdm3
   - gnome-backgrounds
@@ -99,7 +97,6 @@ require:
   - gnome-logs
   - gnome-software
   - gnome-system-monitor
-  - gnome-text-editor
   - loupe
   - nautilus
   - cups
@@ -120,3 +117,13 @@ require:
   - gnome-remote-desktop
   - cups-pk-helper
   - konsole
+  - keepassxc
+  - strace
+  - git
+  - xclip
+  - gedit
+  - wakeonlan
+  - deskflow
+  - make
+  - sshpass
+  - terraform

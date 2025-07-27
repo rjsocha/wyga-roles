@@ -143,3 +143,7 @@
     pinned_packages: "{{ baseline_pin }}"
     leftovers: "{{ baseline_final_installed_packages | reject('match', baseline_packages_rx) }}"
     baseline: "{{ baseline_packages }}"
+
+- name: "Packages Baseline / Halt request ..."
+  fail: msg="halt as requested"
+  when: baseline_halt is defined

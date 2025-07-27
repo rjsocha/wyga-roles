@@ -143,11 +143,11 @@
   debug:
     msg:
       - "TARGET:        {{ target_distribution | capitalize }} {{ target_distribution_version }} / {{ target_arch }}"
-      - "PACKAGES:      {{ __packages }}"
-      - "REPOSITORIES:  {{ repository_list }}"
-      - "PREREQUISITES: {{ prerequisite_list }}"
-      - "PURGE:         {{ purge_list }}"
-      - "SERVICES:      {{ enable_services }}"
+      - "PACKAGES:      {{ __packages | sort}}"
+      - "REPOSITORIES:  {{ repository_list | sort }}"
+      - "PREREQUISITES: {{ prerequisite_list | sort }}"
+      - "PURGE:         {{ purge_list | sort }}"
+      - "SERVICES:      {{ enable_services | sort }}"
 
 - name: "Install prerequisites packages ..."
   include_tasks: "packages/install-prerequisites.yml"

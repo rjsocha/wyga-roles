@@ -1,56 +1,71 @@
 prerequisite:
   - gawk
 require:
-  - apt-utils
+  - apparmor
   - bash-completion
+  - bind9-dnsutils
+  - bsdextrautils
   - bzip2
+  - ca-certificates
+  - cron
+  - cron-daemon-common
   - curl
   - distro-info-data
-  - dnsutils
+  - dmidecode
   - dosfstools
+  - efibootmgr
   - fdisk
-  - haveged
-  - iproute2
-  - less
-  - lsb-release
-  - lsof
-  - mc
-  - mtr-tiny
-  - openssh-client
-  - openssh-server
-  - openssh-sftp-server
-  - python3-apt
-  - python-apt-common
-  - rsync
-  - screen
-  - sudo
-  - sysstat
-  - systemd-timesyncd
-  - tmux
-  - unzip
-  - vim
-  - wget
-  - xz-utils
-  - zstd
-  - libpam-systemd
-  - tpm-udev
-  - time
+  - file
   - grub-common
-  - grub2-common
   - grub-efi-amd64%amd64
   - grub-efi-amd64-bin%amd64
   - grub-efi-amd64-signed%amd64
-  - grub-pc-bin%amd64
   - grub-efi-arm64%arm64
   - grub-efi-arm64-bin%arm64
   - grub-efi-arm64-signed%arm64
-  - shim-signed
+  - grub-pc-bin%amd64
+  - grub2-common
+  - haveged
+  - iproute2
+  - iputils-ping
+  - less
+  - libpam-systemd
+  - linux-sysctl-defaults
+  - locales
+  - logrotate
+  - lsb-release
+  - lsof
+  - lvm2
+  - mc
   - mokutil
-  - efibootmgr
-  - apparmor
+  - mtr-tiny
+  - netcat-openbsd
+  - openssh-client
+  - openssh-server
+  - openssh-sftp-server
+  - openssl
+  - pciutils
+  - perl
   - perl-modules
   - psmisc
-  - netcat-openbsd
+  - python-apt-common
+  - python3-apt
+  - rsync
+  - screen
+  - shim-signed
+  - sudo
+  - sysstat
+  - systemd-timesyncd
+  - time
+  - tmux
+  - tpm-udev
+  - unzip
+  - usbutils
+  - vim
+  - wget
+  - whiptail
+  - xz-utils
+  - zstd
 purge:
   - mawk
   - netcat-traditional

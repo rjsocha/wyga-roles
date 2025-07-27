@@ -125,7 +125,7 @@ alias ....="cd ../../.."
 bind "set show-all-if-ambiguous on"
 
 # Exclude some commands from history
-HISTIGNORE="&:ls:echo:pwd:exit:mount:clear:alias:ll:history"
+HISTIGNORE="&:ls:echo:pwd:exit:mount:clear:alias:ll:history:cd:..:...:...."
 
 # This is used as the number of trailing directory components to retain when exapanding working directory
 PROMPT_DIRTRIM=3
