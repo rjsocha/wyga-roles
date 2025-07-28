@@ -18,7 +18,6 @@ require:
   - firmware-amd-graphics
   - firmware-intel-graphics
   - firmware-nvidia-graphics
-  - firmware-sof-signed
   - firmware-intel-misc
   - man-db
   - manpages
@@ -116,7 +115,6 @@ require:
   - zenity
   - gnome-remote-desktop
   - cups-pk-helper
-  - konsole
   - keepassxc
   - strace
   - git
@@ -127,3 +125,5 @@ require:
   - make
   - sshpass
   - terraform
+  - tilix
+  - flameshot

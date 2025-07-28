@@ -13,3 +13,36 @@
     group: root
     owner: root
     mode: 0644
+
+- name: "Workstation / GNOME Settings ..."
+  block:
+    - name: "Workstation / GNOME Settings ..."
+      remote_user: "{{ host.setup.workstation.user }}"
+      command:
+        cmd: dconf load /
+        stdin: "{{ lookup('ansible.builtin.template', 'dconf/config') }}"
+        creates: ~/.config/.configured
+
+    - name: "Workstation / GNOME Settings / Marker ..."
+      remote_user: "{{ host.setup.workstation.user }}"
+      copy:
+        content: "#CONFIGURED"
+        dest: ~/.config/.configured
+        force: false
+
+    - name: "Workstation / GNOME Avatar ..."
+      copy:
+        src: "account/avatar.png"
+        dest: "/var/lib/AccountsService/icons/{{ host.setup.workstation.user }}"
+        mode: 0644
+
+    - name: "Workstation / GNOME User Configuration ..."
+      template:
+        src: "account/user"
+        dest: "/var/lib/AccountsService/users/{{ host.setup.workstation.user }}"
+        group: root
+        owner: root
+        mode: 0400
+      vars:
+        username: "{{ host.setup.workstation.user }}"
+  when: host.setup.workstation.user is defined

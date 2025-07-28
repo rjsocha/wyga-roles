@@ -1,0 +1,4 @@
+[User]
+Session=
+Icon=/var/lib/AccountsService/icons/{{ username }}
+SystemAccount=false
