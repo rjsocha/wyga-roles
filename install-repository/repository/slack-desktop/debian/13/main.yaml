@@ -1,0 +1,26 @@
+# 2025-07-29: slack-desktop signing key is obsolete (SHA-1)
+# Override sqv policy to allow install
+- name: "Prepare sequoia crypto policy for {{ repository }} on Debian 13 ..."
+  file:
+    path: /etc/crypto-policies/back-ends
+    state: directory
+    owner: root
+    group: root
+    mode:  0755
+
+- name: "Install {{ repository }} repository ..."
+  copy:
+    src: "repository/{{ repository }}/{{ target }}/{{ version }}/{{ file.src }}"
+    dest: "{{ file.dst }}"
+    group: root
+    owner: root
+    mode: 0644
+    force: yes
+  loop:
+    - { 'src': 'file/sequoia.config',  'dst': '/etc/crypto-policies/back-ends/sequoia.config' }
+    - { 'src': 'file/slack-default',  'dst': '/etc/default/slack' }
+    - { 'src': 'file/{{ repository }}.gpg',  'dst': '/usr/share/keyrings/{{ repository }}.gpg' }
+    - { 'src': 'file/{{ repository }}.list', 'dst': '/etc/apt/sources.list.d/{{ repository }}.list' }
+  loop_control:
+    loop_var: file
+    label: "{{ file.dst }}"

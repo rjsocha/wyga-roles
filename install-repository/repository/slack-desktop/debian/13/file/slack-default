@@ -1,0 +1,4 @@
+# Disable any side-effects triggered by cron
+REPOCONFIG=""
+repo_add_once="false"
+repo_reenable_on_distupgrade="false"

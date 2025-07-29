@@ -8,8 +8,17 @@
 - name: "ASIBLE / Install ansible ..."
   community.general.pipx:
     name: ansible
+    state: latest
     install_deps: true
-  environment:
-    PIPX_HOME: /opt/external/ansible
-    PIPX_BIN_DIR: /usr/local/bin
-    PIPX_MAN_DIR: /usr/local/share/man
+    include_injected: true
+    global: true
+
+- name: "ASIBLE / Incject packages  ..."
+  community.general.pipx:
+    name: ansible
+    state: inject
+    install_deps: true
+    global: true
+    inject_packages:
+      - netaddr
+      - argcomplete

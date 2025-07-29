@@ -1,0 +1,1 @@
+deb [signed-by=/usr/share/keyrings/slack-desktop.gpg] https://packagecloud.io/slacktechnologies/slack/debian/ jessie main

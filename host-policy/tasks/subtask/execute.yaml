@@ -166,3 +166,8 @@
 - name: "Process KITs ..."
   include_role:
     name: wyga/kit
+
+- name: "Locale configuration ..."
+  include_role:
+    name: wyga/locale
+  when: host.setup.locale is defined

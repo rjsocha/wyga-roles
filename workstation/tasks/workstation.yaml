@@ -29,12 +29,14 @@
         content: "#CONFIGURED"
         dest: ~/.config/.configured
         force: false
+      register: first_setup
 
     - name: "Workstation / GNOME Avatar ..."
       copy:
         src: "account/avatar.png"
         dest: "/var/lib/AccountsService/icons/{{ host.setup.workstation.user }}"
         mode: 0644
+        force: "{{ true if first_setup.changed else false }}"
 
     - name: "Workstation / GNOME User Configuration ..."
       template:
@@ -43,6 +45,65 @@
         group: root
         owner: root
         mode: 0400
+        force: "{{ true if first_setup.changed else false }}"
       vars:
         username: "{{ host.setup.workstation.user }}"
+
+    - name: "Workstation / GNOME Autostart / Directory ..."
+      remote_user: "{{ host.setup.workstation.user }}"
+      file:
+        path: ~/.config/autostart
+        state: directory
+
+    - name: "Workstation / Applications configuration ..."
+      set_fact:
+        workstation_app:
+          - "flameshot/flameshot.ini"
+
+    - name: "Workstation / Applications configuration / Directory ..."
+      remote_user: "{{ host.setup.workstation.user }}"
+      file:
+        path: "~/.config/{{ app | dirname }}"
+        state: directory
+      loop: "{{ workstation_app }}"
+      loop_control:
+        loop_var: app
+        label: "~/.config/{{ app | dirname }}"
+
+    - name: "Workstation / Applications configuration / Files ..."
+      remote_user: "{{ host.setup.workstation.user }}"
+      copy:
+        src: "app/{{ app }}"
+        dest: "~/.config/{{ app }}"
+        force: "{{ true if first_setup.changed else false }}"
+      loop: "{{ workstation_app }}"
+      loop_control:
+        loop_var: app
+        label: "~/.config/{{ app }}"
+
+    - name: "Workstation / GNOME Autostart / Enable ..."
+      remote_user: "{{ host.setup.workstation.user }}"
+      file:
+        src: "{{ autostart }}"
+        path: "~/.config/autostart/{{ autostart | basename }}"
+        force: "{{ true if first_setup.changed else false }}"
+        state: link
+      loop:
+        - "/usr/share/applications/org.flameshot.Flameshot.desktop"
+      loop_control:
+        loop_var: autostart
+        label: "{{ autostart | basename }}"
   when: host.setup.workstation.user is defined
+
+- name: "Workstation / Install ..."
+  block:
+    - name: "Workstation / Install / Ansible ..."
+      include_role:
+        name: wyga/install/ansible
+      when: host.setup.workstation.install | intersect([ 'ansible' ]) | length > 0
+
+    - name: "Workstation / Install / Slack ..."
+      include_role:
+        name: wyga/install/slack-desktop
+      when: host.setup.workstation.install | intersect([ 'slack', 'slack-desktop' ]) | length > 0
+  when: host.setup.workstation.install is defined
