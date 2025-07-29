@@ -93,6 +93,82 @@
       loop_control:
         loop_var: autostart
         label: "{{ autostart | basename }}"
+
+    - name: "Workstation / XDG ..."
+      block:
+        - name: "Workstation / XDG / Directories ..."
+          set_fact:
+            xdg_relocate:
+              - Desktop
+              - Templates
+              - Public
+              - Music
+              - Pictures
+              - Videos
+            xdg_create:
+              - Documents
+              - Downloads
+
+        - name: "Workstation / XDG / Directories / Relocate ..."
+          remote_user: "{{ host.setup.workstation.user }}"
+          file:
+            path: "~/.xdg/{{ directory }}"
+            state: directory
+          loop: "{{ xdg_relocate }}"
+          loop_control:
+            loop_var: directory
+            label: "~/.xdg/{{ directory }}"
+
+        - name: "Workstation / XDG / Directories / Create ..."
+          remote_user: "{{ host.setup.workstation.user }}"
+          file:
+            path: "~/{{ directory }}"
+            state: directory
+          loop: "{{ xdg_create }}"
+          loop_control:
+            loop_var: directory
+            label: "~/{{ directory }}"
+
+        - name: "Workstation / XDG / Bookmarks ..."
+          remote_user: "{{ host.setup.workstation.user }}"
+          file:
+            path: ~/.config/gtk-3.0
+            state: directory
+
+        - name: "Workstation / XDG / Bookmarks / Setup ..."
+          remote_user: "{{ host.setup.workstation.user }}"
+          template:
+            src: xdg/bookmarks
+            dest: ~/.config/gtk-3.0/bookmarks
+
+        - name: "Workstation / XDG / Configuration ..."
+          remote_user: "{{ host.setup.workstation.user }}"
+          template:
+            src: xdg/user-dirs.dirs
+            dest: ~/.config/user-dirs.dirs
+
+        - name: "Workstation / XDG / Directories / Cleanup ..."
+          remote_user: "{{ host.setup.workstation.user }}"
+          file:
+            path: "~/{{ directory }}"
+            state: absent
+          loop: "{{ xdg_relocate }}"
+          loop_control:
+            loop_var: directory
+            label: "~/{{ directory }}"
+      when: first_setup.changed
+
+    - name: "Workstation / Cleanup ..."
+      remote_user: "{{ host.setup.workstation.user }}"
+      file:
+        path: "~/{{ remove }}"
+        state: absent
+      loop:
+        - .face
+        - .face.icon
+      loop_control:
+        loop_var: remove
+        label: "~/{{ remove }}"
   when: host.setup.workstation.user is defined
 
 - name: "Workstation / Install ..."

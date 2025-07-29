@@ -27,11 +27,11 @@ sleep-inactive-ac-timeout=7200
 show-screenshot-ui=@as []
 
 [org/gtk/gtk4/settings/file-chooser]
-show-hidden=true
+show-hidden=false
 sort-directories-first=true
 
 [org/gtk/settings/file-chooser]
-show-hidden=true
+show-hidden=false
 sort-directories-first=true
 
 [org/gnome/control-center]
@@ -98,7 +98,6 @@ use-tree-view=false
 [org/gnome/nautilus/preferences]
 date-time-format='detailed'
 default-folder-viewer='icon-view'
-migrated-gtk-settings=true
 search-filter-time-type='last_modified'
 show-create-link=true
 show-delete-permanently=true
@@ -166,10 +165,6 @@ scrollbar-policy='never'
 use-system-font=false
 use-theme-colors=false
 visible-name='DEFAULT'
-
-[org/gtk/gtk4/settings/file-chooser]
-show-hidden=true
-sort-directories-first=true
 
 [system/locale]
 region='pl_PL.UTF-8'
