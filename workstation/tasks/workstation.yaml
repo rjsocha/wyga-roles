@@ -14,6 +14,77 @@
     owner: root
     mode: 0644
 
+- name: "Workstation / Deskflow ..."
+  block:
+    - name: "Workstation / Check  ..."
+      assert:
+        that:
+          host.setup.workstation.deskflow.name is defined
+
+    - name: "Workstation / Install Deskflow Control ..."
+      include_role:
+        name: wyga/install-package-override
+      vars:
+        packages:
+          - deskflow-control
+      when: host.setup.workstation.deskflow.control | default(true)
+
+    - name: "Workstation / Deskflow / Directory ..."
+      file:
+        path: "/opt/deskflow-control"
+        state: directory
+
+    # Client configuration
+    - name: "Workstation / Deskflow GDM Setup ..."
+      template:
+        src: "deskflow/client/{{ deskflow }}"
+        dest: "/opt/deskflow-control/{{ deskflow }}"
+        group: root
+        owner: root
+        mode: 0755
+      vars:
+        deskflow_name:  "{{ host.setup.workstation.deskflow.name }}"
+        deskflow_host:  "{{ host.setup.workstation.deskflow.host }}"
+        deskflow_debug: "{{ host.setup.workstation.deskflow.debug | default('INFO') }}"
+      loop:
+        - start-gdm
+        - start
+      loop_control:
+        loop_var: deskflow
+        label: "{{ deskflow }}"
+      when: host.setup.workstation.deskflow.control | default(true) and host.setup.workstation.deskflow.host is defined
+
+    # Server configuration
+    - name: "Workstation / Deskflow GDM Setup ..."
+      template:
+        src: "deskflow/server/{{ deskflow }}"
+        dest: "/opt/deskflow-control/{{ deskflow }}"
+        group: root
+        owner: root
+        mode: 0755
+      vars:
+        deskflow_name:  "{{ host.setup.workstation.deskflow.name }}"
+        deskflow_debug: "{{ host.setup.workstation.deskflow.debug | default('INFO') }}"
+      loop:
+        - start-gdm
+        - start
+      loop_control:
+        loop_var: deskflow
+        label: "{{ deskflow }}"
+      when: host.setup.workstation.deskflow.control | default(true) and host.setup.workstation.deskflow.host is not defined
+
+    - name: "Workstation / Deskflow Server Configuration ..."
+      template:
+        src: "deskflow/server/template/{{ host.setup.workstation.deskflow.layout.template }}"
+        dest: "/opt/deskflow-control/config"
+        group: root
+        owner: root
+        mode: 0644
+      vars:
+        nodes:  "{{ host.setup.workstation.deskflow.layout.nodes }}"
+      when: host.setup.workstation.deskflow.control | default(true) and host.setup.workstation.deskflow.host is not defined and host.setup.workstation.deskflow.layout.template is defined
+  when: host.setup.workstation.deskflow is defined
+
 - name: "Workstation / GNOME Settings ..."
   block:
     - name: "Workstation / GNOME Settings ..."
@@ -81,6 +152,16 @@
         loop_var: app
         label: "~/.config/{{ app }}"
 
+    - name: "Workstation / GNOME Autostart / List ..."
+      set_fact:
+        workstation_autostart:
+          - "/usr/share/applications/org.flameshot.Flameshot.desktop"
+
+    - name: "Workstation / GNOME Autostart / Deskflow Control ..."
+      set_fact:
+        workstation_autostart: "{{ workstation_autostart + [ '/usr/share/applications/deskflow-control.desktop' ] }}"
+      when: host.setup.workstation.deskflow is defined and host.setup.workstation.deskflow.control | default(true)
+
     - name: "Workstation / GNOME Autostart / Enable ..."
       remote_user: "{{ host.setup.workstation.user }}"
       file:
@@ -88,8 +169,7 @@
         path: "~/.config/autostart/{{ autostart | basename }}"
         force: "{{ true if first_setup.changed else false }}"
         state: link
-      loop:
-        - "/usr/share/applications/org.flameshot.Flameshot.desktop"
+      loop: "{{ workstation_autostart }}"
       loop_control:
         loop_var: autostart
         label: "{{ autostart | basename }}"
@@ -166,6 +246,7 @@
       loop:
         - .face
         - .face.icon
+        - .config/user-dirs.locale
       loop_control:
         loop_var: remove
         label: "~/{{ remove }}"

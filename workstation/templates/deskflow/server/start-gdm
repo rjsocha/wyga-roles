@@ -1,0 +1,3 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+#!/bin/sh
+exec sleep 5

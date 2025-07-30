@@ -127,3 +127,4 @@ require:
   - terraform
   - tilix
   - flameshot
+  - upx-ucl

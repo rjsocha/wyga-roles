@@ -1,0 +1,39 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+section: screens
+{% for node in nodes %}
+  {{ node }}:
+    halfDuplexCapsLock = false
+    halfDuplexNumLock = false
+    halfDuplexScrollLock = false
+    xtestIsXineramaUnaware = false
+    switchCorners = none
+    switchCornerSize = 0
+{% endfor %}
+end
+
+section: aliases
+end
+
+section: links
+{% for node in nodes %}
+  {{ node }}:
+    {% if loop.previtem is defined %}
+      left = {{ loop.previtem }}
+    {% endif %}
+    {% if loop.nextitem is defined %}
+      right = {{ loop.nextitem }}
+    {% endif %}
+{% endfor %}
+end
+
+section: options
+  protocol = barrier
+  relativeMouseMoves = false
+  win32KeepForeground = false
+  disableLockToScreen = false
+  clipboardSharing = true
+  clipboardSharingSize = 3072
+  switchCorners = none
+  switchCornerSize = 0
+  keystroke(Control+Shift+Home) = lockCursorToScreen(toggle)
+end

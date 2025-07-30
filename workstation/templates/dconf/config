@@ -46,7 +46,7 @@ name='X-GNOME-Shell-System.directory'
 translate=true
 
 [org/gnome/desktop/app-folders/folders/Utilities]
-apps=['org.gnome.Connections.desktop', 'org.gnome.Evince.desktop', 'org.gnome.font-viewer.desktop', 'org.gnome.Loupe.desktop', 'qt6ct.desktop', 'qt5ct.desktop', 'mcedit.desktop', 'mc.desktop', 'org.gnome.SoundRecorder.desktop']
+apps=['org.gnome.Connections.desktop', 'org.gnome.Evince.desktop', 'org.gnome.font-viewer.desktop', 'org.gnome.Loupe.desktop', 'qt6ct.desktop', 'qt5ct.desktop', 'mcedit.desktop', 'mc.desktop', 'org.gnome.SoundRecorder.desktop', 'org.deskflow.deskflow.desktop' ]
 name='X-GNOME-Shell-Utilities.directory'
 translate=true
 
@@ -106,9 +106,9 @@ show-delete-permanently=true
 night-light-schedule-automatic=false
 
 [org/gnome/shell]
-app-picker-layout=[{'org.gnome.Settings.desktop': <{'position': <0>}>, 'org.deskflow.deskflow.desktop': <{'position': <1>}>, 'transmission-qt.desktop': <{'position': <2>}>, 'gimp.desktop': <{'position': <3>}>, 'org.remmina.Remmina.desktop': <{'position': <4>}>, 'remote-viewer.desktop': <{'position': <5>}>, 'org.gnome.Calculator.desktop': <{'position': <6>}>, 'vlc.desktop': <{'position': <7>}>, 'System': <{'position': <8>}>, 'Utilities': <{'position': <9>}>, 'org.gnome.Software.desktop': <{'position': <10>}>, 'com.mattjakeman.ExtensionManager.desktop': <{'position': <11>}>}]
+app-picker-layout=[{'org.gnome.Settings.desktop': <{'position': <0>}>, 'deskflow-control.desktop': <{'position': <1>}>, 'transmission-qt.desktop': <{'position': <2>}>, 'gimp.desktop': <{'position': <3>}>, 'org.remmina.Remmina.desktop': <{'position': <4>}>, 'remote-viewer.desktop': <{'position': <5>}>, 'org.gnome.Calculator.desktop': <{'position': <6>}>, 'vlc.desktop': <{'position': <7>}>, 'System': <{'position': <8>}>, 'Utilities': <{'position': <9>}>, 'org.gnome.Software.desktop': <{'position': <10>}>, 'com.mattjakeman.ExtensionManager.desktop': <{'position': <11>}>}]
 enabled-extensions=['dash-to-panel@jderose9.github.com', 'ubuntu-appindicators@ubuntu.com']
-favorite-apps=['org.gnome.Nautilus.desktop', 'com.gexperts.Tilix.desktop', 'google-chrome.desktop', 'firefox-esr.desktop', 'virt-manager.desktop', 'org.keepassxc.KeePassXC.desktop', 'org.gnome.gedit.desktop']
+favorite-apps=['org.gnome.Nautilus.desktop', 'com.gexperts.Tilix.desktop', 'google-chrome.desktop', 'firefox-esr.desktop', 'virt-manager.desktop', 'org.keepassxc.KeePassXC.desktop', 'slack.desktop', 'org.gnome.gedit.desktop']
 
 [org/gnome/shell/extensions/dash-to-panel]
 animate-app-switch=false
