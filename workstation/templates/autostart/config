@@ -1,0 +1,7 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+[config]
+delay=250
+[autostart]
+{% for entry in autostart %}
+{{ loop.index }}={{ entry }}
+{% endfor %}

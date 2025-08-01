@@ -128,3 +128,14 @@ require:
   - tilix
   - flameshot
   - upx-ucl
+  - build-essential
+  - libncurses-dev
+  - bison
+  - flex
+  - libssl-dev
+  - libelf-dev
+  - libcurl4-openssl-dev
+  - qtbase5-dev
+  - qt6-base-dev
+  - cmake
+  - libgio-2.0-dev

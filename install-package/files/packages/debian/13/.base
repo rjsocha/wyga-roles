@@ -46,7 +46,7 @@ require:
   - openssl
   - pciutils
   - perl
-  - perl-modules
+  - perl-modules-5.40
   - psmisc
   - python-apt-common
   - python3-apt

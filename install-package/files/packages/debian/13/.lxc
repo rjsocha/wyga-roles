@@ -33,7 +33,7 @@ require:
   - libpam-systemd
   - time
   - apparmor
-  - perl-modules
+  - perl-modules-5.40
   - psmisc
   - netcat-openbsd
 purge:

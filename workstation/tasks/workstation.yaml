@@ -1,3 +1,29 @@
+- name: "Workstation / Install / Prepare ..."
+  set_fact:
+    workstation_install: []
+
+- name: "Workstation / Install / Deskflow ..."
+  set_fact:
+    workstation_install: "{{ workstation_install + ['deskflow-control'] }}"
+  when: host.setup.workstation.deskflow is defined and host.setup.workstation.deskflow.control|default(true)
+
+- name: "Workstation / Install / Ordered Autostart ..."
+  set_fact:
+    workstation_install: "{{ workstation_install + ['ordered-autostart'] }}"
+  when: host.setup.workstation.autostart is defined
+
+- name: "Workstation / Install / Woke Poke ..."
+  set_fact:
+    workstation_install: "{{ workstation_install + ['woke-poke'] }}"
+  when: host.setup.workstation.wol is defined
+
+- name: "Workstation / Install ..."
+  include_role:
+    name: wyga/install-package-override
+  vars:
+    packages: "{{ workstation_install }}"
+  when: workstation_install | length > 0
+
 - name: "Workstation / GDM Configuration ..."
   template:
     src: gdm/daemon.conf
@@ -20,14 +46,6 @@
       assert:
         that:
           host.setup.workstation.deskflow.name is defined
-
-    - name: "Workstation / Install Deskflow Control ..."
-      include_role:
-        name: wyga/install-package-override
-      vars:
-        packages:
-          - deskflow-control
-      when: host.setup.workstation.deskflow.control | default(true)
 
     - name: "Workstation / Deskflow / Directory ..."
       file:
@@ -102,80 +120,49 @@
         force: false
       register: first_setup
 
-    - name: "Workstation / GNOME Avatar ..."
-      copy:
-        src: "account/avatar.png"
-        dest: "/var/lib/AccountsService/icons/{{ host.setup.workstation.user }}"
-        mode: 0644
-        force: "{{ true if first_setup.changed else false }}"
-
-    - name: "Workstation / GNOME User Configuration ..."
-      template:
-        src: "account/user"
-        dest: "/var/lib/AccountsService/users/{{ host.setup.workstation.user }}"
-        group: root
-        owner: root
-        mode: 0400
-        force: "{{ true if first_setup.changed else false }}"
-      vars:
-        username: "{{ host.setup.workstation.user }}"
-
-    - name: "Workstation / GNOME Autostart / Directory ..."
-      remote_user: "{{ host.setup.workstation.user }}"
-      file:
-        path: ~/.config/autostart
-        state: directory
-
-    - name: "Workstation / Applications configuration ..."
-      set_fact:
-        workstation_app:
-          - "flameshot/flameshot.ini"
-
-    - name: "Workstation / Applications configuration / Directory ..."
-      remote_user: "{{ host.setup.workstation.user }}"
-      file:
-        path: "~/.config/{{ app | dirname }}"
-        state: directory
-      loop: "{{ workstation_app }}"
-      loop_control:
-        loop_var: app
-        label: "~/.config/{{ app | dirname }}"
-
-    - name: "Workstation / Applications configuration / Files ..."
-      remote_user: "{{ host.setup.workstation.user }}"
-      copy:
-        src: "app/{{ app }}"
-        dest: "~/.config/{{ app }}"
-        force: "{{ true if first_setup.changed else false }}"
-      loop: "{{ workstation_app }}"
-      loop_control:
-        loop_var: app
-        label: "~/.config/{{ app }}"
-
-    - name: "Workstation / GNOME Autostart / List ..."
-      set_fact:
-        workstation_autostart:
-          - "/usr/share/applications/org.flameshot.Flameshot.desktop"
-
-    - name: "Workstation / GNOME Autostart / Deskflow Control ..."
-      set_fact:
-        workstation_autostart: "{{ workstation_autostart + [ '/usr/share/applications/deskflow-control.desktop' ] }}"
-      when: host.setup.workstation.deskflow is defined and host.setup.workstation.deskflow.control | default(true)
-
-    - name: "Workstation / GNOME Autostart / Enable ..."
-      remote_user: "{{ host.setup.workstation.user }}"
-      file:
-        src: "{{ autostart }}"
-        path: "~/.config/autostart/{{ autostart | basename }}"
-        force: "{{ true if first_setup.changed else false }}"
-        state: link
-      loop: "{{ workstation_autostart }}"
-      loop_control:
-        loop_var: autostart
-        label: "{{ autostart | basename }}"
-
     - name: "Workstation / XDG ..."
       block:
+        - name: "Workstation / GNOME Avatar ..."
+          copy:
+            src: "account/avatar.png"
+            dest: "/var/lib/AccountsService/icons/{{ host.setup.workstation.user }}"
+            mode: 0644
+
+        - name: "Workstation / GNOME User Configuration ..."
+          template:
+            src: "account/user"
+            dest: "/var/lib/AccountsService/users/{{ host.setup.workstation.user }}"
+            group: root
+            owner: root
+            mode: 0400
+          vars:
+            username: "{{ host.setup.workstation.user }}"
+
+        - name: "Workstation / Applications configuration ..."
+          set_fact:
+            workstation_app:
+              - "flameshot/flameshot.ini"
+
+        - name: "Workstation / Applications configuration / Directory ..."
+          remote_user: "{{ host.setup.workstation.user }}"
+          file:
+            path: "~/.config/{{ app | dirname }}"
+            state: directory
+          loop: "{{ workstation_app }}"
+          loop_control:
+            loop_var: app
+            label: "~/.config/{{ app | dirname }}"
+
+        - name: "Workstation / Applications configuration / Files ..."
+          remote_user: "{{ host.setup.workstation.user }}"
+          copy:
+            src: "app/{{ app }}"
+            dest: "~/.config/{{ app }}"
+          loop: "{{ workstation_app }}"
+          loop_control:
+            loop_var: app
+            label: "~/.config/{{ app }}"
+
         - name: "Workstation / XDG / Directories ..."
           set_fact:
             xdg_relocate:
@@ -236,20 +223,52 @@
           loop_control:
             loop_var: directory
             label: "~/{{ directory }}"
+
+        - name: "Workstation / Cleanup ..."
+          remote_user: "{{ host.setup.workstation.user }}"
+          file:
+            path: "~/{{ remove }}"
+            state: absent
+          loop:
+            - .face
+            - .face.icon
+            - .config/user-dirs.locale
+          loop_control:
+            loop_var: remove
+            label: "~/{{ remove }}"
       when: first_setup.changed
 
-    - name: "Workstation / Cleanup ..."
-      remote_user: "{{ host.setup.workstation.user }}"
-      file:
-        path: "~/{{ remove }}"
-        state: absent
-      loop:
-        - .face
-        - .face.icon
-        - .config/user-dirs.locale
-      loop_control:
-        loop_var: remove
-        label: "~/{{ remove }}"
+    - name: "Workstation / Autostart ..."
+      block:
+        - name: "Workstation / Autostart / Configure  ..."
+          remote_user: "{{ host.setup.workstation.user }}"
+          template:
+            src: autostart/config
+            dest: ~/.config/ordered-autostart
+          vars:
+            autostart:  "{{ host.setup.workstation.autostart }}"
+
+        - name: "Workstation / GNOME Autostart / Cleanup ..."
+          remote_user: "{{ host.setup.workstation.user }}"
+          file:
+            path: "~/.config/autostart/{{ autostart }}.desktop"
+            state: absent
+          loop: "{{ host.setup.workstation.autostart }}"
+          loop_control:
+            loop_var: autostart
+            label: "{{ autostart }}.desktop"
+      when: host.setup.workstation.autostart is defined
+
+    - name: "Workstation / Wake On Lan ..."
+      block:
+        - name: "Workstation / WOL / Configure  ..."
+          remote_user: "{{ host.setup.workstation.user }}"
+          template:
+            src: wol/woke-poke
+            dest: ~/.config/woke-poke
+          vars:
+            nodes:  "{{ host.setup.workstation.wol }}"
+      when: host.setup.workstation.wol is defined
   when: host.setup.workstation.user is defined
 
 - name: "Workstation / Install ..."
