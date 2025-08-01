@@ -1,6 +1,0 @@
-- name: "Slack Desktop / Install ..."
-  include_role:
-    name: wyga/install-package-override
-  vars:
-    packages:
-      - slack-desktop

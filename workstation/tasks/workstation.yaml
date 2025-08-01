@@ -17,6 +17,16 @@
     workstation_install: "{{ workstation_install + ['woke-poke'] }}"
   when: host.setup.workstation.wol is defined
 
+- name: "Workstation / Install / doctl ..."
+  set_fact:
+    workstation_install: "{{ workstation_install + ['doctl'] }}"
+  when: host.setup.workstation.install is defined and host.setup.workstation.install | intersect([ 'doctl' ]) | length > 0
+
+- name: "Workstation / Install / Slack Desktop ..."
+  set_fact:
+    workstation_install: "{{ workstation_install + ['slack-desktop'] }}"
+  when: host.setup.workstation.install is defined and host.setup.workstation.install | intersect([ 'slack', 'slack-desktop' ]) | length > 0
+
 - name: "Workstation / Install ..."
   include_role:
     name: wyga/install-package-override
@@ -277,9 +287,4 @@
       include_role:
         name: wyga/install/ansible
       when: host.setup.workstation.install | intersect([ 'ansible' ]) | length > 0
-
-    - name: "Workstation / Install / Slack ..."
-      include_role:
-        name: wyga/install/slack-desktop
-      when: host.setup.workstation.install | intersect([ 'slack', 'slack-desktop' ]) | length > 0
   when: host.setup.workstation.install is defined
