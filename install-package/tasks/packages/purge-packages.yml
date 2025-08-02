@@ -1,4 +1,4 @@
-- name: "Purge packages ..." 
+- name: "Purge packages ..."
   apt:
     name: "{{ purge_list }}"
     state: absent

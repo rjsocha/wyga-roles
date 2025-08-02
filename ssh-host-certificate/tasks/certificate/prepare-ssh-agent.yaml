@@ -10,7 +10,7 @@
       until: _ca_key_is_present is success
 
     - name: "Host CA key not loaded ..."
-      fail: 
+      fail:
         msg: "Host CA key not loaded ..."
       when: _ca_key_is_present.rc != 0
   when: use_ssh_agent | bool == True
