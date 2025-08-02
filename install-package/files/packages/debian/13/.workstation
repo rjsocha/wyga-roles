@@ -144,3 +144,5 @@ require:
   - qt6-base-dev
   - cmake
   - libgio-2.0-dev
+  - pwgen
+  - sipcalc

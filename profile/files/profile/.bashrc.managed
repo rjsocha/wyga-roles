@@ -1,19 +1,15 @@
 # This file is managed by ansible - use .bashrc.local for local changes
 
-# Some support functions
 mc() {
-local _pwd _ncd
-  _pwd="${TMPDIR-/tmp}/mc-${USER}/mc.pwd.$$"
-  env LANG=en_US.UTF-8 /usr/bin/mc -P "$_pwd" "$@"
-  if [[ -r ${_pwd} ]]
-  then
-    _ncd="$(<${_pwd})"
-    if [[ -n ${_ncd} ]] && [[ -d ${_ncd} ]]
-    then
-      cd "${_ncd}"
+local lwd="/dev/shm/.mc.${USER}.lwd.$$" rcd
+  LANG=en_US.UTF-8 /usr/bin/mc -P "${lwd}" "$@"
+  if [[ -r ${lwd} ]];  then
+    rcd="$(<${lwd})" 2>/dev/null || true
+    if [[ -n ${rcd} ]] && [[ -d ${rcd} ]]; then
+      cd "${rcd}"
     fi
   fi
-  rm -f "$_pwd" &>/dev/null
+  rm -f -- "${lwd}" &>/dev/null || true
 }
 
 # Following functions allow to save exexuted commands to the history file instantly

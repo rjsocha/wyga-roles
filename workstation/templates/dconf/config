@@ -9,7 +9,7 @@ picture-uri-dark=''
 primary-color='#2d7d9d'
 
 [org/gnome/desktop/session]
-idle-delay=uint32 600
+idle-delay=uint32 0
 
 [org/gnome/settings-daemon/plugins/media-keys]
 custom-keybindings=['/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/']
@@ -22,6 +22,7 @@ name='FLAMESHOT'
 [org/gnome/settings-daemon/plugins/power]
 power-button-action='interactive'
 sleep-inactive-ac-timeout=7200
+sleep-inactive-ac-type='suspend'
 
 [org/gnome/shell/keybindings]
 show-screenshot-ui=@as []
@@ -41,13 +42,13 @@ last-panel='display'
 folder-children=['System', 'Utilities']
 
 [org/gnome/desktop/app-folders/folders/System]
-apps=['org.gnome.baobab.desktop', 'org.gnome.DiskUtility.desktop', 'org.gnome.Logs.desktop', 'org.gnome.tweaks.desktop', 'org.gnome.SystemMonitor.desktop', 'org.gnome.Terminal.desktop']
+apps=['org.gnome.baobab.desktop', 'org.gnome.DiskUtility.desktop', 'org.gnome.Logs.desktop', 'org.gnome.SystemMonitor.desktop', 'org.gnome.Terminal.desktop']
 name='X-GNOME-Shell-System.directory'
 translate=true
 
 [org/gnome/desktop/app-folders/folders/Utilities]
-apps=['org.gnome.Connections.desktop', 'org.gnome.Evince.desktop', 'org.gnome.font-viewer.desktop', 'org.gnome.Loupe.desktop', 'qt6ct.desktop', 'qt5ct.desktop', 'mcedit.desktop', 'mc.desktop', 'org.gnome.SoundRecorder.desktop', 'org.deskflow.deskflow.desktop' ]
 name='X-GNOME-Shell-Utilities.directory'
+apps=['org.gnome.Evince.desktop', 'org.gnome.font-viewer.desktop', 'org.gnome.Loupe.desktop', 'qt6ct.desktop', 'qt5ct.desktop', 'mcedit.desktop', 'mc.desktop', 'org.gnome.SoundRecorder.desktop', 'org.deskflow.deskflow.desktop']
 translate=true
 
 [org/gnome/desktop/background]
@@ -65,6 +66,7 @@ show-banners=false
 show-in-lock-screen=false
 
 [org/gnome/desktop/interface]
+clock-show-date=false
 document-font-name='Cantarell 12'
 enable-hot-corners=false
 font-name='Cantarell 12'
@@ -106,7 +108,7 @@ show-delete-permanently=true
 night-light-schedule-automatic=false
 
 [org/gnome/shell]
-app-picker-layout=[{'org.gnome.Settings.desktop': <{'position': <0>}>, 'deskflow-control.desktop': <{'position': <1>}>, 'transmission-qt.desktop': <{'position': <2>}>, 'gimp.desktop': <{'position': <3>}>, 'org.remmina.Remmina.desktop': <{'position': <4>}>, 'remote-viewer.desktop': <{'position': <5>}>, 'org.gnome.Calculator.desktop': <{'position': <6>}>, 'vlc.desktop': <{'position': <7>}>, 'System': <{'position': <8>}>, 'Utilities': <{'position': <9>}>, 'org.gnome.Software.desktop': <{'position': <10>}>, 'com.mattjakeman.ExtensionManager.desktop': <{'position': <11>}>}]
+app-picker-layout=[{'org.gnome.Settings.desktop': <{'position': <0>}>, 'org.gnome.tweaks.desktop': <{'position': <1>}>, 'woke-poke.desktop': <{'position': <2>}>, 'org.gnome.Connections.desktop': <{'position': <3>}>, 'org.remmina.Remmina.desktop': <{'position': <4>}>, 'deskflow-control.desktop': <{'position': <5>}>, 'com.mattjakeman.ExtensionManager.desktop': <{'position': <6>}>, 'org.gnome.Calculator.desktop': <{'position': <7>}>, 'gimp.desktop': <{'position': <8>}>, 'transmission-qt.desktop': <{'position': <9>}>, 'remote-viewer.desktop': <{'position': <10>}>, 'vlc.desktop': <{'position': <11>}>, 'org.flameshot.Flameshot.desktop': <{'position': <12>}>, 'org.gnome.Software.desktop': <{'position': <13>}>, 'System': <{'position': <14>}>, 'Utilities': <{'position': <15>}>}]
 enabled-extensions=['dash-to-panel@jderose9.github.com', 'ubuntu-appindicators@ubuntu.com']
 favorite-apps=['org.gnome.Nautilus.desktop', 'com.gexperts.Tilix.desktop', 'google-chrome.desktop', 'firefox-esr.desktop', 'virt-manager.desktop', 'org.keepassxc.KeePassXC.desktop', 'slack.desktop', 'org.gnome.gedit.desktop']
 
@@ -246,3 +248,9 @@ use-system-font=false
 use-theme-colors=false
 visible-name='DEFAULT'
 
+[org/gnome/shell/extensions/appindicator]
+icon-opacity=255
+icon-size=22
+
+[org/virt-manager/virt-manager/conns/qemu:system]
+pretty-name='+local'
