@@ -7,6 +7,8 @@ baseline:
   - bash
   - bsdutils
   - btrfs-progs
+  - busybox
+  - busybox-static
   - ca-certificates
   - coreutils
   - cpio

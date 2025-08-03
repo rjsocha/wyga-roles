@@ -6,6 +6,7 @@ require:
   - bind9-dnsutils
   - bsdextrautils
   - bzip2
+  - busybox
   - ca-certificates
   - cron
   - cron-daemon-common
