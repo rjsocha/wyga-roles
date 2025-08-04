@@ -17,6 +17,7 @@
     arch: "{{ target_arch }}"
     params:
       - files:
+          - "repository/{{ repository_name }}/common/main.yaml"
           - "repository/{{ repository_name }}/{{ target_distribution }}/{{ target_distribution_version }}/main.yaml"
           - "local/tasks/repository/{{ target_distribution }}/{{ target_distribution_version }}/{{ repository_name }}.yml"
           - "local/tasks/repository/generic/{{ repository_name }}.yml"

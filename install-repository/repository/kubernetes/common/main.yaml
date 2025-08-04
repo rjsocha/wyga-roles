@@ -1,0 +1,29 @@
+- name: "Install {{ repository }} repository (keyring) ..."
+  copy:
+    src: "repository/{{ repository }}/common/file/{{ file.src }}"
+    dest: "{{ file.dst }}"
+    group: root
+    owner: root
+    mode: 0644
+    force: yes
+  loop:
+    - { 'src': '{{ repository }}.gpg',  'dst': '/usr/share/keyrings/{{ repository }}.gpg' }
+  loop_control:
+    loop_var: file
+    label: "{{ file.dst }}"
+
+- name: "Install {{ repository }} repository (list) ..."
+  template:
+    src: "repository/{{ repository }}/common/template/{{ file.src }}"
+    dest: "{{ file.dst }}"
+    group: root
+    owner: root
+    mode: 0644
+    force: yes
+  vars:
+    k8s_version: "{{ kubernetes_version | default('v1.33') }}"
+  loop:
+    - { 'src': '{{ repository }}.list', 'dst': '/etc/apt/sources.list.d/{{ repository }}.list' }
+  loop_control:
+    loop_var: file
+    label: "{{ file.dst }}"
