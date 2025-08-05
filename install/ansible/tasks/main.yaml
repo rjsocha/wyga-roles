@@ -6,19 +6,45 @@
       - pipx
 
 - name: "ASIBLE / Install ansible ..."
-  community.general.pipx:
-    name: ansible
-    state: latest
-    install_deps: true
-    include_injected: true
-    global: true
+  block:
+    - name: "ASIBLE / Install ansible ..."
+      community.general.pipx:
+        name: ansible
+        state: latest
+        install_deps: true
+        include_injected: true
+        global: true
 
-- name: "ASIBLE / Incject packages  ..."
-  community.general.pipx:
-    name: ansible
-    state: inject
-    install_deps: true
-    global: true
-    inject_packages:
-      - netaddr
-      - argcomplete
+    - name: "ASIBLE / Incject packages  ..."
+      community.general.pipx:
+        name: ansible
+        state: inject
+        install_deps: true
+        global: true
+        inject_packages:
+          - netaddr
+          - argcomplete
+  rescue:
+    - name: "ASIBLE / Install ansible (fallback) ..."
+      community.general.pipx:
+        name: ansible
+        state: latest
+        install_deps: true
+        include_injected: true
+      environment:
+        PIPX_HOME: /opt/external/ansible-core
+        PIPX_BIN_DIR: /usr/local/bin
+        PIPX_MAN_DIR: /usr/local/share/man
+
+    - name: "ASIBLE / Incject packages  ..."
+      community.general.pipx:
+        name: ansible
+        state: inject
+        install_deps: true
+        inject_packages:
+          - netaddr
+          - argcomplete
+      environment:
+        PIPX_HOME: /opt/external/ansible-core
+        PIPX_BIN_DIR: /usr/local/bin
+        PIPX_MAN_DIR: /usr/local/share/man

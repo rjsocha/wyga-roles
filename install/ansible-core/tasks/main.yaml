@@ -6,8 +6,37 @@
       - pipx
 
 - name: "ASIBLE / Install ansible-core ..."
-  community.general.pipx:
-    name: ansible-core
-    install_deps: true
-    global: true
-    state: latest
+  block:
+    - name: "ASIBLE / Install ansible-core ..."
+      community.general.pipx:
+        name: ansible-core
+        install_deps: true
+        global: true
+        state: latest
+
+    - name: "ASIBLE / Incject packages  ..."
+      community.general.pipx:
+        name: ansible-core
+        state: inject
+        install_deps: true
+        global: true
+        inject_packages:
+          - netaddr
+  rescue:
+    - name: "ASIBLE / Install ansible-core (fallback) ..."
+      community.general.pipx:
+        name: ansible-core
+        install_deps: true
+        state: latest
+      environment:
+        PIPX_HOME: /opt/external/ansible-core
+        PIPX_BIN_DIR: /usr/local/bin
+        PIPX_MAN_DIR: /usr/local/share/man
+
+    - name: "ASIBLE / Incject packages  (fallback) ..."
+      community.general.pipx:
+        name: ansible-core
+        state: inject
+        install_deps: true
+        inject_packages:
+          - netaddr
