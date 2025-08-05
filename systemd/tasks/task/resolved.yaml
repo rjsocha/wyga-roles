@@ -3,13 +3,17 @@
   ansible.builtin.package_facts:
     manager: auto
 
+
 - name: "SYSTEMD / Resolved / install systemd-resolved ..."
-  include_role:
-    name: wyga/install-package-override
-  vars:
-    packages:
-      - systemd-resolved
-  when: "'systemd-resolved' is not in ansible_facts.packages"
+  block:
+    - name: "SYSTEMD / Resolved / install systemd-resolved ..."
+      include_role:
+        name: wyga/install-package-override
+      vars:
+        packages:
+          - systemd-resolved
+      when: "'systemd-resolved' is not in ansible_facts.packages"
+  when: target_distribution not in [ 'ubuntu' ] and target_distribution_version not in [ "22.04" ]
 
 - name: "SYSTEMD / Resolved ..."
   file:
