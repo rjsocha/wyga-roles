@@ -23,7 +23,6 @@
         global: true
         inject_packages:
           - netaddr
-          - argcomplete
   rescue:
     - name: "ASIBLE / Install ansible (fallback) ..."
       community.general.pipx:
@@ -32,7 +31,7 @@
         install_deps: true
         include_injected: true
       environment:
-        PIPX_HOME: /opt/external/ansible-core
+        PIPX_HOME: /opt/pipx
         PIPX_BIN_DIR: /usr/local/bin
         PIPX_MAN_DIR: /usr/local/share/man
 
@@ -40,11 +39,9 @@
       community.general.pipx:
         name: ansible
         state: inject
-        install_deps: true
         inject_packages:
           - netaddr
-          - argcomplete
       environment:
-        PIPX_HOME: /opt/external/ansible-core
+        PIPX_HOME: /opt/pipx
         PIPX_BIN_DIR: /usr/local/bin
         PIPX_MAN_DIR: /usr/local/share/man

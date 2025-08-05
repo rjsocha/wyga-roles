@@ -29,7 +29,7 @@
         install_deps: true
         state: latest
       environment:
-        PIPX_HOME: /opt/external/ansible-core
+        PIPX_HOME: /opt/pipx
         PIPX_BIN_DIR: /usr/local/bin
         PIPX_MAN_DIR: /usr/local/share/man
 
@@ -37,6 +37,5 @@
       community.general.pipx:
         name: ansible-core
         state: inject
-        install_deps: true
         inject_packages:
           - netaddr
