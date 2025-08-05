@@ -53,7 +53,7 @@
 
 - name: "Prepare packages list ..."
   set_fact:
-     package_list: "{{ package_list + [ { 'name': ip_package, 'manifest': playbook_dir + '/local/packages/' + target_distribution + '/' + target_distribution_version + '/' + ip_package } ] + [ { 'name': ip_package, 'manifest': role_path + '/files/packages/' + target_distribution + '/' + target_distribution_version + '/' + ip_package } ] }}"
+    package_list: "{{ package_list + [ { 'name': ip_package, 'manifest': playbook_dir + '/local/packages/' + target_distribution + '/' + target_distribution_version + '/' + ip_package } ] + [ { 'name': ip_package, 'manifest': role_path + '/files/packages/common/' + ip_package } ] + [ { 'name': ip_package, 'manifest': role_path + '/files/packages/' + target_distribution + '/' + target_distribution_version + '/' + ip_package } ] }}"
   loop: "{{ __packages }}"
   loop_control:
     loop_var: ip_package

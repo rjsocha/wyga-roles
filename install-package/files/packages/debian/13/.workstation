@@ -146,3 +146,11 @@ require:
   - libgio-2.0-dev
   - pwgen
   - sipcalc
+  - libreoffice-writer
+  - libreoffice-calc
+  - libreoffice-draw
+  - libreoffice-impress
+  - libreoffice-base
+  - zip
+  - yubikey-manager
+  - aptly

@@ -1,0 +1,5 @@
+Types: deb
+URIs: https://package.wyga.it/apt
+Suites: wyga
+Components: main
+Signed-By: /usr/share/keyrings/wyga.gpg

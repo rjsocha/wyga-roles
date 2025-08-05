@@ -1,0 +1,23 @@
+- name: "Install {{ repository }} repository / Format (deb822) ..."
+  set_fact:
+    repository_format: "sources"
+
+- name: "Install {{ repository }} repository / Format (legacy) ..."
+  set_fact:
+    repository_format: "list"
+  when: target in ['debian', 'ubuntu'] and version in ['12', '22.04']
+
+- name: "Install {{ repository }} repository ..."
+  copy:
+    src: "repository/{{ repository }}/common/{{ file.src }}"
+    dest: "{{ file.dst }}"
+    group: root
+    owner: root
+    mode: 0644
+    force: yes
+  loop:
+    - { 'src': 'file/{{ repository }}.gpg',  'dst': '/usr/share/keyrings/{{ repository }}.gpg' }
+    - { 'src': 'file/{{ repository }}.{{ repository_format }}', 'dst': '/etc/apt/sources.list.d/{{ repository }}.{{ repository_format }}' }
+  loop_control:
+    loop_var: file
+    label: "{{ file.dst }}"

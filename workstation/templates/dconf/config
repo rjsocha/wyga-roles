@@ -39,16 +39,26 @@ sort-directories-first=true
 last-panel='display'
 
 [org/gnome/desktop/app-folders]
-folder-children=['System', 'Utilities']
+folder-children=['System', 'Utilities', 'a1b66376-8814-4599-a9f6-5ae65bad8010', '674d515c-9884-49bb-82be-1ad460cd847b']
+
+[org/gnome/desktop/app-folders/folders/674d515c-9884-49bb-82be-1ad460cd847b]
+apps=['woke-poke.desktop', 'deskflow-control.desktop', 'vlc.desktop', 'org.flameshot.Flameshot.desktop', 'mcedit.desktop', 'mc.desktop', 'remote-viewer.desktop', 'org.remmina.Remmina.desktop', 'transmission-qt.desktop']
+name='Tools'
+translate=false
+
+[org/gnome/desktop/app-folders/folders/a1b66376-8814-4599-a9f6-5ae65bad8010]
+apps=['libreoffice-startcenter.desktop', 'libreoffice-calc.desktop', 'libreoffice-writer.desktop', 'libreoffice-base.desktop', 'libreoffice-impress.desktop', 'libreoffice-draw.desktop']
+name='Office'
+translate=false
 
 [org/gnome/desktop/app-folders/folders/System]
-apps=['org.gnome.baobab.desktop', 'org.gnome.DiskUtility.desktop', 'org.gnome.Logs.desktop', 'org.gnome.SystemMonitor.desktop', 'org.gnome.Terminal.desktop']
+apps=['org.gnome.baobab.desktop', 'org.gnome.DiskUtility.desktop', 'org.gnome.Logs.desktop', 'org.gnome.SystemMonitor.desktop', 'org.gnome.Terminal.desktop', 'com.mattjakeman.ExtensionManager.desktop', 'org.gnome.Software.desktop', 'org.deskflow.deskflow.desktop']
 name='X-GNOME-Shell-System.directory'
 translate=true
 
 [org/gnome/desktop/app-folders/folders/Utilities]
 name='X-GNOME-Shell-Utilities.directory'
-apps=['org.gnome.Evince.desktop', 'org.gnome.font-viewer.desktop', 'org.gnome.Loupe.desktop', 'qt6ct.desktop', 'qt5ct.desktop', 'mcedit.desktop', 'mc.desktop', 'org.gnome.SoundRecorder.desktop', 'org.deskflow.deskflow.desktop']
+apps=['org.gnome.tweaks.desktop', 'org.gnome.Evince.desktop', 'org.gnome.font-viewer.desktop', 'org.gnome.Loupe.desktop', 'org.gnome.SoundRecorder.desktop', 'org.gnome.Calculator.desktop', 'qt6ct.desktop', 'qt5ct.desktop']
 translate=true
 
 [org/gnome/desktop/background]
@@ -108,7 +118,7 @@ show-delete-permanently=true
 night-light-schedule-automatic=false
 
 [org/gnome/shell]
-app-picker-layout=[{'org.gnome.Settings.desktop': <{'position': <0>}>, 'org.gnome.tweaks.desktop': <{'position': <1>}>, 'woke-poke.desktop': <{'position': <2>}>, 'org.gnome.Connections.desktop': <{'position': <3>}>, 'org.remmina.Remmina.desktop': <{'position': <4>}>, 'deskflow-control.desktop': <{'position': <5>}>, 'com.mattjakeman.ExtensionManager.desktop': <{'position': <6>}>, 'org.gnome.Calculator.desktop': <{'position': <7>}>, 'gimp.desktop': <{'position': <8>}>, 'transmission-qt.desktop': <{'position': <9>}>, 'remote-viewer.desktop': <{'position': <10>}>, 'vlc.desktop': <{'position': <11>}>, 'org.flameshot.Flameshot.desktop': <{'position': <12>}>, 'org.gnome.Software.desktop': <{'position': <13>}>, 'System': <{'position': <14>}>, 'Utilities': <{'position': <15>}>}]
+app-picker-layout=[{'org.gnome.Settings.desktop': <{'position': <0>}>, 'gimp.desktop': <{'position': <1>}>, 'org.gnome.Connections.desktop': <{'position': <2>}>, 'a1b66376-8814-4599-a9f6-5ae65bad8010': <{'position': <3>}>, '674d515c-9884-49bb-82be-1ad460cd847b': <{'position': <4>}>, 'Utilities': <{'position': <5>}>, 'System': <{'position': <6>}>}]
 enabled-extensions=['dash-to-panel@jderose9.github.com', 'ubuntu-appindicators@ubuntu.com']
 favorite-apps=['org.gnome.Nautilus.desktop', 'com.gexperts.Tilix.desktop', 'google-chrome.desktop', 'firefox-esr.desktop', 'virt-manager.desktop', 'org.keepassxc.KeePassXC.desktop', 'slack.desktop', 'org.gnome.gedit.desktop']
 
