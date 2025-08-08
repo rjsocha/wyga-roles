@@ -1,1 +1,1 @@
-deb [signed-by=/usr/share/keyrings/wyga.gpg] https://package.wyga.it/apt wyga main
+deb [arch=amd64,arm64 signed-by=/usr/share/keyrings/wyga.gpg] https://package.wyga.it/apt wyga main
