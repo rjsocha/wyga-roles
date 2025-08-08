@@ -37,6 +37,3 @@
         loop_var: file
         label: "{{ file.dst }}"
   when: not repository_legacy
-
-- name: clean / hack
-  command: find  /var/lib/apt/lists/ -type f -delete
