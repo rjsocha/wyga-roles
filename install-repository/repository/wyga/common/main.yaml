@@ -31,16 +31,11 @@
         mode: 0644
         force: yes
       loop:
+        - { 'src': 'file/{{ repository }}.gpg',  'dst': '/usr/share/keyrings/{{ repository }}.gpg' }
         - { 'src': 'file/{{ repository }}.sources', 'dst': '/etc/apt/sources.list.d/{{ repository }}.sources' }
       loop_control:
         loop_var: file
         label: "{{ file.dst }}"
-
-    - name: "CLEANUP (temporary) ..."
-      file:
-        path: '/usr/share/keyrings/wyga.gpg'
-        state: absent
-      register: cleanup_rep
   when: not repository_legacy
 
 - name: clean / hack

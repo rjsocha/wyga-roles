@@ -2,16 +2,4 @@ Types: deb
 URIs: https://package.wyga.it/apt
 Suites: wyga
 Components: main
-Signed-By:
-  -----BEGIN PGP PUBLIC KEY BLOCK-----
-  mDMEaJH4cRYJKwYBBAHaRw8BAQdAzwElkfBYVdgovMpvg3Tj8LaRg4GUVdyEJg5x
-  tmBQGeq0HldZR0EgUGFja2FnZSA8cGFja2FnZUB3eWdhLml0PoiWBBMWCgA+FiEE
-  yJ/fi/DljiiYvcUfCIS2J5IBao4FAmiR+HECGwMFCQlmAYAFCwkIBwIGFQoJCAsC
-  BBYCAwECHgECF4AACgkQCIS2J5IBao4BLAEA2Iz+i1qkvptKAidS7CcrdLywttRK
-  h8H7+M3j4vVEoE8BALye9jm/Zh2txuVHjuMR8r/xL82Fk5+2ZoXg7tYPvdYFuDgE
-  aJH4cRIKKwYBBAGXVQEFAQEHQHOeTw6t64wZRS5Pe7FlJf7r88WUQcg7l451dpM0
-  kdBzAwEIB4h+BBgWCgAmFiEEyJ/fi/DljiiYvcUfCIS2J5IBao4FAmiR+HECGwwF
-  CQlmAYAACgkQCIS2J5IBao7XzgEA4ZXrdNtQCDLeroBIq9qtflSp31EGGUl2YIpG
-  Jd5Gzo4BAIGezitliMaCxTvsYmogyEJl2ozxuecTiclW5upwhg8H
-  =YaHH
-  -----END PGP PUBLIC KEY BLOCK-----
+Signed-By: /usr/share/keyrings/wyga.gpg
