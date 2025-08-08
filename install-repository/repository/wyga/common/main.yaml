@@ -1,23 +1,47 @@
-- name: "Install {{ repository }} repository / Format (deb822) ..."
+- name: "Install {{ repository }} repository / Target  ..."
   set_fact:
-    repository_format: "sources"
+    repository_legacy: "{{ true if target in ['debian', 'ubuntu'] and version in ['12', '22.04'] else false }}"
 
-- name: "Install {{ repository }} repository / Format (legacy) ..."
-  set_fact:
-    repository_format: "list"
-  when: target in ['debian', 'ubuntu'] and version in ['12', '22.04']
+- name: "Install {{ repository }} repository / Legacy Format ..."
+  block:
+    - name: "Install {{ repository }} repository ..."
+      copy:
+        src: "repository/{{ repository }}/common/{{ file.src }}"
+        dest: "{{ file.dst }}"
+        group: root
+        owner: root
+        mode: 0644
+        force: yes
+      loop:
+        - { 'src': 'file/{{ repository }}.gpg',  'dst': '/usr/share/keyrings/{{ repository }}.gpg' }
+        - { 'src': 'file/{{ repository }}.list', 'dst': '/etc/apt/sources.list.d/{{ repository }}.list' }
+      loop_control:
+        loop_var: file
+        label: "{{ file.dst }}"
+  when: repository_legacy
 
-- name: "Install {{ repository }} repository ..."
-  copy:
-    src: "repository/{{ repository }}/common/{{ file.src }}"
-    dest: "{{ file.dst }}"
-    group: root
-    owner: root
-    mode: 0644
-    force: yes
-  loop:
-    - { 'src': 'file/{{ repository }}.gpg',  'dst': '/usr/share/keyrings/{{ repository }}.gpg' }
-    - { 'src': 'file/{{ repository }}.{{ repository_format }}', 'dst': '/etc/apt/sources.list.d/{{ repository }}.{{ repository_format }}' }
-  loop_control:
-    loop_var: file
-    label: "{{ file.dst }}"
+- name: "Install {{ repository }} repository / deb822 Format ..."
+  block:
+    - name: "Install {{ repository }} repository ..."
+      copy:
+        src: "repository/{{ repository }}/common/{{ file.src }}"
+        dest: "{{ file.dst }}"
+        group: root
+        owner: root
+        mode: 0644
+        force: yes
+      loop:
+        - { 'src': 'file/{{ repository }}.sources', 'dst': '/etc/apt/sources.list.d/{{ repository }}.sources' }
+      loop_control:
+        loop_var: file
+        label: "{{ file.dst }}"
+
+    - name: "CLEANUP (temporary) ..."
+      file:
+        path: '/usr/share/keyrings/wyga.gpg'
+        state: absent
+      register: cleanup_rep
+  when: not repository_legacy
+
+- name: clean / hack
+  command: find  /var/lib/apt/lists/ -type f -delete
