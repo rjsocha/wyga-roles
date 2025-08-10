@@ -1,0 +1,5 @@
+Types: deb
+URIs: https://packages.gitlab.com/runner/gitlab-runner/ubuntu
+Suites: noble
+Components: main
+Signed-By: /usr/share/keyrings/gitlab-runner.gpg

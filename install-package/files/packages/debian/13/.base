@@ -70,3 +70,4 @@ require:
 purge:
   - mawk
   - netcat-traditional
+  - usr-is-merged

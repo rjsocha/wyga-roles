@@ -36,4 +36,14 @@
       loop_control:
         loop_var: file
         label: "{{ file.dst }}"
+
+    - name: "Cleanup {{ repository }} repository ..."
+      file:
+        path: "{{ file.purge }}"
+        state: absent
+      loop:
+        - { 'purge': '/etc/apt/sources.list.d/wyga.list' }
+      loop_control:
+        loop_var: file
+        label: "{{ file.purge }}"
   when: not repository_legacy
