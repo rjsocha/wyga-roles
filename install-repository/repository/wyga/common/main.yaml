@@ -14,7 +14,7 @@
         force: yes
       loop:
         - { 'src': 'file/{{ repository }}.gpg',  'dst': '/usr/share/keyrings/{{ repository }}.gpg' }
-        - { 'src': 'file/{{ repository }}.list', 'dst': '/etc/apt/sources.list.d/{{ repository }}.list' }
+        - { 'src': 'file/{{ arch }}/{{ repository }}.list', 'dst': '/etc/apt/sources.list.d/{{ repository }}.list' }
       loop_control:
         loop_var: file
         label: "{{ file.dst }}"
@@ -32,7 +32,7 @@
         force: yes
       loop:
         - { 'src': 'file/{{ repository }}.gpg',  'dst': '/usr/share/keyrings/{{ repository }}.gpg' }
-        - { 'src': 'file/{{ repository }}.sources', 'dst': '/etc/apt/sources.list.d/{{ repository }}.sources' }
+        - { 'src': 'file/{{ arch }}/{{ repository }}.sources', 'dst': '/etc/apt/sources.list.d/{{ repository }}.sources' }
       loop_control:
         loop_var: file
         label: "{{ file.dst }}"
