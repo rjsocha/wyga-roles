@@ -1,5 +1,5 @@
 Types: deb
 URIs: https://packages.gitlab.com/runner/gitlab-runner/debian
-Suites: bookworm
+Suites: trixie
 Components: main
 Signed-By: /usr/share/keyrings/gitlab-runner.gpg

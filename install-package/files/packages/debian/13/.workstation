@@ -155,3 +155,7 @@ require:
   - yubikey-manager
   - aptly
   - whois
+  - 7zip
+  - doctl
+  - pkg-config
+  - unrar
