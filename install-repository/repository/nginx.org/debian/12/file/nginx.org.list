@@ -1,0 +1,1 @@
+deb [signed-by=/usr/share/keyrings/nginx.org.gpg] http://nginx.org/packages/mainline/debian bookworm nginx
