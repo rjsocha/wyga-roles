@@ -4,7 +4,7 @@ iptables firewall and docker integration
 
 How to update firewall rules (at runtime) using netfilter-persistent package without restarting (reseting) already appiled rules (docker rules).
 
-Please make sure you understand how networking (in context of iptables integration). For referenece:
+Please make sure you understand how networking works with docker (in context of iptables integration). For referenece:
 https://docs.docker.com/engine/network/packet-filtering-firewalls/
 
 When iptables rules are reseted all docker's iptable rules are wipeouted. And to restore them one solution is to restart docker daemon.

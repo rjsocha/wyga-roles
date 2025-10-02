@@ -159,3 +159,11 @@ require:
   - doctl
   - pkg-config
   - unrar
+  - graphicsmagick
+  - python3-protobuf
+  - yad
+  - ipv6calc
+  - google-cloud-cli
+  - google-cloud-cli-gke-gcloud-auth-plugin
+  - aws-cli-v2
+  - kubectl

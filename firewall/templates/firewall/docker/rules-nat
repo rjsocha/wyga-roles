@@ -8,6 +8,7 @@
   {{- ' -i ' ~ rule.in if rule.in is defined else '' -}}
   {{- ' --dport ' ~ dport -}}
   {{- ' -d ' ~ dst -}}
+  {{- ' -s ' ~ rule.src if rule.src is defined else '' -}}
   {{- ' -m comment --comment "' ~ rule.comment ~ '"' if rule.comment is defined else '' -}}
   {{ '' }} -j DNAT --to {{ rule.to }}
 {% endfor %}
