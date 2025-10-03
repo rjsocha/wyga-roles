@@ -16,14 +16,20 @@
 {% if host.firewall.snat is defined %}
 {% for rule in host.firewall.snat %}
 -A NAT-POSTROUTING-RULES
-  {{- ' -m ' ~ rule.proto if rule.proto is defined else ' -m tcp' -}}
-  {{- ' -p ' ~ rule.proto if rule.proto is defined else ' -p tcp' -}}
+{%- if rule.proto is defined %}
+  {{- ' -m ' ~ rule.proto -}}
+  {{- ' -p ' ~ rule.proto -}}
+{% endif -%}
   {{- ' -i ' ~ rule.in if rule.in is defined else '' -}}
   {{- ' --dport ' ~ rule.dport if rule.dport is defined else '' -}}
   {{- ' --sport ' ~ rule.sport if rule.dport is defined else '' -}}
   {{- ' -d ' ~ rule.dst if rule.dst is defined else '' -}}
   {{- ' -s ' ~ rule.src if rule.src is defined else '' -}}
   {{- ' -m comment --comment "' ~ rule.comment ~ '"' if rule.comment is defined else '' -}}
-  {{ '' }} -j SNAT --to {{ rule.to }}
+{%- if rule.masquerade is defined %}
+ -j MASQUERADE
+{% else %}
+ -j SNAT --to {{ rule.to }}
+{% endif %}
 {% endfor %}
 {% endif %}
