@@ -4,3 +4,5 @@ require:
   - docker-compose-plugin
   - python3-requests
   - docker-buildx-plugin
+repository:
+  - docker-ce

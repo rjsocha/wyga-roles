@@ -3,3 +3,5 @@ require:
   - docker-ce-cli
   - docker-compose-plugin
   - python3-requests
+repository:
+  - docker-ce
