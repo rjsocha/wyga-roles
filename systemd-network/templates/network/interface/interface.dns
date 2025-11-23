@@ -4,6 +4,8 @@ Name={{ interface.match.name }}
 
 [Network]
 KeepConfiguration=yes
+ConfigureWithoutCarrier=yes
+IgnoreCarrierLoss=yes
 LinkLocalAddressing=no
 DNS={{ interface.dns | ipaddr('address') | join(' ') }}
 {% if interface.domains is defined %}
