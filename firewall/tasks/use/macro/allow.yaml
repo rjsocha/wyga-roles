@@ -1,41 +1,31 @@
 ---
 - name: "Process allow/any ..."
-  block:
-    - name: "Append rule ..."
-      set_fact:
-        fwrules: "{{ fwrules + [ { 'any': 'any' } ] }}"
-        rule_parsed: true
+  set_fact:
+    fwrules: "{{ fwrules + [ { 'any': 'any' } ] }}"
+    rule_parsed: true
   when: rule.allow == 'any'
 
 - name: "Process allow/icmp ..."
-  block:
-    - name: "Append common icmp rules ..."
-      set_fact:
-        fwrule_icmp:
-          - { 'icmptype': 'destination-unreachable', 'match': 'icmp', 'proto': 'icmp' }
-          - { 'icmptype': 'echo-request', 'match': 'icmp', 'proto': 'icmp' }
-          - { 'icmptype': 'time-exceeded', 'match': 'icmp', 'proto': 'icmp' }
-          - { 'icmptype': 'parameter-problem', 'match': 'icmp', 'proto': 'icmp' }
-
-    - name: "Append rule ..."
-      set_fact:
-        fwrules: "{{ fwrules + fwrule_icmp }}"
-        rule_parsed: true
+  set_fact:
+    fwrules: "{{ fwrules + fwrule_icmp }}"
+    rule_parsed: true
+  vars:
+    fwrule_icmp:
+      - { 'icmptype': 'destination-unreachable', 'match': 'icmp', 'proto': 'icmp' }
+      - { 'icmptype': 'echo-request', 'match': 'icmp', 'proto': 'icmp' }
+      - { 'icmptype': 'time-exceeded', 'match': 'icmp', 'proto': 'icmp' }
+      - { 'icmptype': 'parameter-problem', 'match': 'icmp', 'proto': 'icmp' }
   when: rule.allow == 'icmp'
 
 - name: "Process allow/http ..."
-  block:
-    - name: "Append http/https/http3 rules ..."
-      set_fact:
-        fwrule_http:
-          - { 'dport': '80', 'match': 'tcp', 'proto': 'tcp' }
-          - { 'dport': '443', 'match': 'tcp', 'proto': 'tcp' }
-          - { 'dport': '443', 'match': 'udp', 'proto': 'udp' }
-
-    - name: "Append rule ..."
-      set_fact:
-        fwrules: "{{ fwrules + fwrule_http }}"
-        rule_parsed: true
+  set_fact:
+    fwrules: "{{ fwrules + fwrule_http }}"
+    rule_parsed: true
+  vars:
+    fwrule_http:
+      - { 'dport': '80', 'match': 'tcp', 'proto': 'tcp' }
+      - { 'dport': '443', 'match': 'tcp', 'proto': 'tcp' }
+      - { 'dport': '443', 'match': 'udp', 'proto': 'udp' }
   when: rule.allow == 'http'
 
 - name: "Process allow/nebula ..."
@@ -50,17 +40,13 @@
         rule_parsed: true
   when: rule.allow == 'nebula'
 
-- name: "Process allow/overlay ..."
-  block:
-    - name: "Append allow/overlay rules ..."
-      set_fact:
-        fwrule_overlay:
-          - { 'iface': 'overlay0' }
-    - name: "Append rule ..."
-      set_fact:
-        fwrules: "{{ fwrules + fwrule_overlay }}"
-        rule_parsed: true
-  when: rule.allow == 'overlay'
+- name: "Process allow/if ..."
+  set_fact:
+    fwrules: "{{ fwrules + [{'iface': allow_iface}] }}"
+    rule_parsed: true
+  vars:
+    allow_iface: "{{ rule.allow.split('/')[1] }}"
+  when: rule.allow is regex('(?i)^if/[a-z][a-z0-9-]{1,18}[a-z0-9]$')
 
 - name: "Process allow/vpn ..."
   block:
