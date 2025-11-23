@@ -4,9 +4,6 @@
     select_policy: "{{ inventory_hostname | basename }}"
   when: select_policy is not defined
 
-# refrain from coding in YAML ...
-# refrain from coding in YAML ...
-# refrain from coding in YAML ... etc
 # Include vars to generated variable for reuse in loops
 - name: "Load defaults ..."
   include_vars:
@@ -42,6 +39,8 @@
           skip: true
           files:
             - "{{ policy_file | default(omit) }}"
+            - "{{ playbook_dir }}/policy/{{ select_policy }}.yaml"
+            - "{{ playbook_dir }}/policy/{{ select_policy }}.yml"
             - "{{ playbook_dir }}/policy/{{ select_policy }}"
 
     - name: "Get host policy ..."

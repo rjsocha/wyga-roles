@@ -153,7 +153,12 @@
 - name: "Configure Traefik Ingress ..."
   include_role:
     name: wyga/ingress/traefik
-  when: "host.setup.ingress is defined and host.setup.ingress.target | default('traefik') == 'traefik'"
+  when: host.setup.ingress.traefik is defined
+
+- name: "Configure Nginx Ingress ..."
+  include_role:
+    name: wyga/ingress/nginx
+  when: host.setup.ingress.nginx is defined
 
 - name: "Policy marker ..."
   include_tasks: "mark-policy.yaml"
