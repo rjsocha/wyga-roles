@@ -23,7 +23,7 @@
 - name: "Install /etc/ssh/ssh_known_hosts"
   copy:
     dest: "/etc/ssh/ssh_known_hosts"
-    src: "key/known_hosts/{{ whp_site }}/ssh_known_hosts"
+    src: "key/known_hosts/{{ host_policy_site }}/ssh_known_hosts"
     mode: "0644"
     owner: "root"
     group: "root"
