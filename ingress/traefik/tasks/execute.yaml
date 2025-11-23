@@ -12,11 +12,11 @@
 
 - name: "Traefik Ingress / Setup / Load IngressConfig ..."
   set_fact:
-    IngressConfig: "{{ host.setup.ingress }}"
+    IngressConfig: "{{ host.setup.ingress.traefik }}"
 
 - name: "Traefik Ingress / Setup / Update runtime directory ..."
   set_fact:
-    IngressConfig: "{{ host.setup.ingress | combine( { 'runtime': { 'path': ingress_default_runtime_dir }}, recursive=True ) }}"
+    IngressConfig: "{{ host.setup.ingress.traefik | combine( { 'runtime': { 'path': ingress_default_runtime_dir }}, recursive=True ) }}"
   when: IngressConfig.runtime.path is not defined
 
 - name: "Traefik Ingress / Process ..."
