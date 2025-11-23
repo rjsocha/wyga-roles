@@ -120,7 +120,7 @@
 - name: "Verify configuration for static method (IP) ..."
   assert:
     that:
-      - ip | ipv4('address/prefix')
+      - ip | ipv4('address/prefix') or ip | ipv6('address/prefix')
     msg: "Unable to continue, check interface configuration ..."
   loop: "{{ interface.ip | list }}"
   loop_control:
@@ -148,7 +148,7 @@
   assert:
     that:
       - interface.dns | type_debug == "list"
-      - ip | ipv4('address')
+      - ip | ipv4('address') or ip | ipv6('address')
     msg: "Unable to continue, check interface configuration ..."
   loop: "{{ interface.dns }}"
   loop_control:
