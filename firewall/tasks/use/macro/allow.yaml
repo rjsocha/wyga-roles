@@ -89,8 +89,16 @@
 
     - name: "Load ssh hosts ..."
       include_vars:
-        file: "local/firewall/ssh/{{ ssh_firewall_file }}"
+        file: "site/{{ site_host_policy }}/firewall/ssh/{{ ssh_firewall_file }}"
         name: ssh_firewall_hosts
+      when: ssh_firewall_file != 'any'
+
+    - name: "Define 'any' ..."
+      set_fact:
+        ssh_firewall_hosts:
+          hosts:
+            - 0.0.0.0/0
+      when: ssh_firewall_file == 'any'
 
     - name: "ERROR ..."
       fail:
