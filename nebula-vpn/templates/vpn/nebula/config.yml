@@ -71,7 +71,7 @@ relay:
 
 tun:
   disabled: false
-  dev: {{ vpn.dev | default('overlay0') }}
+  dev: {{ vpn.tun.dev | default('overlay0') }}
   drop_local_broadcast: true
   drop_multicast: true
   tx_queue: 500
