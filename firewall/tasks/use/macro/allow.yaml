@@ -89,7 +89,7 @@
 
     - name: "Load ssh hosts ..."
       include_vars:
-        file: "site/{{ site_host_policy }}/firewall/ssh/{{ ssh_firewall_file }}"
+        file: "site/{{ host_policy_site }}/firewall/ssh/{{ ssh_firewall_file }}"
         name: ssh_firewall_hosts
       when: ssh_firewall_file != 'any'
 
