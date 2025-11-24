@@ -10,7 +10,7 @@ DHCP=ipv4
 IPv6AcceptRA={{ 'yes' if interface.ra | default(false) else 'no' }}
 LinkLocalAddressing={{ interface.lla | default('ipv6') | string }}
 {% if interface.dns is defined %}
-DNS={{ interface.dns | ipaddr('address') | join(' ') }}
+DNS={{ interface.dns | ansible.utils.ipaddr('address') | join(' ') }}
 {% endif %}
 {% if interface.domains is defined %}
 Domains={{ interface.domains if interface.domains is string else ' '.join(interface.domains) }}

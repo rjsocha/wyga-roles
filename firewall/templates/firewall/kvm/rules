@@ -2,7 +2,7 @@
 # {{ ansible_managed }}
 {% set vm_if = host.setup.kvm.network.interface | default('vm0') %}
 {% set vm_subnet = host.setup.kvm.network.subnet %}
-{% set vm_gw = vm_subnet | ipaddr('1') | ipaddr('address') %}
+{% set vm_gw = vm_subnet | ansible.utils.ipaddr('1') | ansible.utils.ipaddr('address') %}
 *filter
 :INPUT ACCEPT [0:0]
 :FORWARD DROP [0:0]

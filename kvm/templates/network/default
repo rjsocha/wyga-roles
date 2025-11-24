@@ -9,15 +9,15 @@
 {% set vm_if = host.setup.kvm.network.interface | default('vm0') %}
 {% set vm_domain = host.setup.kvm.network.domain | default('vm') %}
 {% set vm_subnet = host.setup.kvm.network.subnet %}
-{% set vm_gw = host.setup.kvm.network.gateway if host.setup.kvm.network.gateway is defined else vm_subnet | ipaddr('1') | ipaddr('address') %}
-{% set vm_dhcp_start = host.setup.kvm.network.dhcp.range | first if host.setup.kvm.network.dhcp.range is defined else vm_subnet | ipaddr('256') | ipaddr('address') %}
-{% set vm_dhcp_end = host.setup.kvm.network.dhcp.range | last if host.setup.kvm.network.dhcp.range is defined else vm_subnet | ipaddr('last_usable') | ipaddr('address') %}
+{% set vm_gw = host.setup.kvm.network.gateway if host.setup.kvm.network.gateway is defined else vm_subnet | ansible.utils.ipaddr('1') | ansible.utils.ipaddr('address') %}
+{% set vm_dhcp_start = host.setup.kvm.network.dhcp.range | first if host.setup.kvm.network.dhcp.range is defined else vm_subnet | ansible.utils.ipaddr('256') | ansible.utils.ipaddr('address') %}
+{% set vm_dhcp_end = host.setup.kvm.network.dhcp.range | last if host.setup.kvm.network.dhcp.range is defined else vm_subnet | ansible.utils.ipaddr('last_usable') | ansible.utils.ipaddr('address') %}
 <network xmlns:dnsmasq='http://libvirt.org/schemas/network/dnsmasq/1.0'>>
   <name>default</name>
   <forward mode='open'/>
   <bridge name='{{ vm_if }}' stp='off' delay='0'/>
   <domain name='{{ vm_domain }}'/>
-  <ip address='{{ vm_gw }}' netmask='{{ vm_subnet | ipaddr('netmask') }}'>
+  <ip address='{{ vm_gw }}' netmask='{{ vm_subnet | ansible.utils.ipaddr('netmask') }}'>
     <dhcp>
       <range start='{{ vm_dhcp_start }}' end='{{ vm_dhcp_end }}'/>
     </dhcp>
@@ -37,7 +37,7 @@
 {% endif %}
 {% if host.setup.kvm.network.route is defined %}
 {% for vm_rt in host.setup.kvm.network.route %}
-  <route address='{{ vm_rt.to | ipaddr('network') }}' prefix='{{ vm_rt.to | ipaddr('prefix') }}' gateway='{{ vm_rt.via }}'/>
+  <route address='{{ vm_rt.to | ansible.utils.ipaddr('network') }}' prefix='{{ vm_rt.to | ansible.utils.ipaddr('prefix') }}' gateway='{{ vm_rt.via }}'/>
 {% endfor %}
 {% endif %}
 </network>

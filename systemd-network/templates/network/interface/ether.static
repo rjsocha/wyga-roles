@@ -13,7 +13,7 @@ LinkLocalAddressing={{ interface.lla | default('ipv6') | string }}
 Address={{ ip }}
 {% endfor %}
 {% if interface.dns is defined %}
-DNS={{ interface.dns | ipaddr('address') | join(' ') }}
+DNS={{ interface.dns | ansible.utils.ipaddr('address') | join(' ') }}
 {% endif %}
 {% if interface.domains is defined %}
 Domains={{ interface.domains }}
