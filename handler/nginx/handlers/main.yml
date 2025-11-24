@@ -6,3 +6,11 @@
     daemon_reload: true
     state: restarted
     masked: no
+
+- name: reload-nginx
+  systemd:
+    name: nginx
+    enabled: true
+    daemon_reload: true
+    state:  reloaded
+    masked: no
