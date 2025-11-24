@@ -5,6 +5,7 @@
     autoremove: yes
     purge: yes
     autoclean: yes
+    force_apt_get: yes
     update_cache: yes
   register: _action
   retries: 25
@@ -14,6 +15,7 @@
   apt:
     autoremove: yes
     purge: yes
+    force_apt_get: yes
   register: _action
   retries: 25
   until: _action is success or ('Failed to lock apt for exclusive operation' not in _action.msg and '/var/lib/dpkg/lock' not in _action.msg)
