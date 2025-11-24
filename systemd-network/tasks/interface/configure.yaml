@@ -46,7 +46,7 @@
 
 - name: "Configure dummy interface ..."
   block:
-    - name: "Configure dummy device {{ interface.name }} ..."
+    - name: "Configure dummy device {{ interface.name | default(omit) }} ..."
       template:
         src: "network/netdev/dummy"
         dest: "/etc/systemd/network/05-dummy-{{ interface.name }}.netdev"
@@ -57,7 +57,7 @@
     - name: "Update interface changed status ..."
       set_fact:
         if_changed: "{{ if_changed or if_change.changed }}"
-    - name: "Configure interface {{ interface.name }} ..."
+    - name: "Configure interface {{ interface.name | default(omit) }} ..."
       template:
         src: "network/interface/dummy"
         dest: "/etc/systemd/network/15-dummy-{{ interface.name }}.network"
@@ -68,7 +68,7 @@
     - name: "Update interface changed status ..."
       set_fact:
         if_changed: "{{ if_changed or if_change.changed }}"
-    - name: "Mark configuration of device {{ interface.name }} as managed ..."
+    - name: "Mark configuration of device {{ interface.name | default(omit) }} as managed ..."
       set_fact:
         networkd_managed_files: "{{ networkd_managed_files + [ '05-dummy-' ~ interface.name ~ '.netdev', '15-dummy-' ~  interface.name ~ '.network' ] }}"
   when: interface.match.type is defined and interface.match.type == 'dummy'
@@ -132,7 +132,7 @@
     - name: "Set interface file suffix ..."
       set_fact:
         mac_file: "{{ interface.match.mac | replace(':','' ) | upper }}"
-    - name: "Configure {{ interface.match.mac }} interface ..."
+    - name: "Configure {{ interface.match.mac | default(omit) }} interface ..."
       template:
         src: "network/interface/interface.{{ interface.method }}"
         dest: "/etc/systemd/network/20-mac-{{ mac_file }}-{{ interface.method }}.network"
@@ -143,7 +143,7 @@
     - name: "Update interface changed status ..."
       set_fact:
         if_changed: "{{ if_changed or if_change.changed }}"
-    - name: "Mark configuration of {{ interface.match.mac }} as managed ..."
+    - name: "Mark configuration of {{ interface.match.mac | default(omit) }} as managed ..."
       set_fact:
         networkd_managed_files: "{{ networkd_managed_files + [ '20-mac-' ~ mac_file ~ '-' ~ interface.method ~ '.network' ] }}"
   when: interface.match.mac is defined

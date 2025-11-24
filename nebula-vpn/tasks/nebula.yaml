@@ -15,8 +15,8 @@
 
 - name: "Prepare variables ..."
   set_fact:
-    am_lighthouse: "{{ true if vpn_instance.ip | ipaddr('address') in vpn.lighthouse.hosts.keys() else false }}"
-    ip_valid: "{{ true if vpn_instance.ip | ipaddr('address') | ipaddr(vpn.network) else false }}"
+    am_lighthouse: "{{ true if vpn_instance.ip | ansible.utils.ipaddr('address') in vpn.lighthouse.hosts.keys() else false }}"
+    ip_valid: "{{ true if vpn_instance.ip | ansible.utils.ipaddr('address') | ansible.utils.ipaddr(vpn.network) else false }}"
     node_subnets: []
 
 - name: "Check is node IP belongs to VPN network ..."
@@ -34,7 +34,7 @@
   loop_control:
     loop_var: nebula_routes
     label: "{{ nebula_routes.key }}"
-  when: vpn.routing is defined and vpn_instance.ip | ipaddr('address') == nebula_routes.key
+  when: vpn.routing is defined and vpn_instance.ip | ansible.utils.ipaddr('address') == nebula_routes.key
 
 - name: "Certificate marker (test) ..."
   template:
@@ -169,7 +169,7 @@
     owner: root
     mode: 0600
   vars:
-    vpn_ip: "{{ vpn_instance.ip | ipaddr('address') }}"
+    vpn_ip: "{{ vpn_instance.ip | ansible.utils.ipaddr('address') }}"
     vpn_name: "{{ vpn_instance.name }}"
     vpn_adjacent: "{{ vpn_instance.adjacents | default([]) }}"
     vpn_am_lighthouse: "{{ am_lighthouse }}"

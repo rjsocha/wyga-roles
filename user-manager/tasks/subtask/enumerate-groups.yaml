@@ -3,7 +3,10 @@
   set_fact:
     my_groups: []
 
-- name: "Append group {{ item.key }} to the group list ..."
+- name: "Append group {{ group_append.key | default(omit) }} to the group list ..."
   set_fact:
-    my_groups: "{{ my_groups + [ item.key ] }}"
+    my_groups: "{{ my_groups + [ group_append.key ] }}"
   loop: "{{ wum_groups | dict2items }}"
+  loop_control:
+    loop_var: group_append
+    label: "{{ group_append }}"

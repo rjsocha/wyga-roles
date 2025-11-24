@@ -158,7 +158,7 @@
 
 - name: "Firewall / Render runtime firewall configuration ..."
   set_fact:
-     firewall_rendered_rules: "{{ lookup('template', 'firewall/{{ firewall_profile }}/rules-apply') }}"
+     firewall_rendered_rules: "{{ lookup('template', 'firewall/' ~ firewall_profile ~ '/rules-apply') }}"
 
 - name: "Firewall / Apply firewall rules ..."
   command:

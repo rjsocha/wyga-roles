@@ -7,7 +7,7 @@ KeepConfiguration=yes
 ConfigureWithoutCarrier=yes
 IgnoreCarrierLoss=yes
 LinkLocalAddressing=no
-DNS={{ interface.dns | ipaddr('address') | join(' ') }}
+DNS={{ interface.dns | ansible.utils.ipaddr('address') | join(' ') }}
 {% if interface.domains is defined %}
 Domains={{ interface.domains }}
 {% endif %}

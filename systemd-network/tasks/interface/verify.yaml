@@ -120,7 +120,7 @@
 - name: "Verify configuration for static method (IP) ..."
   assert:
     that:
-      - ip | ipv4('address/prefix') or ip | ipv6('address/prefix')
+      - ip | ansible.utils.ipaddr('host') is not false
     msg: "Unable to continue, check interface configuration ..."
   loop: "{{ interface.ip | list }}"
   loop_control:
@@ -148,7 +148,7 @@
   assert:
     that:
       - interface.dns | type_debug == "list"
-      - ip | ipv4('address') or ip | ipv6('address')
+      - ip | ansible.utils.ipaddr('address') is not false
     msg: "Unable to continue, check interface configuration ..."
   loop: "{{ interface.dns }}"
   loop_control:
@@ -159,7 +159,7 @@
 - name: "Verify gw configuration ..."
   assert:
     that:
-      - interface.gw | ipv4('address')
+      - interface.gw | ansible.utils.ipaddr('address') is not false
     msg: "Unable to continue, check interface configuration ..."
   when: interface.method == 'static' and interface.gw is defined
 
@@ -176,8 +176,8 @@
       - route.keys() | difference(['to', 'via','onlink']) == []
       - route.to is defined
       - route.via is defined
-      - route.to == "default" or route.to | ipv4('net')
-      - route.via | ipv4('address')
+      - route.to == "default" or route.to | ansible.utils.ipaddr('net') is not false
+      - route.via | ansible.utils.ipaddr('address') is not false
     msg: "'to' and 'via' fields are required and must be defined, 'to' must be either 'default' or a valid IPv4 network address, and 'via' must contain a valid IPv4 address"
   loop: "{{ interface.route }}"
   loop_control:

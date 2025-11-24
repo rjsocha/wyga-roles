@@ -12,7 +12,7 @@
     dest: "/etc/initramfs-tools/conf.d/resume"
     content: "RESUME={{ host.setup.initramfs.resume | default('none') }}\n"
   notify: update-initramfs
-  when: host.setup.initramfs.resume|default(true)
+  when: host.setup.initramfs.resume is defined
 
 - name: "initramfs - set driver policy ..."
   copy:

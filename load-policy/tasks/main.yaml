@@ -38,7 +38,7 @@
         params:
           skip: true
           files:
-            - "{{ policy_file | default(omit) }}"
+            - "{{ policy_file | default([]) }}"
             - "{{ playbook_dir }}/policy/{{ select_policy }}.yaml"
             - "{{ playbook_dir }}/policy/{{ select_policy }}.yml"
             - "{{ playbook_dir }}/policy/{{ select_policy }}"
