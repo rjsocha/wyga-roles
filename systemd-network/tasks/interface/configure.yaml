@@ -109,9 +109,9 @@
         networkd_managed_files: "{{ networkd_managed_files + [ '20-wlan-' ~ interface.match.driver | replace('_','-') ~ '-' ~ interface.method ~ '.network' ] }}"
   when: interface.match.type is defined and interface.match.type == 'wlan'
 
-- name: "Configure {{ interface.match.name }} interface ..."
+- name: "Configure {{ interface.match.name | default(omit) }} interface ..."
   block:
-    - name: "Configure {{ interface.match.name }} interface ..."
+    - name: "Configure {{ interface.match.name | default(omit) }} interface ..."
       template:
         src: "network/interface/interface.{{ interface.method }}"
         dest: "/etc/systemd/network/20-{{ interface.match.name }}-{{ interface.method }}.network"
@@ -122,7 +122,7 @@
     - name: "Update interface changed status ..."
       set_fact:
         if_changed: "{{ if_changed or if_change.changed }}"
-    - name: "Mark configuration of {{ interface.match.name }} as managed ..."
+    - name: "Mark configuration of {{ interface.match.name | default(omit) }} as managed ..."
       set_fact:
         networkd_managed_files: "{{ networkd_managed_files + [ '20-' ~ interface.match.name ~ '-' ~ interface.method ~ '.network' ] }}"
   when: interface.match.name is defined

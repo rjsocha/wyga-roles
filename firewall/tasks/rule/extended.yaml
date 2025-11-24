@@ -20,12 +20,12 @@
     - name: "Firewall / Normalize src ..."
       set_fact:
         fw_raw_rule: "{{ fw_raw_rule | combine({ 'src': [ rule.src ] }) }}"
-      when: rule.src is string
+      when: rule.src is defined and rule.src is string
 
     - name: "Firewall / Normalize dst ..."
       set_fact:
         fw_raw_rule: "{{ fw_raw_rule | combine({ 'dst': [ rule.dst ] }) }}"
-      when: rule.dst is string
+      when: rule.dst is defined and rule.dst is string
 
     - name: "Append rule ..."
       set_fact:
