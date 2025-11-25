@@ -134,15 +134,16 @@
     firewall_restart: "{{ firewall_master.changed }}"
 
 - name: "Firewall / Check if master template is loaded ..."
-  block:
-    - name: "Firewall / Check if master template is loaded ..."
-      command: iptables -C INPUT -m comment --comment MANAGED-FIREWALL
-      no_log: true
-      changed_when: false
-  rescue:
-    - name: "Firewall / Force firewall restart ..."
-      set_fact:
-        firewall_restart: true
+  command: iptables -C INPUT -m comment --comment MANAGED-FIREWALL
+  no_log: true
+  register: firewall_check
+  changed_when: false
+  failed_when: false
+
+- name: "Firewall / Force firewall restart ..."
+  set_fact:
+    firewall_restart: true
+  when: firewall_check.rc != 0
 
 - name: "Firewall / Generate firewall configuration (persistent) ..."
   template:

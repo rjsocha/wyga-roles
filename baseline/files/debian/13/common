@@ -209,6 +209,7 @@ baseline:
   - shim-signed-common
   - shim-unsigned
   - sqv
+  - sudo
   - systemd
   - systemd-resolved
   - systemd-sysv

@@ -54,5 +54,15 @@
   notify:
     - systemd-resolved
 
+- name: "SYSTEMD / Resolved / Fix resolv.conf if broken ..."
+  file:
+    src: /run/systemd/resolve/stub-resolv.conf
+    dest: /etc/resolv.conf
+    state: link
+    force: true
+  notify:
+    - systemd-resolved
+  when: host.setup.systemd.resolved.fix | default(true)
+
 # systemd-resolved on Debian after installation do not import /etc/resolve.conf's nameservers
 - meta: flush_handlers

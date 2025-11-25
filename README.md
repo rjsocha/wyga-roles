@@ -2,8 +2,8 @@
 
 Collection of ansible roles for:
 
- - Ubuntu (20.04, 22.04, 24.04)
- - Debian (12)
+ - Ubuntu (22.04, 24.04)
+ - Debian (12,13)
 
 in roles folder:
 ```

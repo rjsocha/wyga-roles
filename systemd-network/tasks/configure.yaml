@@ -39,17 +39,19 @@
   when: host.network.bridge is defined
 
 - name: "Interfaces ..."
+  vars:
+    host_interfaces: "{{ host.network.base | default([]) + host.network.interface }}"
   block:
     - name: "Verify network interfaces ..."
       include_tasks: "interface/verify.yaml"
-      loop: "{{ host.network.interface }}"
+      loop: "{{ host_interfaces }}"
       loop_control:
         label: "{{ interface_entry.match.type | default(interface_entry.match.name) | default(interface_entry.use) | default('UNKNOWN') }}"
         loop_var: interface_entry
 
     - name: "Configure network interfaces ..."
       include_tasks: "interface/configure.yaml"
-      loop: "{{ host.network.interface }}"
+      loop: "{{ host_interfaces }}"
       loop_control:
         label: "{{ interface_entry.match.type | default(interface_entry.match.name) | default(interface_entry.use) | default('UNKNOWN') }}"
         loop_var: interface_entry
