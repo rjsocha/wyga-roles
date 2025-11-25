@@ -56,8 +56,8 @@
 
 - name: "SYSTEMD / Resolved / Fix resolv.conf if broken ..."
   file:
-    src: /run/systemd/resolve/stub-resolv.conf
-    dest: /etc/resolv.conf
+    src: "../run/systemd/resolve/stub-resolv.conf"
+    dest: "/etc/resolv.conf"
     state: link
     force: true
   notify:
