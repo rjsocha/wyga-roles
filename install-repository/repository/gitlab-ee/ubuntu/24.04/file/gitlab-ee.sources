@@ -1,0 +1,5 @@
+Types: deb
+URIs: https://packages.gitlab.com/gitlab/gitlab-ee/ubuntu
+Suites: noble
+Components: main
+Signed-By: /usr/share/keyrings/gitlab-ee.gpg

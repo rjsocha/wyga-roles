@@ -1,1 +1,0 @@
-deb [signed-by=/usr/share/keyrings/gitlab-ee.gpg] https://packages.gitlab.com/gitlab/gitlab-ee/ubuntu/ noble main

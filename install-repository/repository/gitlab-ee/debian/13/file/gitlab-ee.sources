@@ -1,0 +1,5 @@
+Types: deb
+URIs: https://packages.gitlab.com/gitlab/gitlab-ee/debian
+Suites: trixie
+Components: main
+Signed-By: /usr/share/keyrings/gitlab-ee.gpg
