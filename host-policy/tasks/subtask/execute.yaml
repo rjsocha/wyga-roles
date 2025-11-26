@@ -45,7 +45,9 @@
 - name: "Packages Baseline ..."
   include_role:
     name: wyga/baseline
-  when: host.package.baseline is defined
+  when: >
+    host.package.baseline is defined and
+    (host.package.baseline is not string or host.package.baseline != 'none')
 
 - name: "Process repositories ..."
   include_role:

@@ -1,3 +1,5 @@
 - name: "Packages Baseline / Execute ..."
   include_tasks: "baseline.yaml"
-  when: host.package.baseline is defined
+  when: >
+    host.package.baseline is defined and
+    (host.package.baseline is not string or host.package.baseline != 'none')
