@@ -143,7 +143,7 @@
 - name: "Canonicalization of group configuation ..."
   include_role:
     name: wyga/user-manager
-  when: host.group is defined or host.user is defined
+  when: host.group is defined or host.user is defined or host.append.user is defined
 
 - name: "Configure KVM Profile ..."
   include_role:

@@ -11,13 +11,16 @@
   set_fact:
     wum_users: {}
 
+- name: "Merge host.user with host.append.user ..."
+  set_fact:
+    wum_host_users: "{{ (host.append.user | default({})) | combine(host.user | default({}),recursive=True, list_merge='append_rp') }}"
+
 - name: "Canonicalization of users configuation ..."
   include_tasks: "normalize-user.yaml"
-  loop: "{{ host.user }}"
+  loop: "{{ wum_host_users }}"
   loop_control:
     loop_var: wum_target
     label: "user"
-  when: host.user is defined
 
 - block:
   - name: "Load user CA certificate ..."
@@ -50,7 +53,7 @@
   loop_control:
     loop_var: required_directory
     label: "{{ required_directory }}"
-  when: host.user is defined
+
 # roles disabled
 #    - "{{ ca_ssh_ca_dir }}"
 #    - "{{ ca_ssh_role_dir }}"
