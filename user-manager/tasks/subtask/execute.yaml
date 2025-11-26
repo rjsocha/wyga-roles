@@ -1,15 +1,25 @@
 ---
-- name: "Canonicalization of group configuation ..."
-  include_tasks: "normalize-group.yaml"
-  loop: "{{ host.group }}"
-  loop_control:
-    loop_var: wum_target
-    label: "group"
-  when: host.group is defined
+- name: "Prepare groups dictonary ..."
+  set_fact:
+    wum_groups: {}
 
 - name: "Prepare users dictonary ..."
   set_fact:
     wum_users: {}
+
+- name: "Normalize groups ..."
+  vars:
+    _defaults:
+      system: false
+      unique: true
+    _raw: "{{ wum_target.value if wum_target.value is mapping else {} }}"
+  set_fact:
+    wum_groups: "{{ wum_groups | default({}) | combine({wum_target.key: _defaults | combine(_raw)}) }}"
+  loop: "{{ (host.group | default({})) | dict2items }}"
+  loop_control:
+    loop_var: wum_target
+    label: "{{ wum_target.key }}"
+
 
 - name: "Merge host.user with host.append.user ..."
   set_fact:
@@ -17,7 +27,7 @@
 
 - name: "Canonicalization of users configuation ..."
   include_tasks: "normalize-user.yaml"
-  loop: "{{ wum_host_users }}"
+  loop: "{{ wum_host_users | dict2items }}"
   loop_control:
     loop_var: wum_target
     label: "user"
@@ -37,9 +47,6 @@
 
 - name: "Group management ..."
   include_tasks: "group.yaml"
-
-- name: "Enumerate users ..."
-  include_tasks: "enumerate-users.yaml"
 
 - name: "User management ..."
   include_tasks: "user.yaml"

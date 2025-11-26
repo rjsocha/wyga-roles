@@ -3,8 +3,12 @@
     that:
       - host is defined
 
-- name: "Create empty group list ..."
-  set_fact:
-    wum_groups: {}
+- name: "User Manager / Verify host.user ..."
+  assert:
+    that:
+      - host.user is mapping
+    quiet: true
+    fail_msg: "Unsupported host.user format ..."
+  when: host.user is defined
 
 - include_tasks: "subtask/execute.yaml"

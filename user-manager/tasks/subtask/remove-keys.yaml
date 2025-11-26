@@ -3,7 +3,7 @@
   find:
     path: "{{ ssh_pool_dir }}"
     file_type: file
-    excludes: "{{ my_users }}"
+    excludes: "{{ wum_users.keys() }}"
   register: remove_keys
 
 - name: "Delete removed keys..."

@@ -1,64 +1,14 @@
 ---
-- name: "Simple user definition ..."
-  block:
-    - name: "Create {{ wum_target }} user dictonary ..."
-      set_fact:
-        _wum_target: "{{ { 'key': wum_target, 'value': { '.simple.': '.rick.' } } }}"
-  when: wum_target is string
-
-- name: "Extended user definition ..."
+- name: "Normalize user {{ wum_target.key }}"
+  vars:
+    _defaults:
+      shell: /bin/bash
+      role: []
+      authorized: []
+      groups: []
+      forceChange: false
+    _raw_value: "{{ wum_target.value if wum_target.value is mapping else {} }}"
+    _with_onboard: "{{ (_raw_value.password | default('') == 'onboard') | ternary({'password': onboard_password, 'forceChange': true}, {}) }}"
+    _normalized: "{{ _defaults | combine(_raw_value) | combine(_with_onboard) | combine({'name': wum_target.key}) }}"
   set_fact:
-    _wum_target: "{{ lookup('dict',wum_target) }}"
-  when: wum_target is mapping
-
-- name: "Fix empty user extended definition for {{ _wum_target.key }} ..."
-  set_fact:
-    _wum_target: "{{ { 'key': _wum_target.key, 'value': { '.simple.': '.rick.' } } }}"
-  when: _wum_target.value is none
-
-- name: "Normalize user object ..."
-  set_fact:
-    _wum_value: "{{ _wum_target.value | default({}) }}"
-
-- name: "Make sure shell attribute is present for user {{ _wum_target.key }} ..."
-  set_fact:
-    _wum_value: "{{ _wum_value | combine({'shell': '/bin/bash'}) }}"
-  when: _wum_value.shell is not defined
-
-- name: "Make sure role attribute is present for user {{ _wum_target.key }} ..."
-  set_fact:
-    _wum_value: "{{ _wum_value | combine({'role': []}) }}"
-  when: _wum_value.role is not defined
-
-- name: "Make sure authorized attribute is present for user {{ _wum_target.key }} ..."
-  set_fact:
-    _wum_value: "{{ _wum_value | combine({'authorized': []}) }}"
-  when: _wum_value.authorized is not defined
-
-- name: "Make sure groups attribute is present for user {{ _wum_target.key }} ..."
-  set_fact:
-    _wum_value: "{{ _wum_value | combine({'groups': []}) }}"
-  when: _wum_value.groups is not defined
-
-#- name: "Make sure gecos attribute is present for user {{ _wum_target.key }} ..."
-#  set_fact:
-#    _wum_value: "{{ _wum_value | combine({'gecos': _wum_target.key}) }}"
-#  when: _wum_value.gecos is not defined
-
-- name: "Set onboard password for user {{ _wum_target.key }} ..."
-  set_fact:
-    _wum_value: "{{ _wum_value | combine({'password': onboard_password, 'forceChange': true } ) }}"
-  when: _wum_value.password is defined and _wum_value.password == "onboard"
-
-- name: "Make sure password expiration attribute is present for user {{ _wum_target.key }} ..."
-  set_fact:
-    _wum_value: "{{ _wum_value | combine({'forceChange': false }) }}"
-  when: _wum_value.forceChange is not defined
-
-- name: "Make sure name attribute is present for user {{ _wum_target.key }} ..."
-  set_fact:
-    _wum_value: "{{ _wum_value | combine({'name': _wum_target.key}) }}"
-
-- name: "Append {{ _wum_target.key }} to users dictonary ..."
-  set_fact:
-    wum_users: "{{ wum_users|default({}) | combine({_wum_target.key: _wum_value}) }}"
+    wum_users: "{{ wum_users | default({}) | combine({wum_target.key: _normalized}) }}"

@@ -3,7 +3,7 @@
   find:
     path: "{{ ca_ssh_role_dir }}"
     file_type: file
-    excludes: "{{ my_users }}"
+    excludes: "{{ wum_users.keys() }}"
   register: remove_roles
 
 - name: "Delete orphaned role {{ item.path }} ..."
