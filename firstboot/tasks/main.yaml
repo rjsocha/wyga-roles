@@ -1,4 +1,8 @@
 ---
+- fail:
+    msg:
+      - "NO LONGER SUPPORTED"
+
 - name: "Check if OS is supported ..."
   assert:
     that:
