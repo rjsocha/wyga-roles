@@ -25,13 +25,15 @@ static_map:
   lookup_timeout: 250ms
 
 lighthouse:
-  am_lighthouse: {{ 'true' if vpn_am_lighthouse else 'false' }}
-  {% if am_lighthouse and vpn.lighthouse.dns.enable | default(true) %}
+{% if am_lighthouse %}
+  am_lighthouse: true
+  {% if vpn.lighthouse.dns.enable | default(true) %}
   serve_dns: true
   dns:
     host: {{ vpn_ip }}
     port: 53
   {% endif %}
+{% endif %}
   interval: 60
   hosts:
     {% if not vpn_am_lighthouse %}
