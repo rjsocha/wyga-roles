@@ -1,58 +1,46 @@
 ---
-- name: "Role init ..."
-  set_fact:
-    use_or_merge: false
+- name: "Check if old configuration is present ..."
+  assert:
+    that:
+      - host.setup.monitoring.use is not defined
+      - host.setup.monitoring.merge is not defined
+    fail_msg: "Old syntax detected (use/merge). Migrate to: from: <template>, mode: use|merge"
 
-- name: "Check and prepare template configuration ..."
-  block:
-    - name: "Check configuration ..."
-      assert:
-        that:
-          - >
-            (host.setup.monitoring.use is defined and host.setup.monitoring.merge is not defined)
-            or (host.setup.monitoring.use is not defined and host.setup.monitoring.merge is defined)
-    - name: "Select use strategy ..."
-      set_fact:
-        use_or_merge: true
-        use_or_merge_name: "{{ host.setup.monitoring.use }}"
-      when: host.setup.monitoring.use is defined
+- name: "Check if mode is supported ..."
+  assert:
+    that:
+      - host.setup.monitoring.mode | default('use') in ['use','merge']
+    fail_msg: "Only 'use' or 'merge' modes are supported ..."
 
-    - name: "Select merge strategy ..."
-      set_fact:
-        use_or_merge: true
-        use_or_merge_name: "{{ host.setup.monitoring.merge }}"
-      when: host.setup.monitoring.merge is defined
-  when: host.setup.monitoring.use is defined or host.setup.monitoring.merge is defined
-
-- name: "Load monitoring/use template ..."
+- name: "Load monitoring template ..."
   include_vars:
-    file: "{{ monitoring_template }}"
-    name: monitoring_use_template
+    file: "{{ monitoring_template_file }}"
+    name: monitoring_template
   loop: "{{ query('first_found', params) }}"
   loop_control:
-    loop_var: monitoring_template
+    loop_var: monitoring_template_file
   vars:
     params:
       skip: false
       files:
-        - "{{ playbook_dir}}/local/monitoring/{{ use_or_merge_name }}"
-        - "{{ role_path }}/monitoring/{{ use_or_merge_name }}"
-  when: use_or_merge
+        - "{{ playbook_dir}}/local/monitoring/{{ host.setup.monitoring.template }}"
+        - "{{ role_path }}/monitoring/{{ host.setup.monitoring.template }}"
+  when: host.setup.monitoring.template is defined
 
 - name: "Prepare monitoring configuration (use) ..."
   set_fact:
-    monitoring_config: "{{ monitoring_use_template.monitoring | combine(host.setup.monitoring) | combine({'use': omit}) }}"
-  when: host.setup.monitoring.use is defined and monitoring_use_template.monitoring is defined
+    monitoring_config: "{{ monitoring_template.monitoring | combine(host.setup.monitoring) | combine({'template': omit, 'mode': omit }) }}"
+  when: host.setup.monitoring.mode == 'use' and host.setup.monitoring.template is defined
 
 - name: "Prepare monitoring configuration (merge) ..."
   set_fact:
-    monitoring_config: "{{ monitoring_use_template.monitoring | combine(host.setup.monitoring,list_merge='prepend_rp') | combine({'merge': omit}) }}"
-  when: host.setup.monitoring.merge is defined and monitoring_use_template.monitoring is defined
+    monitoring_config: "{{ monitoring_template.monitoring | combine(host.setup.monitoring,list_merge='prepend_rp') | combine({'template': omit, 'mode': omit }) }}"
+  when: host.setup.monitoring.mode == 'merge' and host.setup.monitoring.template is defined
 
 - name: "Prepare monitoring configuration ..."
   set_fact:
-    monitoring_config: "{{ host.setup.monitoring }}"
-  when: not use_or_merge
+    monitoring_config: "{{ host.setup.monitoring | combine({'template': omit, 'mode': omit }) }}"
+  when: host.setup.monitoring.template is not defined
 
 - name: "Check configuration ..."
   assert:
