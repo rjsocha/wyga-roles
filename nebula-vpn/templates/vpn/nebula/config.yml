@@ -42,13 +42,14 @@ lighthouse:
 
 listen:
   host: 0.0.0.0
-  port: {{ vpn_port }}
+  port: {{ vpn_port if vpn_am_lighthouse else 0 }}
 
 punchy:
   punch: true
   respond: true
   delay: 1s
   respond_delay: 5s
+  target_all_remotes: true
 
 cipher: {{ vpn.cipher | default('aes') }}
 {% if vpn_adjacent | length > 0 %}
@@ -108,6 +109,16 @@ logging:
   format: text
   disable_timestamp: true
 
+handshakes:
+  try_interval: 100ms
+  retries: 10
+  query_buffer: 64
+  trigger_buffer: 64
+
+tunnels:
+  drop_inactive: true
+  inactivity_timeout: 60m
+
 firewall:
   outbound_action: reject
   inbound_action: reject
@@ -127,8 +138,10 @@ firewall:
       proto: any
       host: any
 
+{% if vpn.routing is defined or instance.routing is defined %}
 # Allow unsafe_routes (post 1.9.0)
     - port: any
       proto: any
       host: any
       local_cidr: 0.0.0.0/0
+{% endif %}
