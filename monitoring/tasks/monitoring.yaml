@@ -12,6 +12,11 @@
       - host.setup.monitoring.mode | default('use') in ['use','merge']
     fail_msg: "Only 'use' or 'merge' modes are supported ..."
 
+- name: "Template selection ..."
+  set_fact:
+    use_template: "{{ host.setup.monitoring.template is defined or host.setup.monitoring.from is defined }}"
+    template_name: "{{ host.setup.monitoring.from if host.setup.monitoring.from is defined else host.setup.monitoring.template | default('NONE') }}"
+
 - name: "Load monitoring template ..."
   include_vars:
     file: "{{ monitoring_template_file }}"
@@ -21,26 +26,26 @@
     loop_var: monitoring_template_file
   vars:
     params:
-      skip: false
+      skip: "{{ not use_template }}"
       files:
-        - "{{ playbook_dir}}/local/monitoring/{{ host.setup.monitoring.template }}"
-        - "{{ role_path }}/monitoring/{{ host.setup.monitoring.template }}"
-  when: host.setup.monitoring.template is defined
-
-- name: "Prepare monitoring configuration (use) ..."
-  set_fact:
-    monitoring_config: "{{ monitoring_template.monitoring | combine(host.setup.monitoring) | combine({'template': omit, 'mode': omit }) }}"
-  when: host.setup.monitoring.mode == 'use' and host.setup.monitoring.template is defined
+        - "{{ playbook_dir}}/local/monitoring/{{ template_name }}"
+        - "{{ role_path }}/monitoring/{{ template_name }}"
+  when: use_template
 
 - name: "Prepare monitoring configuration (merge) ..."
   set_fact:
-    monitoring_config: "{{ monitoring_template.monitoring | combine(host.setup.monitoring,list_merge='prepend_rp') | combine({'template': omit, 'mode': omit }) }}"
-  when: host.setup.monitoring.mode == 'merge' and host.setup.monitoring.template is defined
+    monitoring_config: "{{ monitoring_template.monitoring | combine(host.setup.monitoring,list_merge='prepend_rp') | combine({'template': omit, 'from': omit, 'mode': omit }) }}"
+  when: host.setup.monitoring.mode | default('use') == 'merge' and use_template
+
+- name: "Prepare monitoring configuration (use) ..."
+  set_fact:
+    monitoring_config: "{{ monitoring_template.monitoring | combine(host.setup.monitoring) | combine({'template': omit, 'from': omit, 'mode': omit }) }}"
+  when: host.setup.monitoring.mode | default('use') == 'use' and use_template
 
 - name: "Prepare monitoring configuration ..."
   set_fact:
     monitoring_config: "{{ host.setup.monitoring | combine({'template': omit, 'mode': omit }) }}"
-  when: host.setup.monitoring.template is not defined
+  when: not use_template
 
 - name: "Check configuration ..."
   assert:

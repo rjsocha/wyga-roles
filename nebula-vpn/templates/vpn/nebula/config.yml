@@ -134,16 +134,52 @@ firewall:
     - port: any
       proto: any
       host: any
+ {% if vpn.routing is defined %}
+    {% for via in vpn.routing.keys() %}
+    {% for route in vpn.routing[via] %}
+
+    - port: any
+      proto: any
+      host: any
+      local_cidr: {{ route.to }}
+    {% endfor %}
+    {% endfor %}
+{% endif %}
+{% if instance.routing is defined %}
+    {% for via in instance.routing.keys() %}
+    {% for route in instance.routing[via] %}
+
+    - port: any
+      proto: any
+      host: any
+      local_cidr: {{ route.to }}
+    {% endfor %}
+    {% endfor %}
+{% endif %}
 
   inbound:
     - port: any
       proto: any
       host: any
+ {% if vpn.routing is defined %}
+    {% for via in vpn.routing.keys() %}
+    {% for route in vpn.routing[via] %}
 
-{% if vpn.routing is defined or instance.routing is defined %}
-# Allow unsafe_routes (post 1.9.0)
     - port: any
       proto: any
       host: any
-      local_cidr: 0.0.0.0/0
+      local_cidr: {{ route.to }}
+    {% endfor %}
+    {% endfor %}
+{% endif %}
+{% if instance.routing is defined %}
+    {% for via in instance.routing.keys() %}
+    {% for route in instance.routing[via] %}
+
+    - port: any
+      proto: any
+      host: any
+      local_cidr: {{ route.to }}
+    {% endfor %}
+    {% endfor %}
 {% endif %}
