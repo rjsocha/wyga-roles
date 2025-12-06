@@ -1,0 +1,4 @@
+- name: "site / apply / gitlab / runner ..."
+  include_role:
+      name: wyga/site/gitlab/runner
+  when: host.setup.site.gitlab is defined and host.setup.site.gitlab.runner is defined

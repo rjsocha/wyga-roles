@@ -1,0 +1,21 @@
+- name: "Site / Gitlab / Runner / Checks ..."
+  assert:
+    that:
+      - host.setup.site.gitlab is defined
+      - host.setup.site.gitlab.runner is defined
+      - host.setup.site.gitlab.runner.user is defined
+    fail_msg: "host.setup.site.gitlab.runner.user not defined ..."
+
+- name: "Site / Gitlab / Runner / Directory ..."
+  ansible.builtin.file:
+    path: "/etc/site/gitlab"
+    state: directory
+    mode: 0755
+
+- name: "Site / Gitlab / Runner / Checks ..."
+  template:
+    src: "gitlab/runner/site"
+    dest: "/etc/site/gitlab/runner"
+    owner: root
+    group: root
+    mode: 0644

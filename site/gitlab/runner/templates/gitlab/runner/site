@@ -1,0 +1,5 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+GITLAB_RUNNER_USER="{{ host.setup.site.gitlab.runner.user }}"
+{% if host.setup.site.gitlab.runner.home is defined %}
+GITLAB_RUNNER_HOME="{{ host.setup.site.gitlab.runner.home }}"
+{% endif %}

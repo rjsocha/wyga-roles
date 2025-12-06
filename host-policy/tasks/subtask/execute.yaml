@@ -4,6 +4,11 @@
     name: wyga/hostname
   when: skip_hostname is not defined
 
+- name: "Site Configuration ..."
+  include_role:
+    name: wyga/site/apply
+  when: host.setup.site is defined
+
 - name: "Network configuration (systemd) ..."
   block:
     - include_role:
