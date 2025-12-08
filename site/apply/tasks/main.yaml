@@ -1,3 +1,7 @@
+- name: "site / apply / docker / cleanup ..."
+  include_role:
+      name: wyga/site/docker/cleanup
+
 - name: "site / apply / gitlab / runner ..."
   include_role:
       name: wyga/site/gitlab/runner

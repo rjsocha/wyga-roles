@@ -1,0 +1,13 @@
+- name: "Site / Docker / Directory ..."
+  ansible.builtin.file:
+    path: "/etc/site/docker"
+    state: directory
+    mode: 0755
+
+- name: "Site / Docker / Cleanup ..."
+  template:
+    src: "docker/cleanup"
+    dest: "/etc/site/docker/cleanup"
+    owner: root
+    group: root
+    mode: 0644

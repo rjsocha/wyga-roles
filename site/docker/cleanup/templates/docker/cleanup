@@ -1,0 +1,6 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+{% if host.setup.site.docker is defined and host.setup.site.docker.cleanup is defined %}
+SITE_DOCKER_CLEANUP="{{ 'true' if host.setup.site.docker.cleanup | bool else 'false' }}"
+{% else %}
+SITE_DOCKER_CLEANUP="false"
+{% endif %}
