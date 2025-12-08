@@ -11,7 +11,7 @@
     rule_parsed: true
   vars:
     fwrule_icmp:
-      - { 'dport': '80', 'match': 'tcp', 'proto': 'tcp', 'dst': [ '100.100.100.100' ] , 'iface': 'registry-mirror' }
+      - { 'dport': '80', 'match': 'tcp', 'proto': 'tcp', 'dst': [ '100.100.100.100' ] }
   when: rule.allow == 'registry-mirror' or rule.allow == 'registry/mirror'
 
 - name: "Process allow/icmp ..."
