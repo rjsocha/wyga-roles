@@ -1,0 +1,5 @@
+Types: deb
+URIs: http://download.zerotier.com/debian/noble
+Suites: noble
+Components: main
+Signed-By: /usr/share/keyrings/zerotier.gpg

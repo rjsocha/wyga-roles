@@ -1,0 +1,24 @@
+- name: "Install {{ repository }} repository ..."
+  copy:
+    src: "repository/{{ file.src }}"
+    dest: "{{ file.dst }}"
+    group: root
+    owner: root
+    mode: 0644
+    force: yes
+  loop:
+    - { 'src': '{{ repository }}/common/{{ repository }}.gpg',  'dst': '/usr/share/keyrings/{{ repository }}.gpg' }
+    - { 'src': '{{ repository }}/{{ target }}/{{ version }}/file/{{ repository }}.sources', 'dst': '/etc/apt/sources.list.d/{{ repository }}.sources' }
+  loop_control:
+    loop_var: file
+    label: "{{ file.src }} => {{ file.dst }}"
+
+- name: "Cleanup {{ repository }} repository ..."
+  file:
+    path: "{{ file.purge }}"
+    state: absent
+  loop:
+    - { 'purge': '/etc/apt/sources.list.d/{{ repository }}.list' }
+  loop_control:
+    loop_var: file
+    label: "{{ file.purge }}"
