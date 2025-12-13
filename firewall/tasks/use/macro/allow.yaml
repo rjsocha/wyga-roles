@@ -57,6 +57,16 @@
     allow_iface: "{{ rule.allow.split('/')[1] }}"
   when: rule.allow is regex('(?i)^if/[a-z][a-z0-9-]{1,18}[a-z0-9]$')
 
+- name: "Process allow/port/proto/if ..."
+  set_fact:
+    fwrules: "{{ fwrules + [ { 'proto': allow_proto, 'iface': allow_iface, 'dport': allow_port } ] }}"
+    rule_parsed: true
+  vars:
+    allow_port: "{{ rule.allow.split('/')[0] }}"
+    allow_proto: "{{ rule.allow.split('/')[1] }}"
+    allow_iface: "{{ rule.allow.split('/')[2] }}"
+  when: rule.allow is regex('(?i)^[0-9]+/[a-z]+/([a-z][a-z0-9-]{1,18}[a-z0-9]|[a-z][a-z0-9]+\+)$')
+
 - name: "Process allow/vpn ..."
   block:
     - name: "Append allow/vpn rules ..."

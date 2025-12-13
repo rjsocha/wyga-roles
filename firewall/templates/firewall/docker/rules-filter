@@ -3,6 +3,8 @@
   {{- ' -m ' ~ rule.match if rule.match is defined else '' -}}
   {{- ' -p ' ~ rule.proto if rule.proto is defined else '' -}}
   {{- ' -i ' ~ rule.iface if rule.iface is defined else '' -}}
+  {{- ' -o ' ~ rule.oface if rule.oface is defined else '' -}}
+  {{- ' -m state --state ' ~ rule.state if rule.state is defined else '' -}}
   {{- ' --dport ' ~ rule.dport if rule.dport is defined else '' -}}
   {{- ' --sport ' ~ rule.sport if rule.sport is defined else '' -}}
   {{- ' -s ' ~ ','.join(rule.src) if rule.src is defined else '' -}}
@@ -16,6 +18,8 @@
   {{- ' -m ' ~ rule.match if rule.match is defined else '' -}}
   {{- ' -p ' ~ rule.proto if rule.proto is defined else '' -}}
   {{- ' -i ' ~ rule.iface if rule.iface is defined else '' -}}
+  {{- ' -o ' ~ rule.oface if rule.oface is defined else '' -}}
+  {{- ' -m state --state ' ~ rule.state if rule.state is defined else '' -}}
   {{- ' --dport ' ~ rule.dport if rule.dport is defined else '' -}}
   {{- ' --sport ' ~ rule.sport if rule.sport is defined else '' -}}
   {{- ' -s ' ~ ','.join(rule.src) if rule.src is defined else '' -}}
