@@ -1,8 +1,0 @@
-- name: "Use string/proto ..."
-  set_fact:
-    fwrule: "{{ {} | combine({ 'proto': rule | split('/') | last }) }}"
-    rule_parsed: true
-
-- name: "Append rule ..."
-  set_fact:
-    fwrules: "{{ fwrules + [ fwrule ] }}"

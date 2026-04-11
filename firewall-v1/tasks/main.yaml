@@ -1,3 +1,0 @@
-- name: "Process firewall configuration ..."
-  include_tasks: firewall.yaml
-  when: host.firewall is defined
