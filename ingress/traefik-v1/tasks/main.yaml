@@ -1,3 +1,0 @@
-- name: "Traefik Ingress"
-  include_tasks: execute.yaml
-  when: "host.setup.ingress is defined and host.setup.ingress.target | default('traefik') == 'traefik'"
