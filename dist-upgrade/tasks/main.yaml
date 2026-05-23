@@ -1,4 +1,9 @@
 ---
+# Hackish
+- name: Run one-kernel-only if present
+  ansible.builtin.shell: command -v one-kernel-only >/dev/null && one-kernel-only --purge || true
+  changed_when: false
+
 - name: apt-get dist-upgrade
   apt:
     upgrade: dist
