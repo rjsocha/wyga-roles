@@ -2,10 +2,6 @@
   include_role:
     name: wyga/minimal-facts
 
-- name: "Connected user ..."
-  set_fact:
-    connected_user: "{{ ansible_facts.user_id }}"
-
 - name: "Select become method as su ..."
   set_fact:
     method: "su"
@@ -24,6 +20,10 @@
   become: true
   become_method: "{{ method | default('sudo') }}"
   become_user: root
+
+- name: "Save connected user ..."
+  set_fact:
+    connected_user: "{{ ansible_ssh_user }}"
 
 - meta: reset_connection
 

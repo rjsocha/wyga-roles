@@ -2,7 +2,7 @@
 
 Collection of ansible roles for:
 
- - Ubuntu (22.04, 24.04)
+ - Ubuntu (22.04, 24.04, 26.04)
  - Debian (12,13)
 
 in roles folder:

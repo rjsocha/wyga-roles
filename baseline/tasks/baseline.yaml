@@ -3,7 +3,7 @@
   assert:
     that:
       - target_distribution in [ 'debian', 'ubuntu' ]
-      - target_distribution_version in [ '13','24.04' ]
+      - target_distribution_version in [ '13', '24.04', '26.04' ]
     fail_msg: "Unsupported distribution: {{ target_distribution | capitalize }} {{ target_distribution_version }}"
     quiet: true
 
