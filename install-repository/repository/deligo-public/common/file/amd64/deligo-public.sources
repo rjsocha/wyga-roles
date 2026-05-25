@@ -1,0 +1,6 @@
+Types: deb
+URIs: https://package.deligo.pl/apt
+Suites: depot
+Components: world
+Architectures: amd64
+Signed-By: /usr/share/keyrings/deligo-public.gpg
