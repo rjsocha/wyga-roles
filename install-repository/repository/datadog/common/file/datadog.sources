@@ -1,0 +1,5 @@
+Types: deb
+URIs: https://apt.datadoghq.com/
+Suites: stable
+Components: 7
+Signed-By: /usr/share/keyrings/datadog-archive-keyring.gpg

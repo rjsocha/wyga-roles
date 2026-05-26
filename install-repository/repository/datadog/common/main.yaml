@@ -13,11 +13,21 @@
         mode: 0644
         force: yes
       loop:
-        - { 'src': 'file/{{ repository }}.gpg',  'dst': '/usr/share/keyrings/{{ repository }}.gpg' }
-        - { 'src': 'file/{{ arch }}/{{ repository }}.list', 'dst': '/etc/apt/sources.list.d/{{ repository }}.list' }
+        - { 'src': 'file/datadog-archive-keyring.gpg',  'dst': '/usr/share/keyrings/datadog-archive-keyring.gpg' }
+        - { 'src': 'file/{{ repository }}.list', 'dst': '/etc/apt/sources.list.d/{{ repository }}.list' }
       loop_control:
         loop_var: file
         label: "{{ file.dst }}"
+
+    - name: "Cleanup {{ repository }} repository ..."
+      file:
+        path: "{{ file.purge }}"
+        state: absent
+      loop:
+        - { 'purge': '/etc/apt/sources.list.d/datado.list' }
+      loop_control:
+        loop_var: file
+        label: "{{ file.purge }}"
   when: repository_legacy
 
 - name: "Install {{ repository }} repository / deb822 Format ..."
@@ -31,8 +41,8 @@
         mode: 0644
         force: yes
       loop:
-        - { 'src': 'file/{{ repository }}.gpg',  'dst': '/usr/share/keyrings/{{ repository }}.gpg' }
-        - { 'src': 'file/{{ arch }}/{{ repository }}.sources', 'dst': '/etc/apt/sources.list.d/{{ repository }}.sources' }
+        - { 'src': 'file/datadog-archive-keyring.gpg',  'dst': '/usr/share/keyrings/datadog-archive-keyring.gpg' }
+        - { 'src': 'file/{{ repository }}.sources', 'dst': '/etc/apt/sources.list.d/{{ repository }}.sources' }
       loop_control:
         loop_var: file
         label: "{{ file.dst }}"
@@ -42,6 +52,7 @@
         path: "{{ file.purge }}"
         state: absent
       loop:
+        - { 'purge': '/etc/apt/sources.list.d/datado.list' }
         - { 'purge': '/etc/apt/sources.list.d/{{ repository }}.list' }
       loop_control:
         loop_var: file
