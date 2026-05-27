@@ -55,6 +55,7 @@ require:
   - btrfs-progs
   - exfatprogs
   - git
+  - iputils-ping
 purge:
   - mawk
   - netcat-traditional

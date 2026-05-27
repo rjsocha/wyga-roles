@@ -52,6 +52,7 @@ require:
   - systemd-timesyncd
   - psmisc
   - netcat-openbsd
+  - iputils-ping
 purge:
   - mawk
   - netcat-traditional
