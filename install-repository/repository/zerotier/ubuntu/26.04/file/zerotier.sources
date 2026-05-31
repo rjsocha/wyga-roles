@@ -1,0 +1,5 @@
+Types: deb
+URIs: http://download.zerotier.com/debian/resolute
+Suites: resolute
+Components: main
+Signed-By: /usr/share/keyrings/zerotier.gpg
