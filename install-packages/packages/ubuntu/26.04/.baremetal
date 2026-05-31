@@ -1,0 +1,9 @@
+require:
+  - ethtool
+  - lm-sensors
+  - lvm2
+  - mdadm
+  - smartmontools
+  - irqbalance
+  - intel-microcode
+  - amd64-microcode

@@ -3,6 +3,5 @@ baseline:
   - amd64-microcode
   - intel-microcode
   - iucode-tool
-  - hdparm
-  - linux-firmware
-  - linux-firmware-*
+  - wireless-regdb
+  - firmware-*
