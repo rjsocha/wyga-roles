@@ -52,6 +52,7 @@ baseline:
   - gettext-base
   - gpgv
   - grep
+  - grub-gfxpayload-lists
   - grub2-common
   - grub-common
   - grub-efi-amd64
