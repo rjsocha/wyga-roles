@@ -1,1 +1,0 @@
-deb [arch=arm64 signed-by=/usr/share/keyrings/deligo-public.gpg] https://package.deligo.pl/apt depot world

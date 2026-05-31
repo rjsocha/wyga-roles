@@ -1,0 +1,4 @@
+- name: "Configure initramfs-tools ..."
+  include_role:
+    name: wyga/initramfs-tools
+  when: not host.setup.initramfs.skip | default(false) and platform.initramfs.tool == 'initramfs-tools'

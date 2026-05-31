@@ -1,0 +1,7 @@
+baseline:
+  - .common
+  - amd64-microcode
+  - intel-microcode
+  - iucode-tool
+  - wireless-regdb
+  - firmware-*

@@ -40,17 +40,17 @@
     label: "{{ process_include.name }}"
   when: baseline_include | length > 0
 
-- name: "Packages Baseline / Select only {{ target_distribution }} distribution  ..."
+- name: "Packages Baseline / Select only {{ platform.distribution }} distribution  ..."
   set_fact:
-    baseline_list: "{{ baseline_list | selectattr('distribution', 'in', [ target_distribution, 'target' ]) }}"
+    baseline_list: "{{ baseline_list | selectattr('distribution', 'in', [ platform.distribution, 'target' ]) }}"
 
-- name: "Packages Baseline / Select only {{ target_distribution }} / {{ target_distribution_version }}  ..."
+- name: "Packages Baseline / Select only {{ platform.distribution }} / {{ platform.version }}  ..."
   set_fact:
-    baseline_list: "{{ baseline_list | selectattr('version', 'in', [ target_distribution_version, 'target' ]) }}"
+    baseline_list: "{{ baseline_list | selectattr('version', 'in', [ platform.version, 'target' ]) }}"
 
-- name: "Packages Baseline / Select only {{ target_arch }} architecture  ..."
+- name: "Packages Baseline / Select only {{ platform.arch.package }} architecture  ..."
   set_fact:
-    baseline_list: "{{ baseline_list | selectattr('arch', 'in', [ target_arch, 'target' ]) }}"
+    baseline_list: "{{ baseline_list | selectattr('arch', 'in', [ platform.arch.package, 'target' ]) }}"
 
 - name: "Packages Baseline / Gather installed package facts ..."
   ansible.builtin.package_facts:
@@ -80,7 +80,7 @@
 - name: "Packages Baseline / Information ..."
   debug:
     msg:
-      - "TARGET:         {{ target_distribution | capitalize }} {{ target_distribution_version }} / {{ target_arch }}"
+      - "TARGET:         {{ platform.distribution | capitalize }} {{ platform.version }} / {{ platform.arch.package }}"
       - "BASELINE:       {{ baseline_config }}"
       - "BASELINE TOTAL: {{ baseline_packages | length }}"
       - "PIN:            {{ baseline_pin | sort }}"

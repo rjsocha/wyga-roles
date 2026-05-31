@@ -1,0 +1,6 @@
+Types: deb
+URIs: https://package.deligo.pl/apt
+Suites: deligo
+Components: main
+Architectures: arm64
+Signed-By: /usr/share/keyrings/deligo.gpg

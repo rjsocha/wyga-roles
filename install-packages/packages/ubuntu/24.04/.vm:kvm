@@ -1,0 +1,4 @@
+require:
+  - qemu-guest-agent
+  - linux-image-virtual
+  - dmidecode

@@ -22,10 +22,10 @@
 - name: "Packages Baseline / Include / {{ baseline_include_count }} / Prepeare list of files  ..."
   set_fact:
     baseline_search_files:
-      - "{{ playbook_dir }}/local/baseline/{{ target_distribution }}/{{ target_distribution_version  }}/{{ target_arch }}/{{ baseline_load }}"
-      - "{{ playbook_dir }}/local/baseline/{{ target_distribution }}/{{ target_distribution_version  }}/{{ baseline_load }}"
-      - "{{ role_path }}/files/{{ target_distribution }}/{{ target_distribution_version  }}/{{ target_arch }}/{{ baseline_load }}"
-      - "{{ role_path }}/files/{{ target_distribution }}/{{ target_distribution_version  }}/{{ baseline_load }}"
+      - "{{ playbook_dir }}/local/baseline/{{ platform.distribution }}/{{ platform.version  }}/{{ platform.arch.package }}/{{ baseline_load }}"
+      - "{{ playbook_dir }}/local/baseline/{{ platform.distribution }}/{{ platform.version  }}/{{ baseline_load }}"
+      - "{{ role_path }}/files/{{ platform.distribution }}/{{ platform.version  }}/{{ platform.arch.package }}/{{ baseline_load }}"
+      - "{{ role_path }}/files/{{ platform.distribution }}/{{ platform.version  }}/{{ baseline_load }}"
 
 - name: "Packages Baseline / Include / {{ baseline_include_count }} / Check if include is defined ..."
   set_fact:

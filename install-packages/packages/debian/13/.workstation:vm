@@ -1,0 +1,3 @@
+require:
+  - .workstation
+  - spice-vdagent

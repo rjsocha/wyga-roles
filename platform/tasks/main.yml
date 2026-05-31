@@ -1,0 +1,17 @@
+- name: "Collect Ansible minimal facts ..."
+  ansible.builtin.setup:
+    gather_subset:
+      - 'min'
+
+- name: "Ensure ansible tmp directory ..."
+  ansible.builtin.file:
+    path: "{{ ansible_facts.user_dir }}/.ansible/tmp"
+    state: directory
+    mode: '0700'
+
+- name: "Build platform facts ..."
+  wyga_platform:
+    devices: "{{ host.platform.boot.devices | default(['auto']) }}"
+    distribution: "{{ ansible_distribution | lower }}"
+    version: "{{ ansible_distribution_version }}"
+    arch: "{{ ansible_architecture }}"

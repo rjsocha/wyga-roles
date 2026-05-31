@@ -1,0 +1,8 @@
+require:
+  - docker-ce
+  - docker-ce-cli
+  - docker-compose-plugin
+  - docker-buildx-plugin
+  - python3-requests
+repository:
+  - docker-ce

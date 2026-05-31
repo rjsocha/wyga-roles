@@ -1,0 +1,126 @@
+---
+- name: "Use packages parameter ..."
+  set_fact:
+    install_packages: "{{ packages }}"
+  when: install_packages is not defined and packages is defined
+
+- name: "Use host.package.packages parameter ..."
+  set_fact:
+    install_packages: "{{ host.package.packages }}"
+  when: install_packages is not defined and host.package.packages is defined
+
+- name: "Check inputs ..."
+  assert:
+    that:
+      - install_packages is defined
+      - install_packages is sequence
+    fail_msg: "install_packages must be defined and be a list ..."
+    quiet: true
+
+- name: "Check environment ..."
+  assert:
+    that:
+      - platform is defined
+      - platform is mapping
+    fail_msg: "Platform variable is not defined or is not a dict ..."
+    quiet: true
+
+- name: "Check if OS is supported ..."
+  assert:
+    that:
+      - platform.distribution in [ 'ubuntu', 'debian' ]
+      - platform.version in [ "22.04", "24.04", "26.04", "12", "13" ]
+    fail_msg: "Unsupported distribution: {{ platform.distribution }} {{ platform.version }}"
+    quiet: true
+
+- name: "Resolve package list ..."
+  set_fact:
+    package_manifest: "{{ install_packages | package_resolve(platform=platform, playbook_dir=playbook_dir, role_path=role_path) }}"
+
+- name: "Information ..."
+  debug:
+    msg:
+      - "PLATFORM:      {{ platform.distribution | capitalize }} {{ platform.version }} / {{ platform.arch.package | upper }} {{ platform.firmware | upper }}"
+      - "PACKAGES:      {{ package_manifest.package }}"
+      - "REPOSITORIES:  {{ package_manifest.repository }}"
+      - "PREREQUISITES: {{ package_manifest.prerequisite }}"
+      - "PURGE:         {% if package_manifest.purge_force %}{{ package_manifest.purge_force }} {% endif %}{{ package_manifest.purge }}"
+      - "SERVICES:      {{ package_manifest.enable }}"
+
+- name: "Install respositories ..."
+  include_role:
+    name: wyga/install-repository
+  loop: "{{ package_manifest.repository }}"
+  loop_control:
+    loop_var: repository_loop
+    label: "{{ repository_loop }}"
+  vars:
+    repository: "{{ repository_loop }}"
+  when: package_manifest.repository | length > 0
+
+- name: "Install Prerequisites ..."
+  apt:
+    name: "{{ package_manifest.prerequisite }}"
+    state: latest
+    update_cache: true
+    install_recommends: false
+    autoclean: true
+    purge: true
+  register: _apt
+  retries: 25
+  until: _apt is success or ('Failed to lock apt for exclusive operation' not in _apt.msg and '/var/lib/dpkg/lock' not in _apt.msg)
+  when:  package_manifest.prerequisite | length > 0
+
+- name: "Purge protected packages ..."
+  command: "apt-get -o APT::Get::allow-remove-essential=true purge -y --autoremove {{ purge_force }}"
+  args:
+    removes: "/var/lib/dpkg/info/{{ purge_force | regex_replace('[:=].*', '') }}.list"
+  loop: "{{ package_manifest.purge_force }}"
+  loop_control:
+    loop_var: purge_force
+    label: "{{ purge_force }}"
+  register: _apt
+  retries: 25
+  until: _apt is success or ('Failed to lock apt for exclusive operation' not in _apt.msg and '/var/lib/dpkg/lock' not in _apt.msg)
+  when:  package_manifest.purge_force | length > 0
+
+- name: "Purge packages ..."
+  apt:
+    name: "{{ package_manifest.purge }}"
+    state: absent
+    autoremove: true
+    purge: true
+  register: _apt
+  retries: 25
+  until: _apt is success or ('Failed to lock apt for exclusive operation' not in _apt.msg and '/var/lib/dpkg/lock' not in _apt.msg)
+  when:  package_manifest.purge | length > 0
+
+- name: "Install packages ..."
+  debug:
+    msg:
+      - "Starting package installation ..."
+
+- name: "Install packages ..."
+  apt:
+    name: "{{ (package_manifest.prerequisite + package_manifest.package) | unique }}"
+    state: latest
+    update_cache: true
+    install_recommends: false
+    autoclean: true
+    autoremove: true
+    purge: true
+  register: _apt
+  retries: 25
+  until: _apt is success or ('Failed to lock apt for exclusive operation' not in _apt.msg and '/var/lib/dpkg/lock' not in _apt.msg)
+
+- name: "Enable services ..."
+  systemd:
+    name: "{{ service }}"
+    enabled: true
+    masked: false
+    daemon_reload: true
+  loop: "{{ package_manifest.enable }}"
+  loop_control:
+    loop_var: service
+    label: "{{ service }}"
+  when: package_manifest.enable | length > 0

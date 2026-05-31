@@ -1,0 +1,1 @@
+deb [arch=amd64 signed-by=/usr/share/keyrings/deligo.gpg] https://package.deligo.pl/apt deligo main

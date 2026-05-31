@@ -1,0 +1,27 @@
+require:
+  - .base
+firmware:
+  uefi:
+    require:
+      - grub-efi-amd64:amd64
+      - grub-efi-amd64-bin:amd64
+      - grub-efi-arm64:arm64
+      - grub-efi-arm64-bin:arm64
+      - mokutil
+      - efibootmgr
+      - shim-signed
+    purge:
+      - grub-pc:amd64
+      - grub-pc-bin:amd64
+  bios:
+    require:
+      - grub-pc:amd64
+      - grub-pc-bin:amd64
+    purge:
+      - grub-efi-amd64:amd64
+      - grub-efi-amd64-bin:amd64
+      - grub-efi-amd64-unsigned:amd64
+      - -shim-signed
+      - -grub-efi-amd64-signed:amd64
+      - mokutil
+      - efibootmgr

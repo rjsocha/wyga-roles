@@ -1,12 +1,4 @@
 ---
-- name: "Packages Baseline / Check if OS is supported ..."
-  assert:
-    that:
-      - target_distribution in [ 'debian', 'ubuntu' ]
-      - target_distribution_version in [ '13', '24.04', '26.04' ]
-    fail_msg: "Unsupported distribution: {{ target_distribution | capitalize }} {{ target_distribution_version }}"
-    quiet: true
-
 - name: "Packages Baseline / Create {{ host_policy_dir }} directory ..."
   file:
     path: "{{ host_policy_dir }}"

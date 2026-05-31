@@ -1,0 +1,6 @@
+baseline:
+  - .common
+  - hyperv-daemons
+  - qemu-guest-agent
+  - libglib2.0-0
+  - liburing2

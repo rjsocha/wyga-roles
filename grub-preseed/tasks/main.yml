@@ -1,0 +1,7 @@
+- name: "Preseed grub-pc install_devices (BIOS) ..."
+  ansible.builtin.debconf:
+    name: grub-pc
+    question: grub-pc/install_devices
+    value: "{{ platform.boot.devices | join(', ') }}"
+    vtype: multiselect
+  when: platform.firmware == 'bios'
