@@ -6,7 +6,7 @@ Acquire::Languages "none";
 APT::Install-Recommends "{{ host.setup.apt.install.recommended|default(false) | string | lower }}";
 APT::Install-Suggests "{{ host.setup.apt.install.suggested|default(false) | string | lower }}";
 Acquire::GzipIndexes  "{{ host.setup.apt.acquiregzipindexes|default(true) | string | lower }}";
-{% if  host.setup.apt.cache.keep | default(false) %}
+{% if  host.setup.apt.cache.keep | default(true) %}
 APT::Keep-Downloaded-Packages "true";
 Binary::apt::APT::Keep-Downloaded-Packages "true";
 {% else %}

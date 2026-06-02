@@ -1,19 +1,20 @@
+{% set mirror_url = 'http://deb.debian.org/debian' if apt.mirror == 'cdn' else 'http://ftp.' ~ apt.mirror ~ '.debian.org/debian' %}
 # managed by host-policy
 Types: deb
-URIs: {{ mirror }}
+URIs: {{ mirror_url }}
 Suites: trixie
 Components: main contrib non-free non-free-firmware
 Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
 
 Types: deb
-URIs: {{ mirror }}
+URIs: {{ mirror_url }}
 Suites: trixie-updates
 Components: main contrib non-free non-free-firmware
 Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
 
-{% if backports %}
+{% if apt.backports %}
 Types: deb
-URIs: {{ mirror }}
+URIs: {{ mirror_url }}
 Suites: trixie-backports
 Components: main contrib non-free non-free-firmware
 Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg

@@ -1,13 +1,17 @@
 ---
-- name: "Check if Distribution is supported ..."
-  assert:
-    that:
-      - target_distribution in ['ubuntu','debian']
-      - target_distribution_version in ['22.04', '24.04', '26.04', '12', '13']
-    fail_msg: "Unsupported distribution: {{ target_distribution }} {{ target_distribution_version }}"
-    quiet: true
+- name: "APT / Compute configuration ..."
+  set_fact:
+    apt:
+      mirror:          "{{ host.setup.apt.mirror                  | default('pl') }}"
+      backports:       "{{ host.setup.apt.sources.backports       | default(false) | bool }}"
+      universe:        "{{ host.setup.apt.sources.universe        | default(true)  | bool }}"
+      multiverse:      "{{ host.setup.apt.sources.multiverse      | default(false) | bool }}"
+      restricted:      "{{ host.setup.apt.sources.restricted      | default(true)  | bool }}"
+      contrib:         "{{ host.setup.apt.sources.contrib         | default(true)  | bool }}"
+      nonfree:         "{{ host.setup.apt.sources.nonfree         | default(true)  | bool }}"
+      nonfreefirmware: "{{ host.setup.apt.sources.nonfreefirmware | default(true)  | bool }}"
 
-- name: "Configure /etc/apt/apt.conf.d/99-host-policy ..."
+- name: "APT / Configure /etc/apt/apt.conf.d/99-host-policy ..."
   template:
     src: "apt/host-policy"
     dest: "/etc/apt/apt.conf.d/99-host-policy"
@@ -16,21 +20,46 @@
     mode: 0644
   register: apt_host_policy
 
-- name: "Process per distribution setup ..."
-  include_tasks:
-    file: "{{ item }}"
-  with_first_found:
-    - files:
-      - "{{ role_path }}/tasks/apt/target/{{ target_distribution }}/{{ target_distribution_version }}/apt.yaml"
-      - "{{ role_path }}/tasks/apt/target/generic/apt.yaml"
+- name: "APT / Ensure /etc/apt/sources.list.d ..."
+  file:
+    path: "/etc/apt/sources.list.d"
+    state: directory
+    mode: 0755
 
-# Digitial Ocean's Debian
-#- name: "Cleanup (Debian) ...."
-#  file:
-#    path: "/etc/apt/sources.list.d/debian.sources"
-#    state: absent
-#  when: "target_distribution != 'debian' and  target_distribution_version != '13'"
+- name: "APT / Configure /etc/apt/sources.list ..."
+  template:
+    src: "apt/{{ platform.distribution }}/{{ platform.version }}/sources.list"
+    dest: "/etc/apt/sources.list"
+    group: root
+    owner: root
+    mode: 0644
+  register: apt_sources_list
 
-- name: "Cleanup apt ..."
+- name: "APT / Check for deb822 sources template ..."
+  stat:
+    path: "{{ role_path }}/templates/apt/{{ platform.distribution }}/{{ platform.version }}/{{ platform.distribution }}.sources"
+  delegate_to: localhost
+  become: false
+  register: apt_deb822_template
+
+- name: "APT / Configure /etc/apt/sources.list.d/{{ platform.distribution }}.sources ..."
+  template:
+    src: "apt/{{ platform.distribution }}/{{ platform.version }}/{{ platform.distribution }}.sources"
+    dest: "/etc/apt/sources.list.d/{{ platform.distribution }}.sources"
+    group: root
+    owner: root
+    mode: 0644
+  register: apt_sources_deb822
+  when: apt_deb822_template.stat.exists
+
+- name: "APT / Cleanup legacy sources backups ..."
+  file:
+    path: "/etc/apt/{{ item }}"
+    state: absent
+  loop:
+    - sources.list~
+    - sources.list.bak
+
+- name: "APT / Cleanup apt cache after sources change ..."
   shell: "find /var/lib/apt/lists /var/cache/apt -type f -delete && apt-get clean"
-  when: apt_host_policy.changed or apt_sources.changed
+  when: apt_host_policy.changed or apt_sources_list.changed or (apt_sources_deb822.changed | default(false))

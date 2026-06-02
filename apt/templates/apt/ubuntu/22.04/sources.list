@@ -1,36 +1,36 @@
 # HOST-POLICY IN USE - DO NOT EDIT BY HAND
-{% if mirror == "cdn" %}
+{% if apt.mirror == "cdn" %}
 deb http://archive.ubuntu.com/ubuntu jammy main restricted
 deb http://archive.ubuntu.com/ubuntu jammy-updates main restricted
 deb http://archive.ubuntu.com/ubuntu jammy-security main restricted
-{% if universe %}
+{% if apt.universe %}
 deb http://archive.ubuntu.com/ubuntu jammy universe
 deb http://archive.ubuntu.com/ubuntu jammy-updates universe
 deb http://archive.ubuntu.com/ubuntu jammy-security universe
 {% endif %}
-{% if multiverse %}
+{% if apt.multiverse %}
 deb http://archive.ubuntu.com/ubuntu jammy multiverse
 deb http://archive.ubuntu.com/ubuntu jammy-updates multiverse
 deb http://archive.ubuntu.com/ubuntu jammy-security multiverse
 {% endif %}
-{% if backports %}
-deb http://archive.ubuntu.com/ubuntu jammy-backports main restricted{% if universe %} universe{% endif %}{% if multiverse %} multiverse{% endif %}
+{% if apt.backports %}
+deb http://archive.ubuntu.com/ubuntu jammy-backports main restricted{% if apt.universe %} universe{% endif %}{% if apt.multiverse %} multiverse{% endif %}
 {% endif %}
 {% else %}
-deb http://{{ mirror }}.archive.ubuntu.com/ubuntu jammy main restricted
-deb http://{{ mirror }}.archive.ubuntu.com/ubuntu jammy-updates main restricted
-deb http://{{ mirror }}.archive.ubuntu.com/ubuntu jammy-security main restricted
-{% if universe %}
-deb http://{{ mirror }}.archive.ubuntu.com/ubuntu jammy universe
-deb http://{{ mirror }}.archive.ubuntu.com/ubuntu jammy-updates universe
-deb http://{{ mirror }}.archive.ubuntu.com/ubuntu jammy-security universe
+deb http://{{ apt.mirror }}.archive.ubuntu.com/ubuntu jammy main restricted
+deb http://{{ apt.mirror }}.archive.ubuntu.com/ubuntu jammy-updates main restricted
+deb http://{{ apt.mirror }}.archive.ubuntu.com/ubuntu jammy-security main restricted
+{% if apt.universe %}
+deb http://{{ apt.mirror }}.archive.ubuntu.com/ubuntu jammy universe
+deb http://{{ apt.mirror }}.archive.ubuntu.com/ubuntu jammy-updates universe
+deb http://{{ apt.mirror }}.archive.ubuntu.com/ubuntu jammy-security universe
 {% endif %}
-{% if multiverse %}
-deb http://{{ mirror }}.archive.ubuntu.com/ubuntu jammy multiverse
-deb http://{{ mirror }}.archive.ubuntu.com/ubuntu jammy-updates multiverse
-deb http://{{ mirror }}.archive.ubuntu.com/ubuntu jammy-security multiverse
+{% if apt.multiverse %}
+deb http://{{ apt.mirror }}.archive.ubuntu.com/ubuntu jammy multiverse
+deb http://{{ apt.mirror }}.archive.ubuntu.com/ubuntu jammy-updates multiverse
+deb http://{{ apt.mirror }}.archive.ubuntu.com/ubuntu jammy-security multiverse
 {% endif %}
-{% if backports %}
-deb http://{{ mirror }}.archive.ubuntu.com/ubuntu jammy-backports main restricted{% if universe %} universe{% endif %}{% if multiverse %} multiverse{% endif %}
+{% if apt.backports %}
+deb http://{{ apt.mirror }}.archive.ubuntu.com/ubuntu jammy-backports main restricted{% if apt.universe %} universe{% endif %}{% if apt.multiverse %} multiverse{% endif %}
 {% endif %}
 {% endif %}

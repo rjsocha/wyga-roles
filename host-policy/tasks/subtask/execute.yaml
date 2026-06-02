@@ -38,7 +38,6 @@
 - name: "APT Configuration ..."
   include_role:
     name: wyga/apt
-  when: skip_apt is not defined and host.setup.apt is defined
 
 - name: "Packages Baseline ..."
   include_role:

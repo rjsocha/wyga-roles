@@ -1,5 +1,5 @@
 # managed by host-policy
-{% if mirror == "cdn" %}
+{% if apt.mirror == "cdn" %}
 Types: deb
 URIs: http://archive.ubuntu.com/ubuntu/
 Suites: resolute resolute-updates resolute-backports
@@ -7,7 +7,7 @@ Components: main universe restricted multiverse
 Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
 {% else %}
 Types: deb
-URIs: http://{{ mirror }}.archive.ubuntu.com/ubuntu/
+URIs: http://{{ apt.mirror }}.archive.ubuntu.com/ubuntu/
 Suites: resolute resolute-updates resolute-backports
 Components: main universe restricted multiverse
 Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
