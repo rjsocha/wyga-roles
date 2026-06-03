@@ -3,41 +3,45 @@ prerequisite:
   - ca-certificates
   - gawk
 require:
-  - apt-utils
+  - apparmor
   - bash-completion
+  - bind9-dnsutils
   - bzip2
+  - cron
   - curl
   - distro-info-data
-  - dnsutils
   - dosfstools
   - fdisk
   - git
   - haveged
   - iproute2
-  - iptraf-ng
+  - iptables-persistent
   - less
+  - libpam-systemd
   - lsb-release
   - lsof
   - mc
   - mtr-tiny
+  - netcat-openbsd
   - openssh-client
   - openssh-server
   - openssh-sftp-server
+  - psmisc
   - python3-apt
   - python-apt-common
   - rsync
   - screen
   - sudo
   - sysstat
-  - tcpdump
+  - time
   - tmux
+  - tpm-udev
   - unzip
   - vim
   - wget
+  - whiptail
   - xz-utils
   - zstd
-  - psmisc
-  - netcat-openbsd
 purge:
   - mawk
   - netcat-traditional
