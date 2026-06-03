@@ -7,7 +7,6 @@ require:
   - bash-completion
   - bind9-dnsutils
   - bzip2
-  - ca-certificates
   - cron
   - cron-daemon-common
   - curl

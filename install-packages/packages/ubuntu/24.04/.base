@@ -4,15 +4,15 @@ prerequisite:
   - gawk
 require:
   - apparmor
-  - apt-utils
   - bash-completion
+  - bind9-dnsutils
   - bzip2
   - curl
   - distro-info-data
-  - dnsutils
   - dosfstools
   - fdisk
   - file
+  - git
   - haveged
   - iproute2
   - iputils-ping

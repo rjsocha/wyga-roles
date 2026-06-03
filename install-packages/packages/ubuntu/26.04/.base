@@ -3,25 +3,32 @@ prerequisite:
   - ca-certificates
   - gawk
 require:
-  - apt-utils
+  - apparmor
   - bash-completion
+  - btrfs-progs
   - bzip2
   - curl
   - distro-info-data
-  - dracut
   - dnsutils
   - dosfstools
+  - dracut
+  - exfatprogs
   - fdisk
+  - git
   - haveged
   - iproute2
+  - iputils-ping
   - less
   - lsb-release
   - lsof
   - mc
   - mtr-tiny
+  - netcat-openbsd
   - openssh-client
   - openssh-server
   - openssh-sftp-server
+  - perl-modules
+  - psmisc
   - python3-apt
   - python-apt-common
   - rsync
@@ -29,23 +36,15 @@ require:
   - sudo
   - sysstat
   - systemd-resolved
+  - systemd-timesyncd
   - time
   - tmux
+  - tpm-udev
   - unzip
   - vim
   - wget
   - xz-utils
   - zstd
-  - tpm-udev
-  - apparmor
-  - perl-modules
-  - systemd-timesyncd
-  - psmisc
-  - netcat-openbsd
-  - btrfs-progs
-  - exfatprogs
-  - git
-  - iputils-ping
 purge:
   - mawk
   - netcat-traditional
