@@ -5,10 +5,13 @@ baseline:
   - base-files
   - base-passwd
   - bash
+  - bash-completion
+  - bsdextrautils
   - bsdutils
   - btrfs-progs
   - busybox
   - busybox-static
+  - bzip2
   - ca-certificates
   - coreutils
   - cpio
@@ -29,6 +32,7 @@ baseline:
   - distro-info-data
   - dmeventd
   - dmsetup
+  - dosfstools
   - dpkg
   - dracut-install
   - e2fsprogs
@@ -39,23 +43,25 @@ baseline:
   - gcc-14-base
   - gettext-base
   - grep
+  - grub2-common
   - grub-common
   - grub-efi-amd64
   - grub-efi-amd64-bin
   - grub-efi-amd64-signed
   - grub-efi-amd64-unsigned
   - grub-pc-bin
-  - grub2-common
   - gzip
   - haveged
   - hostname
   - ifupdown
   - init
-  - init-system-helpers
   - initramfs-tools
   - initramfs-tools-bin
   - initramfs-tools-core
+  - init-system-helpers
   - iproute2
+  - iptables
+  - iputils-ping
   - klibc-utils
   - kmod
   - less
@@ -65,27 +71,27 @@ baseline:
   - libapt-pkg7.0
   - libatomic1
   - libattr1
-  - libaudit-common
   - libaudit1
+  - libaudit-common
   - libblkid1
   - libbpf1
   - libbrotli1
   - libbsd0
   - libbz2-1.0
-  - libc-bin
   - libc6
-  - libcap-ng0
   - libcap2
   - libcap2-bin
+  - libcap-ng0
+  - libc-bin
   - libcbor0.10
+  - libc-l10n
   - libcom-err2
   - libcrypt1
   - libdb5.3t64
   - libdbus-1-3
-  - libdbus-1-3
   - libdebconfclient0
-  - libdevmapper-event1.02.1
   - libdevmapper1.02.1
+  - libdevmapper-event1.02.1
   - libedit2
   - libefiboot1t64
   - libefivar1t64
@@ -98,8 +104,8 @@ baseline:
   - libfreetype6
   - libfuse3-4
   - libgcc-s1
-  - libgdbm-compat4t64
   - libgdbm6t64
+  - libgdbm-compat4t64
   - libglib2.0-0t64
   - libgmp10
   - libgpm2
@@ -108,6 +114,9 @@ baseline:
   - libhogweed6t64
   - libicu76
   - libinih1
+  - libip4tc2
+  - libip6tc2
+  - libjansson4
   - libk5crypto3
   - libkeyutils1
   - libklibc
@@ -115,6 +124,7 @@ baseline:
   - libkrb5-3
   - libkrb5support0
   - liblastlog2-2
+  - libldap2
   - liblvm2cmd2.03
   - liblz4-1
   - liblzma5
@@ -124,26 +134,34 @@ baseline:
   - libmount1
   - libmpfr6
   - libncursesw6
+  - libnetfilter-conntrack3
   - libnettle8t64
   - libnewt0.52
+  - libnfnetlink0
+  - libnftables1
+  - libnftnl11
+  - libnl-3-200
+  - libnl-genl-3-200
+  - libpam0g
   - libpam-modules
   - libpam-modules-bin
   - libpam-runtime
   - libpam-systemd
-  - libpam0g
   - libpcre2-8-0
   - libpng16-16t64
   - libpopt0
   - libproc2-0
-  - libpython3-stdlib
   - libpython3.13-minimal
   - libpython3.13-stdlib
+  - libpython3-stdlib
   - libreadline8t64
   - libreiserfscore0t64
+  - libsasl2-2
+  - libsasl2-modules-db
   - libseccomp2
   - libselinux1
-  - libsemanage-common
   - libsemanage2
+  - libsemanage-common
   - libsepol2
   - libsigsegv2
   - libslang2
@@ -153,13 +171,13 @@ baseline:
   - libss2
   - libssl3t64
   - libstdc++6
-  - libsystemd-shared
   - libsystemd0
+  - libsystemd-shared
   - libtext-charwidth-perl
   - libtext-wrapi18n-perl
   - libtinfo6
-  - libtirpc-common
   - libtirpc3t64
+  - libtirpc-common
   - libudev1
   - liburcu8t64
   - libuuid1
@@ -171,8 +189,10 @@ baseline:
   - linux-base
   - linux-image-*
   - linux-sysctl-defaults
+  - locales
   - login
   - login.defs
+  - logrotate
   - logsave
   - lvm2
   - mawk
@@ -184,6 +204,7 @@ baseline:
   - ncurses-base
   - ncurses-bin
   - netbase
+  - nftables
   - openssh-client
   - openssh-server
   - openssh-sftp-server
@@ -193,14 +214,16 @@ baseline:
   - perl-base
   - perl-modules-5.40
   - procps
-  - python-apt-common
   - python3
+  - python3.13
+  - python3.13-minimal
   - python3-apt
   - python3-dbus
   - python3-minimal
-  - python3.13
-  - python3.13-minimal
+  - python-apt-common
+  - quota 
   - readline-common
+  - rsync
   - runit-helper
   - sed
   - sensible-utils
@@ -216,11 +239,13 @@ baseline:
   - systemd-timesyncd
   - sysvinit-utils
   - tar
+  - tpm-udev
   - tzdata
   - ucf
   - udev
   - util-linux
   - whiptail
   - xfsprogs
+  - xz-utils
   - zlib1g
   - zstd
