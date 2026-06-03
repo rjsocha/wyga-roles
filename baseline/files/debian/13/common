@@ -150,6 +150,7 @@ baseline:
   - libpam-runtime
   - libpam-systemd
   - libpcre2-8-0
+  - libperl5.40
   - libpng16-16t64
   - libpopt0
   - libproc2-0
