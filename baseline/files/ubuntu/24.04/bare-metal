@@ -1,9 +1,10 @@
 baseline:
   - .common
   - amd64-microcode
-  - firmware-sof-signed
   - hdparm
   - intel-microcode
   - iucode-tool
   - linux-firmware
+  - linux-image-generic
+  - linux-modules-extra-*
   - wireless-regdb
