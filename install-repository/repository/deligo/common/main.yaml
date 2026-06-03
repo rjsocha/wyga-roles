@@ -24,7 +24,6 @@
         path: "{{ file.purge }}"
         state: absent
       loop:
-        - { 'purge': '/etc/apt/sources.list.d/{{ repository }}.list' }
         - { 'purge': '/etc/apt/sources.list.d/deligo-public.list' }
         - { 'purge': '/etc/apt/sources.list.d/deligo-public.sources' }
         - { 'purge': '/usr/share/keyrings/deligo-public.gpg' }
