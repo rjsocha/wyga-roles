@@ -3,3 +3,5 @@ baseline:
   - qemu-guest-agent
   - liburing2
   - libnuma1
+  - ubuntu-helper-virt-hwe
+  - ubuntu-virt

@@ -9,6 +9,7 @@ baseline:
   - bsdextrautils
   - bsdutils
   - btrfs-progs
+  - bzip2
   - ca-certificates
   - coreutils
   - coreutils-from-uutils
@@ -48,6 +49,7 @@ baseline:
   - gpgv
   - grep
   - grub-gfxpayload-lists
+  - grub-efi
   - grub-efi-amd64
   - grub-efi-amd64-bin
   - grub-efi-amd64-signed
@@ -259,17 +261,15 @@ baseline:
   - systemd-hwe-hwdb
   - systemd-resolved
   - systemd-sysv
+  - systemd-timesyncd
   - sysvinit-utils
   - tar
-  - thin-provisioning-tools
   - tpm-udev
   - tzdata
   - ubuntu-keyring
   - ucf
   - udev
   - util-linux
-  - vim-common
-  - vim-tiny
   - wget
   - whiptail
   - wireless-regdb
