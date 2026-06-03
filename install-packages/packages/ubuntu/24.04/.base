@@ -3,6 +3,7 @@ prerequisite:
   - ca-certificates
   - gawk
 require:
+  - apparmor
   - apt-utils
   - bash-completion
   - bzip2
@@ -11,16 +12,23 @@ require:
   - dnsutils
   - dosfstools
   - fdisk
+  - file
   - haveged
   - iproute2
+  - iputils-ping
   - less
+  - libpam-systemd
   - lsb-release
   - lsof
   - mc
   - mtr-tiny
+  - netcat-openbsd
   - openssh-client
   - openssh-server
   - openssh-sftp-server
+  - perl
+  - perl-modules
+  - psmisc
   - python3-apt
   - python-apt-common
   - rsync
@@ -28,21 +36,15 @@ require:
   - sudo
   - sysstat
   - systemd-resolved
+  - systemd-timesyncd
+  - time
   - tmux
+  - tpm-udev
   - unzip
   - vim
   - wget
   - xz-utils
   - zstd
-  - libpam-systemd
-  - tpm-udev
-  - time
-  - apparmor
-  - perl-modules
-  - systemd-timesyncd
-  - psmisc
-  - netcat-openbsd
-  - iputils-ping
 purge:
   - mawk
   - netcat-traditional
