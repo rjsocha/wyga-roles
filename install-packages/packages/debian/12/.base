@@ -17,6 +17,7 @@ require:
   - git
   - haveged
   - iproute2
+  - iptables-persistent
   - less
   - libpam-systemd
   - lsb-release
@@ -33,6 +34,7 @@ require:
   - psmisc
   - python3-apt
   - python-apt-common
+  - quota
   - rsync
   - screen
   - sudo
