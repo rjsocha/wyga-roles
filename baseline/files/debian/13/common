@@ -61,6 +61,7 @@ baseline:
   - init-system-helpers
   - iproute2
   - iptables
+  - iptables-persistent
   - iputils-ping
   - klibc-utils
   - kmod
@@ -113,6 +114,7 @@ baseline:
   - libhavege2
   - libhogweed6t64
   - libicu76
+  - libidn2-0
   - libinih1
   - libip4tc2
   - libip6tc2
@@ -179,6 +181,7 @@ baseline:
   - libtirpc3t64
   - libtirpc-common
   - libudev1
+  - libunistring5
   - liburcu8t64
   - libuuid1
   - libwrap0
@@ -194,6 +197,7 @@ baseline:
   - login.defs
   - logrotate
   - logsave
+  - lsb-release
   - lvm2
   - mawk
   - mdadm
@@ -204,6 +208,7 @@ baseline:
   - ncurses-base
   - ncurses-bin
   - netbase
+  - netfilter-persistent
   - nftables
   - openssh-client
   - openssh-server
@@ -211,6 +216,7 @@ baseline:
   - openssl
   - openssl-provider-legacy
   - passwd
+  - perl
   - perl-base
   - perl-modules-5.40
   - procps
