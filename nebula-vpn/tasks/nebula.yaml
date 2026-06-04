@@ -48,6 +48,12 @@
     mode: 0700
     path: "/etc/site/vpn/{{ vpn_instance.name }}"
 
+- name: "Preapre VPN instance ..."
+  command: /usr/sbin/nebula-vpn-setup {{ vpn_instance.name }}
+  changed_when: false
+  environment:
+    NEBULA_UNATTENDED_SETUP: true
+
 - name: "Node subnets ..."
   include_tasks: subnets.yaml
   loop: "{{ vpn.routing | dict2items }}"
