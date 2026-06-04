@@ -2,16 +2,6 @@
   include_role:
     name: wyga/minimal-facts
 
-- name: "Select become method as su ..."
-  set_fact:
-    method: "su"
-  when: target_distribution == "debian"
-
-- name: "Select become method as sudo ..."
-  set_fact:
-    method: "sudo"
-  when: target_distribution == "ubuntu"
-
 - name: "Set authorized key ..."
   ansible.posix.authorized_key:
     user: root
