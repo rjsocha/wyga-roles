@@ -29,7 +29,7 @@
 
 - name: "Workstation / Install ..."
   include_role:
-    name: wyga/install-package-override
+    name: wyga/install-packages
   vars:
     packages: "{{ workstation_install }}"
   when: workstation_install | length > 0

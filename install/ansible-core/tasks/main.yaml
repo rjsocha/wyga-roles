@@ -1,6 +1,6 @@
 - name: "ANSIBLE / Install pipx ..."
   include_role:
-    name: wyga/install-package-override
+    name: wyga/install-packages
   vars:
     packages:
       - pipx

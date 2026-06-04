@@ -6,7 +6,7 @@
 
 - name: "KVM / Install KVM subsystem ..."
   include_role:
-    name: wyga/install-package-override
+    name: wyga/install-packages
   vars:
     packages:
       - .kvm-system
@@ -14,7 +14,7 @@
 
 - name: "KVM / Install KVM subsystem (arm) ..."
   include_role:
-    name: wyga/install-package-override
+    name: wyga/install-packages
   vars:
     packages:
       - qemu-system-arm

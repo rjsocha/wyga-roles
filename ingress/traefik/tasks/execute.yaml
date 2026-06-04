@@ -4,7 +4,7 @@
 
 - name: "Traefik Ingress / Install ..."
   include_role:
-    name: wyga/install-package-override
+    name: wyga/install-packages
   vars:
     packages:
       - traefik-ingress

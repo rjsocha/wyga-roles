@@ -78,9 +78,9 @@
 
 - name: "Install check-mk-agent-push ..."
   include_role:
-    name: wyga/install-package-override
+    name: wyga/install-packages
   vars:
-    install_packages:
+    packages:
       - check-mk-agent-push
 
 - name: "Generate configuration ..."
