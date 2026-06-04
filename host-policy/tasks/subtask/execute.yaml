@@ -65,7 +65,7 @@
   include_role:
     name: wyga/install-packages
   vars:
-    install_packages: "{{ host.package.packages }}"
+    packages: "{{ host.package.packages }}"
   when: skip_packages is not defined and host.package.packages is defined and not host.package.skip|default(false)
 
 - name: "Configure packages ..."
