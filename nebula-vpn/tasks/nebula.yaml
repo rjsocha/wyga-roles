@@ -24,9 +24,29 @@
     msg: "Wrong VPN IP ..."
   when: not ip_valid
 
-- name: "Preapre VPN instance ..."
-  command: /usr/sbin/nebula-vpn-setup {{ vpn_instance.name }}
-  changed_when: false
+- name: "Ensure /etc/site exists ..."
+  file:
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+    path: "/etc/site"
+
+- name: "Ensure /etc/site/vpn exists ..."
+  file:
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+    path: "/etc/site/vpn"
+
+- name: "Ensure /etc/site/vpn/{{ vpn_instance.name }} exists ..."
+  file:
+    state: directory
+    owner: root
+    group: root
+    mode: 0700
+    path: "/etc/site/vpn/{{ vpn_instance.name }}"
 
 - name: "Node subnets ..."
   include_tasks: subnets.yaml
