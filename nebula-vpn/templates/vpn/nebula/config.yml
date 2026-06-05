@@ -3,7 +3,6 @@ pki:
   ca: /etc/site/vpn/{{ vpn_name }}/ca.crt
   cert: /etc/site/vpn/{{ vpn_name }}/host.crt
   key: /etc/site/vpn/{{ vpn_name }}/host.key
-  disconnect_invalid: true
 {% if vpn.blocklist is defined %}
   blocklist:
 {% for block in vpn.blocklist %}
@@ -20,9 +19,8 @@ static_host_map:
 {% endfor %}
 
 static_map:
-  cadence: 60s
+  cadence: 300s
   network: ip4
-  lookup_timeout: 250ms
 
 lighthouse:
 {% if am_lighthouse %}
@@ -34,7 +32,7 @@ lighthouse:
     port: 53
   {% endif %}
 {% endif %}
-  interval: 60
+  interval: 10
   hosts:
     {% if not vpn_am_lighthouse %}
     {% for host in vpn.lighthouse.hosts.keys() %}
@@ -49,8 +47,6 @@ listen:
 punchy:
   punch: true
   respond: true
-  delay: 1s
-  respond_delay: 5s
   target_all_remotes: true
 
 cipher: {{ vpn.cipher | default('aes') }}
@@ -73,12 +69,9 @@ relay:
   use_relays: {{ 'true' if vpn_use_relays else 'false' }}
 
 tun:
-  disabled: false
   dev: {{ vpn.tun.dev | default('overlay0') }}
   drop_local_broadcast: true
   drop_multicast: true
-  tx_queue: 500
-  mtu: 1300
 {% if vpn.routing is defined or instance.routing is defined %}
   unsafe_routes:
     {% if vpn.routing is defined %}
@@ -119,7 +112,7 @@ handshakes:
 
 tunnels:
   drop_inactive: true
-  inactivity_timeout: 60m
+  inactivity_timeout: 120m
 
 firewall:
   outbound_action: reject
