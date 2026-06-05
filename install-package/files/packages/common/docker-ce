@@ -1,5 +1,0 @@
-prerequisite:
-  - apt-transport-https
-  - ca-certificates
-repository:
-  - docker-ce

@@ -1,4 +1,5 @@
 require:
+  - linux-image-generic
   - ethtool
   - lm-sensors
   - lvm2

@@ -1,8 +1,0 @@
-require:
-  - ethtool
-  - lm-sensors
-  - lvm2
-  - mdadm
-  - smartmontools
-  - wireless-regdb
-  - irqbalance
