@@ -9,7 +9,7 @@
     name: wyga/install-packages
   vars:
     packages:
-      - .kvm-system
+      - .kvm:host
       - guestfs-tools
 
 - name: "KVM / Install KVM subsystem (arm) ..."
