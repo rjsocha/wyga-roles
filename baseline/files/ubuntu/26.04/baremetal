@@ -1,5 +1,6 @@
 baseline:
   - .common
+  - 3cpio
   - amd64-microcode
   - intel-microcode
   - iucode-tool
