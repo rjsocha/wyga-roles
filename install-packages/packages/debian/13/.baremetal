@@ -5,3 +5,5 @@ require:
   - mdadm
   - smartmontools
   - wireless-regdb
+  - irqbalance
+  - nvme-cli
