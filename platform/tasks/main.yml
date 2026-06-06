@@ -2,6 +2,8 @@
   ansible.builtin.setup:
     gather_subset:
       - 'min'
+      - 'network'
+      - 'mounts'
 
 - name: "Ensure ansible tmp directory ..."
   ansible.builtin.file:

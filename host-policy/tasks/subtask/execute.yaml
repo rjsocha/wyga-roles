@@ -170,6 +170,9 @@
     name: wyga/workstation
   when: host.setup.workstation is defined
 
+- name: "Trigger any pending reboots ..."
+  meta: flush_handlers
+
 - name: "Process KITs ..."
   include_role:
     name: wyga/kit
