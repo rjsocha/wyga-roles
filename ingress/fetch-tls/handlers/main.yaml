@@ -1,0 +1,4 @@
+- name: site-fetch-tls-restart
+  ansible.builtin.systemd:
+    name: site-fetch-tls.service
+    state: restarted

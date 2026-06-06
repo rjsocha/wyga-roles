@@ -1,0 +1,83 @@
+- name: "TLS Fetch / Gather installed package facts ..."
+  ansible.builtin.package_facts:
+    manager: auto
+
+- name: "TLS Fetch / Install ..."
+  include_role:
+    name: wyga/install-packages
+  vars:
+    packages:
+      - site-fetch-tls
+  when: "'site-fetch-tls' is not in ansible_facts.packages"
+
+- name: "TLS Fetch / Load configuration ..."
+  set_fact:
+    FetchConfig: "{{ host.setup.ingress.tls.fetch }}"
+    FetchSecret: "{{ confidential.setup.ingress.tls.fetch | default({}) }}"
+
+- name: "TLS Fetch / Config / Site directories ..."
+  file:
+    path: "{{ site.path }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "{{ site.mode }}"
+  loop:
+    - { path: "/etc/site",           mode: "0755" }
+    - { path: "/etc/site/tls",       mode: "0755" }
+    - { path: "/etc/site/tls/fetch", mode: "0700" }
+  loop_control:
+    loop_var: site
+    label: "{{ site.path }}"
+
+- name: "TLS Fetch / Config / Storage directories ..."
+  file:
+    path: "{{ store }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  loop: >-
+    {{ ([ FetchConfig.storage | default('/var/site/tls') ]
+        + (FetchConfig.domain | selectattr('storage', 'defined') | map(attribute='storage') | list))
+       | unique }}
+  loop_control:
+    loop_var: store
+
+- name: "TLS Fetch / Config / Default password secret ..."
+  copy:
+    dest: "/etc/site/tls/fetch/secret"
+    content: "{{ FetchSecret.password }}"
+    owner: root
+    group: root
+    mode: "0400"
+  no_log: true
+  when: FetchSecret.password is defined
+  notify:
+    - site-fetch-tls-restart
+
+- name: "TLS Fetch / Config / Per-zone password secrets ..."
+  copy:
+    dest: "/etc/site/tls/fetch/secret.{{ pw.key }}"
+    content: "{{ pw.value }}"
+    owner: root
+    group: root
+    mode: "0400"
+  no_log: true
+  loop: "{{ (FetchSecret.domain | default({})) | dict2items }}"
+  loop_control:
+    loop_var: pw
+    label: "{{ pw.key }}"
+  when: (pw.value | string | upper) != 'NONE'
+  notify:
+    - site-fetch-tls-restart
+
+- name: "TLS Fetch / Config / Render configuration ..."
+  template:
+    src: "config"
+    dest: "/etc/site/tls/fetch/config"
+    owner: root
+    group: root
+    mode: "0400"
+  notify:
+    - site-fetch-tls-restart

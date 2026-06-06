@@ -162,6 +162,11 @@
     name: wyga/ingress/nginx
   when: host.setup.ingress.nginx is defined
 
+- name: "Configure TLS Fetch ..."
+  include_role:
+    name: wyga/ingress/fetch-tls
+  when: host.setup.ingress.tls.fetch is defined
+
 - name: "Policy marker ..."
   include_tasks: "mark-policy.yaml"
 

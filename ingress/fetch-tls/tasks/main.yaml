@@ -1,0 +1,3 @@
+- name: "TLS Fetch Ingress"
+  include_tasks: execute.yaml
+  when: host.setup.ingress.tls.fetch is defined

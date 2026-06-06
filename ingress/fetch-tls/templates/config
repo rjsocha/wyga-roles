@@ -1,0 +1,48 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+# SITE-FETCH-TLS CONFIGURATION (managed by wyga/ingress/fetch-tls)
+{% set fetch = host.setup.ingress.tls.fetch %}
+{% set secret = confidential.setup.ingress.tls.fetch | default({}) %}
+DEFAULT_HOST="{{ fetch.host }}"
+DEFAULT_STORAGE="{{ fetch.storage | default('/var/site/tls') }}"
+DEFAULT_OWNER="{{ fetch.owner | default('root') }}"
+DEFAULT_GROUP="{{ fetch.group | default('root') }}"
+DEFAULT_MODE="{{ fetch.mode | default('0400') }}"
+{% if fetch.reload is defined %}
+DEFAULT_RELOAD="{{ fetch.reload }}"
+{% endif %}
+{% if secret.password is defined %}
+DEFAULT_PASSWORD="/etc/site/tls/fetch/secret"
+{% else %}
+DEFAULT_PASSWORD="NONE"
+{% endif %}
+DOMAINS=( {% for d in fetch.domain %}"{{ d.zone }}" {% endfor %})
+{% for d in fetch.domain %}
+{% if d.host is defined %}
+HOST["{{ d.zone }}"]="{{ d.host }}"
+{% endif %}
+{% if d.storage is defined %}
+STORAGE["{{ d.zone }}"]="{{ d.storage }}"
+{% endif %}
+{% if d.owner is defined %}
+OWNER["{{ d.zone }}"]="{{ d.owner }}"
+{% endif %}
+{% if d.group is defined %}
+GROUP["{{ d.zone }}"]="{{ d.group }}"
+{% endif %}
+{% if d.mode is defined %}
+MODE["{{ d.zone }}"]="{{ d.mode }}"
+{% endif %}
+{% if d.reload is defined %}
+RELOAD["{{ d.zone }}"]="{{ d.reload }}"
+{% endif %}
+{% if d.alias is defined %}
+ALIAS["{{ d.zone }}"]="{{ d.alias | join(',') }}"
+{% endif %}
+{% if (secret.domain | default({}))[d.zone] is defined %}
+{% if (secret.domain[d.zone] | string | upper) == 'NONE' %}
+PASSWORD["{{ d.zone }}"]="NONE"
+{% else %}
+PASSWORD["{{ d.zone }}"]="/etc/site/tls/fetch/secret.{{ d.zone }}"
+{% endif %}
+{% endif %}
+{% endfor %}
