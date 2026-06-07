@@ -1,4 +1,2 @@
 - name: traefik-ingress-restart
   command: /usr/bin/traefik-ingress-restart
-
-- debug: msg="traefik-ingress-restart"

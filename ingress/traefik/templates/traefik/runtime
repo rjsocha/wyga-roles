@@ -1,4 +1,5 @@
 #jinja2: trim_blocks: True, lstrip_blocks: True
+{% set dashboard_users = confidential.setup.ingress.traefik.dashboard.users | default(confidential.ingress.dashboard.users | default([])) %}
 http:
   middlewares:
     http2https:
@@ -30,12 +31,12 @@ http:
 {% endfor %}
 {% endif %}
 {% if IngressConfig.dashboard.url is defined %}
-{% if confidential.ingress.dashboard.users is defined %}
+{% if dashboard_users %}
     auth4dashboard:
       basicAuth:
         realm: "[PROTECTED]"
         users:
-{% for dash_user in confidential.ingress.dashboard.users %}
+{% for dash_user in dashboard_users %}
           - '{{ dash_user }}'
 {% endfor %}
 {% endif %}
@@ -51,7 +52,7 @@ http:
       entryPoints:
         - {{ IngressConfig.dashboard.entrypoint }}
       middlewares:
-  {% if confidential.ingress.dashboard.users is defined %}
+  {% if dashboard_users %}
         - auth4dashboard
   {% endif %}
         - redirect2dashboard
@@ -72,7 +73,7 @@ http:
       entryPoints:
         - http
       middlewares:
-{% if confidential.ingress.dashboard.users is defined %}
+{% if dashboard_users %}
         - auth4dashboard
 {% endif %}
         - redirect2dashboard
@@ -85,7 +86,7 @@ http:
       entryPoints:
         - https
       middlewares:
-{% if confidential.ingress.dashboard.users is defined %}
+{% if dashboard_users %}
         - auth4dashboard
 {% endif %}
         - redirect2dashboard
@@ -113,7 +114,7 @@ http:
       entryPoints:
         - https
       middlewares:
-{% if confidential.ingress.dashboard.users is defined %}
+{% if dashboard_users %}
         - auth4dashboard
 {% endif %}
         - redirect2dashboard

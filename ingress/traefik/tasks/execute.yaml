@@ -86,6 +86,8 @@
   file:
     path: "{{ IngressConfig.runtime.path }}/env"
     state: absent
+  notify:
+    - traefik-ingress-restart
   when: confidential.ingress.dns is not defined
 
 - name: "Traefik Ingress / ACME / Create list of runtime files to remove ..."
