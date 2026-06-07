@@ -4,3 +4,6 @@ LLMNR={{ 'yes' if systemd_resolved.llmnr | default(false) else 'no' }}
 MulticastDNS={{ 'yes' if systemd_resolved.mdns | default(false) else 'no' }}
 Cache=no-negative
 FallbackDNS=8.8.8.8#dns.google 1.1.1.1#cloudflare-dns.com
+{% for addr in systemd_resolved.stub | default([]) %}
+DNSStubListenerExtra={{ addr }}
+{% endfor %}
