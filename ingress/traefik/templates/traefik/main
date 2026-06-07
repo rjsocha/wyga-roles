@@ -6,11 +6,18 @@ global:
 log:
   level: "{{ IngressConfig.log | default('error') }}"
 
+{% set docker = (IngressConfig.provider.docker | default({})) or {} %}
+{% set feature_expose_vhost = 'expose.vhost' in (docker.feature | default([])) %}
 providers:
 {% if IngressConfig.provider.docker is defined %}
   docker:
-    exposedByDefault: false
+    exposedByDefault: {{ 'true' if feature_expose_vhost else (docker.exposedByDefault | default(false) | ternary('true','false')) }}
     watch: true
+    endpoint: "{{ docker.endpoint | default('unix:///var/run/docker.sock') }}"
+  {% if feature_expose_vhost %}
+    defaultRule: '{% raw %}{{ $item := 0 }}{{ $vhost := index .Labels "expose.vhost" }}{{ if $vhost }}{{ range $host := mustRegexSplit "," $vhost -1 }}{{ $host = trim $host }}{{ if contains "." $host }}{{ $name := regexFind `^([^.]+)` $host }}{{ $domain := regexFind `\.(.+)$` $host }}{{ $domain = trimAll "." $domain }}{{ if hasSuffix "*" $name }}{{ $prefix := trimSuffix "*" $name }}{{ if ne $item 0 }} || {{ end }}HostRegexp(`(?i)^{{ $prefix }}[0-9a-z][0-9a-z-]*\.{{ $domain }}$`){{ $item = 1 }}{{ else }}{{ if ne $name "" }}{{ if ne $item 0 }} || {{ end }}Host(`{{ $name }}.{{ $domain }}`){{ $item = 1 }}{{ end }}{{ end }}{{ end }}{{ end }}{{ end }}{{ if eq $item 0 }}Host(`{{ normalize .Name }}`){{ end }}{% endraw %}'
+    constraints: '{% raw %}LabelRegex(`traefik.enable`,`(?i)^(yes|true|on)$`) || LabelRegex(`expose.vhost`,`.+`){% endraw %}'
+  {% endif %}
 {% endif %}
 {% if IngressConfig.provider.file is defined %}
   file:
@@ -19,60 +26,43 @@ providers:
 {% endif %}
 
 entryPoints:
-  http:
-    address: ":80"
+{% for name, ep in IngressConfig.entrypoint.items() %}
+  {{ name }}:
+    address: "{{ ep.address }}:{{ ep.port }}"
     reusePort: true
-{% if IngressConfig.runtime.forwarded is defined %}
-    forwardedHeaders:
-  {% if IngressConfig.runtime.forwarded.insecure is defined %}
-      insecure: {{ 'true' if IngressConfig.runtime.forwarded.insecure | default(false) else 'false' }}
-  {% elif IngressConfig.runtime.forwarded.trust is defined %}
-      trustedIPs:
-    {% for trust in IngressConfig.runtime.forwarded.trust %}
-        - "{{ trust }}"
-    {% endfor %}
+  {% if ep.default %}
+    asDefault: true
   {% endif %}
-{% endif %}
+  {% if IngressConfig.runtime.forwarded is defined %}
+    forwardedHeaders:
+    {% if IngressConfig.runtime.forwarded.insecure is defined %}
+      insecure: {{ 'true' if IngressConfig.runtime.forwarded.insecure | default(false) else 'false' }}
+    {% elif IngressConfig.runtime.forwarded.trust is defined %}
+      trustedIPs:
+      {% for trust in IngressConfig.runtime.forwarded.trust %}
+        - "{{ trust }}"
+      {% endfor %}
+    {% endif %}
+  {% endif %}
+  {% if ep.type == 'https' or ep.redirect %}
     http:
-      encodedCharacters:
-        allowEncodedSlash: false
-        allowEncodedBackSlash: false
-        allowEncodedNullCharacter: false
-        allowEncodedSemicolon: false
-        allowEncodedPercent: false
-        allowEncodedQuestionMark: false
-        allowEncodedHash: false
-{% if IngressConfig.http2https | default(false) %}
+  {% if ep.type == 'https' %}
+      tls: {}
+  {% endif %}
+  {% if ep.redirect %}
       redirections:
-        entrypoint:
-          to: https
+        entryPoint:
+          to: {{ ep.redirect.to }}
           scheme: https
-{% endif %}
-
-  https:
-    address: ":443"
-    reusePort: true
-{% if IngressConfig.runtime.forwarded is defined %}
-    forwardedHeaders:
-  {% if IngressConfig.runtime.forwarded.insecure is defined %}
-      insecure: {{ 'true' if IngressConfig.runtime.forwarded.insecure | default(false) else 'false' }}
-  {% elif IngressConfig.runtime.forwarded.trust is defined %}
-      trustedIPs:
-    {% for trust in IngressConfig.runtime.forwarded.trust %}
-        - "{{ trust }}"
-    {% endfor %}
+  {% if ep.redirect.priority is not none %}
+          priority: {{ ep.redirect.priority }}
   {% endif %}
-{% endif %}
-    http:
-      encodedCharacters:
-        allowEncodedSlash: false
-        allowEncodedBackSlash: false
-        allowEncodedNullCharacter: false
-        allowEncodedSemicolon: false
-        allowEncodedPercent: false
-        allowEncodedQuestionMark: false
-        allowEncodedHash: false
+  {% endif %}
+  {% endif %}
+  {% if ep.type == 'https' and ep.http3 | default(true) %}
     http3: {}
+  {% endif %}
+{% endfor %}
 
 {% if IngressConfig.dashboard is defined %}
 api:

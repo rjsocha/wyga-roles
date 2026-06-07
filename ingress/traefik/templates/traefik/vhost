@@ -22,7 +22,9 @@ http:
 {% if vhost.scheme.http | default(false) %}
     http-{{ vhost.id }}:
       entryPoints:
-        - http
+      {% for entrypoint in vhost.entrypoints.http %}
+        - {{ entrypoint }}
+      {% endfor %}
       middlewares:
         - middleware-{{ vhost.id }}@file
   {% if vhost.redirect %}
@@ -30,14 +32,16 @@ http:
   {% else %}
       service: service-{{ vhost.id }}
   {% endif %}
-      rule: {{ vhost.rule }}
+      rule: {{ vhost.rule.http }}
       priority: {{ vhost.priority | default(0) }}
 
 {% endif %}
 {% if vhost.scheme.https | default(false) %}
     https-{{ vhost.id }}:
       entryPoints:
-        - https
+      {% for entrypoint in vhost.entrypoints.https %}
+        - {{ entrypoint }}
+      {% endfor %}
       middlewares:
         - middleware-{{ vhost.id }}@file
   {% if vhost.redirect %}
@@ -45,7 +49,7 @@ http:
   {% else %}
       service: service-{{ vhost.id }}
   {% endif %}
-      rule: {{ vhost.rule }}
+      rule: {{ vhost.rule.https }}
       priority: {{ vhost.priority | default(0) }}
       tls:
   {% if vhost.tls != "none" %}

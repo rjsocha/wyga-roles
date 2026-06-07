@@ -56,7 +56,130 @@ def noduplicates(lst):
       result.append(item)
   return result
 
+def normalize_redirect(value):
+  if value is None:
+    return None
+  if isinstance(value, string_types):
+    parts = value.split(":", 1)
+    to = parts[0]
+    priority = None
+    if len(parts) > 1 and parts[1] != "":
+      try:
+        priority = int(parts[1])
+      except ValueError:
+        raise AnsibleFilterError("redirect priority '%s' is not an integer ..." % parts[1])
+  elif isinstance(value, dict):
+    if "to" not in value:
+      raise AnsibleFilterError("redirect missing 'to' key ...")
+    to = value["to"]
+    priority = value.get("priority")
+  else:
+    raise AnsibleFilterError("redirect must be string or dict, got %s instead ..." % type(value))
+  return { "to": to, "priority": priority }
+
+def normalize_entrypoints(ingress):
+  defaults = {
+    "http":  { "type": "http",  "address": "", "port": 80,  "default": False, "http3": True, "redirect": { "to": "https", "priority": 1 } },
+    "https": { "type": "https", "address": "", "port": 443, "default": True,  "http3": True, "redirect": None },
+  }
+  entrypoints = ingress.get("entrypoint")
+  if not entrypoints:
+    ingress["entrypoint"] = defaults
+    return
+  if not isinstance(entrypoints, dict):
+    raise AnsibleFilterError("entrypoint must be a dict, got %s instead ..." % type(entrypoints))
+  normalized = {}
+  for name, spec in entrypoints.items():
+    if spec == "default":
+      if name not in defaults:
+        raise AnsibleFilterError("entrypoint '%s' has no built-in 'default', only http/https do ..." % name)
+      normalized[name] = dict(defaults[name])
+      continue
+    spec = spec or {}
+    if not isinstance(spec, dict):
+      raise AnsibleFilterError("entrypoint '%s' must be a dict or 'default', got %s instead ..." % (name, type(spec)))
+    etype = spec.get("type")
+    if etype not in ( "http", "https" ):
+      raise AnsibleFilterError("entrypoint '%s' has invalid type '%s', must be 'http' or 'https' ..." % (name, etype))
+    normalized[name] = {
+      "type": etype,
+      "address": spec.get("address", spec.get("bind", "")),
+      "port": spec.get("port", 80 if etype == "http" else 443),
+      "default": spec.get("default", False),
+      "http3": spec.get("http3", True),
+      "redirect": normalize_redirect(spec.get("redirect")),
+    }
+  for name, ep in normalized.items():
+    if ep["redirect"] and ep["redirect"]["to"] not in normalized:
+      raise AnsibleFilterError("entrypoint '%s' redirect target '%s' is not a defined entrypoint ..." % (name, ep["redirect"]["to"]))
+  ingress["entrypoint"] = normalized
+
+def resolve_cert_path(path, store):
+  if path.startswith("/"):
+    return path
+  if not store:
+    raise AnsibleFilterError("relative certificate '%s' requires tls.store to be set ..." % path)
+  return "%s/%s.pem" % (store.rstrip("/"), path)
+
+def normalize_certificates(ingress):
+  tls = ingress.get("tls")
+  if not tls:
+    return
+  certs = tls.get("certificates")
+  if not certs:
+    return
+  provider = ingress.get("provider") or {}
+  if "file" not in provider:
+    raise AnsibleFilterError("tls.certificates requires the file provider (provider.file) to be enabled ...")
+  store = tls.get("store")
+  resolved = []
+  for entry in certs:
+    if isinstance(entry, string_types):
+      cert = key = entry
+    elif isinstance(entry, dict):
+      cert = entry.get("cert")
+      if not cert:
+        raise AnsibleFilterError("certificate entry missing 'cert' key ...")
+      key = entry.get("key", cert)
+    else:
+      raise AnsibleFilterError("certificate entry must be string or dict, got %s instead ..." % type(entry))
+    resolved.append({ "certFile": resolve_cert_path(cert, store), "keyFile": resolve_cert_path(key, store) })
+  tls["certificates"] = resolved
+
+def expand_redirects(ingress):
+  redirects = ingress.pop("redirect", None)
+  if not redirects:
+    return
+  if not isinstance(redirects, list):
+    raise AnsibleFilterError("redirect must be a list, got %s instead ..." % type(redirects))
+  vhosts = ingress.setdefault("vhost", [])
+  for entry in redirects:
+    if not isinstance(entry, dict):
+      raise AnsibleFilterError("redirect entry must be a dict, got %s instead ..." % type(entry))
+    to = entry.get("to")
+    if not to:
+      raise AnsibleFilterError("redirect entry missing 'to' key ...")
+    if "://" not in to:
+      to = "https://" + to
+    frm = entry.get("from")
+    if not frm:
+      raise AnsibleFilterError("redirect entry missing 'from' key ...")
+    sources = [ frm ] if isinstance(frm, string_types) else list(frm)
+    urls = []
+    for src in sources:
+      scheme = urlsplit(src).scheme
+      if scheme in ( "", "http2s" ):
+        host = urlsplit(src).hostname or src
+        urls.append("http://" + host)
+        urls.append("https://" + host)
+      else:
+        urls.append(src)
+    vhosts.append({ "to": to, "config": { "url": urls } })
+
 def process_ingress_config(ingress):
+  normalize_entrypoints(ingress)
+  normalize_certificates(ingress)
+  expand_redirects(ingress)
   runtime_files = [ "config.yaml" ]
   tls_domains = set()
 
@@ -77,10 +200,18 @@ def process_ingress_config(ingress):
   ingress.setdefault("acme", {})
   ingress["acme"]["files"] = list(acme_files)
 
-  dashboard_url = ingress.get("dashboard",{}).get("url")
+  dashboard = ingress.get("dashboard", {})
+  dashboard_url = dashboard.get("url")
   if dashboard_url:
-    dashboard_scheme = urlsplit(dashboard_url).scheme
-    if dashboard_scheme in [ 'https', 'http2s' ]:
+    dashboard_ep = dashboard.get("entrypoint", dashboard.get("via"))
+    if dashboard_ep is not None:
+      if dashboard_ep not in ingress["entrypoint"]:
+        raise AnsibleFilterError("dashboard entrypoint '%s' is not defined ..." % dashboard_ep)
+      dashboard["entrypoint"] = dashboard_ep
+      dashboard_tls = ingress["entrypoint"][dashboard_ep]["type"] == "https"
+    else:
+      dashboard_tls = urlsplit(dashboard_url).scheme in [ 'https', 'http2s' ]
+    if dashboard_tls:
       tls_domains.add(urlsplit(dashboard_url).hostname)
 
   if 'vhost' not in ingress:
@@ -218,9 +349,11 @@ def process_ingress_config(ingress):
         runtime["tls"] = "none"
     tls = runtime["tls"]
 
-    rule = str()
+    rule_http = str()
+    rule_https = str()
     http = https = http2s = False
-    seen_host = set()
+    seen_http = set()
+    seen_https = set()
     for url in urls:
       host = urlsplit(url).hostname
       scheme = urlsplit(url).scheme
@@ -232,20 +365,31 @@ def process_ingress_config(ingress):
         http = https = True
         cfg['redirect'].append("http2s://" + host)
         tls_domains.add(host)
+        if sans_empty:
+          sans.append(host)
+        if host not in seen_http:
+          seen_http.add(host)
+          rule_http = add_rule(rule_http, url, entry_count)
+        if host not in seen_https:
+          seen_https.add(host)
+          rule_https = add_rule(rule_https, url, entry_count)
       if scheme == "https":
         https = True
         if redirect:
           cfg['redirect'].append("https://" + host)
         tls_domains.add(host)
+        if sans_empty:
+          sans.append(host)
+        if host not in seen_https:
+          seen_https.add(host)
+          rule_https = add_rule(rule_https, url, entry_count)
       if scheme == "http":
         http = True
         if redirect:
-          cfg['redirect'].append("https://" + host)
-      if sans_empty:
-        sans.append(host)
-      if host not in seen_host:
-        seen_host.add(host)
-        rule = add_rule(rule,url, entry_count)
+          cfg['redirect'].append("http://" + host)
+        if host not in seen_http:
+          seen_http.add(host)
+          rule_http = add_rule(rule_http, url, entry_count)
 
     if http2s and (http or https):
       raise AnsibleFilterError("Mixed http2s and http or https schemes %s (%s) ..." % (urls[0], entry_count))
@@ -284,30 +428,35 @@ def process_ingress_config(ingress):
           if url in seen_redirect:
             raise AnsibleFilterError("redirect url already defined (http2s) %s (%s) ..." % (url, entry_count))
           seen_redirect.add(url)
-          seen_redirect.add(url)
           redirects.append( { "kind": "http2s", "id": to_id })
-          if host not in seen_host:
-            seen_host.add(host)
-            rule = add_rule(rule, url, entry_count)
+          if host not in seen_http:
+            seen_http.add(host)
+            rule_http = add_rule(rule_http, url, entry_count)
+          if host not in seen_https:
+            seen_https.add(host)
+            rule_https = add_rule(rule_https, url, entry_count)
           if sans_empty:
             sans.append(host)
           create_chain = False
           tls_domains.add(host)
         else:
-          if scheme == "http":
-            http = True
-          if scheme == "https":
-            https = True
-            tls_domains.add(host)
           url = scheme + "://" + host
           if url in seen_redirect:
             raise AnsibleFilterError("redirect url already defined %s (%s) ..." % (url, entry_count))
           seen_redirect.add(url)
-          if host not in seen_host:
-            seen_host.add(host)
-            rule = add_rule(rule, url, entry_count)
-          if scheme == "https" and sans_empty:
-            sans.append(host)
+          if scheme == "http":
+            http = True
+            if host not in seen_http:
+              seen_http.add(host)
+              rule_http = add_rule(rule_http, url, entry_count)
+          if scheme == "https":
+            https = True
+            tls_domains.add(host)
+            if host not in seen_https:
+              seen_https.add(host)
+              rule_https = add_rule(rule_https, url, entry_count)
+            if sans_empty:
+              sans.append(host)
           redirects.append( { "kind": "redirect", "id": to_id })
       unique = []
       seen = set()
@@ -322,11 +471,36 @@ def process_ingress_config(ingress):
         runtime_files.append(to_file)
         redirect_target.add(to)
 
-    runtime["rule"] = rule
+    runtime["rule"] = { "http": rule_http, "https": rule_https }
     runtime["scheme"] = {}
     runtime["scheme"]["http2s"] = http2s
     runtime["scheme"]["https"] = https
     runtime["scheme"]["http"] = http
+
+    via = cfg.get("entrypoint", cfg.get("via"))
+    if via is None:
+      http_eps = [ "http" ]
+      https_eps = [ "https" ]
+    else:
+      if isinstance(via, string_types):
+        via = [ via ]
+      elif not is_sequence(via):
+        raise AnsibleFilterError("via must be string or list, got %s instead (%s) ..." % (type(via), entry_count))
+      http_eps = []
+      https_eps = []
+      for ep_name in via:
+        if ep_name not in ingress["entrypoint"]:
+          raise AnsibleFilterError("vhost entrypoint '%s' is not defined (%s) ..." % (ep_name, entry_count))
+        if ingress["entrypoint"][ep_name]["type"] == "http":
+          http_eps.append(ep_name)
+        else:
+          https_eps.append(ep_name)
+      if http and not http_eps:
+        raise AnsibleFilterError("vhost %s serves http but 'via' lists no http-type entrypoint (%s) ..." % (urls[0], entry_count))
+      if https and not https_eps:
+        raise AnsibleFilterError("vhost %s serves https but 'via' lists no https-type entrypoint (%s) ..." % (urls[0], entry_count))
+    runtime["entrypoints"] = { "http": http_eps, "https": https_eps }
+
     runtime["san"] = noduplicates(sans)
     runtime["redirect"] = redirect
 

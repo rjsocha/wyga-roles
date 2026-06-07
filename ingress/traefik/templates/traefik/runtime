@@ -46,6 +46,27 @@ http:
         replacement: "/dashboard/"
 
   routers:
+{% if IngressConfig.dashboard.entrypoint is defined %}
+    traefik-dashboard:
+      entryPoints:
+        - {{ IngressConfig.dashboard.entrypoint }}
+      middlewares:
+  {% if confidential.ingress.dashboard.users is defined %}
+        - auth4dashboard
+  {% endif %}
+        - redirect2dashboard
+      service: api@internal
+      rule: Host(`{{ IngressConfig.dashboard.url | urlsplit('hostname') }}`)
+      priority: 999
+  {% if IngressConfig.entrypoint[IngressConfig.dashboard.entrypoint].type == 'https' %}
+    {% if IngressConfig.acme is defined and IngressConfig.dashboard.tls is defined and IngressConfig.dashboard.tls != "none" %}
+      tls:
+        certResolver: {{ IngressConfig.dashboard.tls }}
+    {% else %}
+      tls: {}
+    {% endif %}
+  {% endif %}
+{% else %}
 {% if IngressConfig.dashboard.url | urlsplit('scheme') == 'http' %}
     traefik-dashboard-http:
       entryPoints:
@@ -106,9 +127,17 @@ http:
       tls: {}
 {% endif %}
 {% endif %}
+{% endif %}
 
 {% endif %}
 tls:
+{% if IngressConfig.tls.certificates is defined %}
+  certificates:
+  {% for cert in IngressConfig.tls.certificates %}
+    - certFile: {{ cert.certFile }}
+      keyFile: {{ cert.keyFile }}
+  {% endfor %}
+{% endif %}
   options:
     default:
       sniStrict: false
