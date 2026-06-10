@@ -49,7 +49,7 @@
     path: "/etc/site/vpn/{{ vpn_instance.name }}"
 
 - name: "Preapre VPN instance ..."
-  command: /usr/sbin/nebula-vpn-setup {{ vpn_instance.name }}
+  command: nebula-vpn setup {{ vpn_instance.name }}
   changed_when: false
   environment:
     NEBULA_UNATTENDED_SETUP: true
