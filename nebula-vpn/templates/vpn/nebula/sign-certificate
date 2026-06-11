@@ -11,9 +11,9 @@ fi
 nebula-cert sign \
             -ca-crt "${{ '{' }}{{ tl_name | upper }}_NEBULA_CA}/ca.crt" \
             -ca-key "${{ '{' }}{{ tl_name | upper }}_NEBULA_CA}/ca.key" \
-            -in-pub "{{ playbook_dir }}/vpn/inbox/{{ tl_name }}-{{ template_hostname }}.pub" \
-            -out-crt "{{ playbook_dir }}/vpn/inbox/{{ tl_name }}-{{ template_hostname }}.crt" \
-            -name "{{ tl_hostname }}.{{ template_domain }}" \
+            -in-pub "{{ playbook_dir }}/vpn/inbox/{{ tl_name }}-{{ tl_hostname }}.pub" \
+            -out-crt "{{ playbook_dir }}/vpn/inbox/{{ tl_name }}-{{ tl_hostname }}.crt" \
+            -name "{{ tl_hostname }}.{{ tl_domain }}" \
 {% if tl_subnets | length > 0 %}
             -subnets "{{ ','.join(tl_subnets) }}" \
 {% endif %}
