@@ -14,7 +14,7 @@ nebula-cert sign \
             -in-pub "{{ playbook_dir }}/vpn/inbox/{{ template_name }}-{{ template_hostname }}.pub" \
             -out-crt "{{ playbook_dir }}/vpn/inbox/{{ template_name }}-{{ template_hostname }}.crt" \
             -name "{{ template_hostname }}.{{ template_domain }}" \
-{% if subnets | length > 0 %}
+{% if template_subnets | length > 0 %}
             -subnets "{{ ','.join(template_subnets) }}" \
 {% endif %}
             -ip "{{ template_ip }}"
