@@ -5,11 +5,11 @@
     dest: "{{ nebula_certificate_base }}-sign"
     mode: 0755
   vars:
-    ip: "{{ vpn_instance.ip }}"
-    name: "{{ vpn_instance.name }}"
-    hostname: "{{ vpn_instance.hostname }}"
-    subnets: "{{ (vpn.subnets if vpn.subnets is defined else node_subnets) | sort }}"
-    domain: "{{ vpn.domain | default('vpn') }}"
+    template_ip: "{{ vpn_instance.ip }}"
+    template_name: "{{ vpn_instance.name }}"
+    template_hostname: "{{ vpn_instance.hostname }}"
+    template_subnets: "{{ (vpn.subnets if vpn.subnets is defined else node_subnets) | sort }}"
+    template_domain: "{{ vpn.domain | default('vpn') }}"
   delegate_to: localhost
 
 - name: "Waiting for {{ nebula_certificate_base }}.crt ..."

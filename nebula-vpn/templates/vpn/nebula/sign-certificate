@@ -2,19 +2,19 @@
 set -eufo pipefail
 IFS=$'\t\n'
 
-if [[ -z ${{ '{' }}{{ name | upper }}_NEBULA_CA:-} ]]
+if [[ -z ${{ '{' }}{{ template_name | upper }}_NEBULA_CA:-} ]]
 then
-  printf -- "ERROR: {{ name | upper }}_NEBULA_CA not set ..."
+  printf -- "ERROR: {{ template_name | upper }}_NEBULA_CA not set ..."
   exit 10
 fi
 
 nebula-cert sign \
-            -ca-crt "${{ '{' }}{{ name | upper }}_NEBULA_CA}/ca.crt" \
-            -ca-key "${{ '{' }}{{ name | upper }}_NEBULA_CA}/ca.key" \
-            -in-pub "{{ playbook_dir }}/vpn/inbox/{{ name }}-{{ hostname }}.pub" \
-            -out-crt "{{ playbook_dir }}/vpn/inbox/{{ name }}-{{ hostname }}.crt" \
-            -name "{{ hostname }}.{{ domain }}" \
+            -ca-crt "${{ '{' }}{{ template_name | upper }}_NEBULA_CA}/ca.crt" \
+            -ca-key "${{ '{' }}{{ template_name | upper }}_NEBULA_CA}/ca.key" \
+            -in-pub "{{ playbook_dir }}/vpn/inbox/{{ template_name }}-{{ template_hostname }}.pub" \
+            -out-crt "{{ playbook_dir }}/vpn/inbox/{{ template_name }}-{{ template_hostname }}.crt" \
+            -name "{{ template_hostname }}.{{ template_domain }}" \
 {% if subnets | length > 0 %}
-            -subnets "{{ ','.join(subnets) }}" \
+            -subnets "{{ ','.join(template_subnets) }}" \
 {% endif %}
-            -ip "{{ ip }}"
+            -ip "{{ template_ip }}"
