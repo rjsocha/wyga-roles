@@ -1,12 +1,6 @@
 - name: "Append hostname ..."
   set_fact:
-    vpn_instance: "{{ vpn_entry | combine({ 'hostname': host.hostname}) }}"
-  when: vpn_entry.hostname is not defined
-
-- name: "Append hostname ..."
-  set_fact:
-    vpn_instance: "{{ vpn_entry }}"
-  when: vpn_entry.hostname is defined
+    vpn_instance: "{{ vpn_entry | combine({ 'hostname': vpn_entry.hostname if vpn_entry.hostname is defined else host.hostname }) }}"
 
 - name: "Load VPN configuration ..."
   include_vars:
@@ -126,13 +120,8 @@
         dest: "{{ playbook_dir }}/vpn/inbox/{{ vpn_instance.name }}-{{ vpn_instance.hostname }}.pub"
         flat: true
 
-    - name: "Manual certicate sign ..."
-      include_tasks: sign_cert_manual.yaml
-      when: vpn.ca.encrypted | default(true)
-
-    - name: "Automatic certicate sign ..."
-      include_tasks: sign_cert_auto.yaml
-      when: not vpn.ca.encrypted | default(true)
+    - name: "Sign Certicate ..."
+      include_tasks: sign.yaml
 
     - name: "Copy host certificate ..."
       copy:

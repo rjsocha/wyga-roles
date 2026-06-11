@@ -2,7 +2,7 @@
 - name: "Generate sign script ..."
   template:
     src: "vpn/nebula/sign-certificate"
-    dest: "{{ playbook_dir }}/vpn/inbox/{{ vpn_instance.name }}-{{ vpn_instance.hostname }}-sign"
+    dest: "{{ nebula_certificate_base }}-sign"
     mode: 0755
   vars:
     ip: "{{ vpn_instance.ip }}"
@@ -12,12 +12,12 @@
     domain: "{{ vpn.domain | default('vpn') }}"
   deleagate_to: localhost
 
-- name: "Waiting for vpn/inbox/{{ vpn_instance.name }}-{{ vpn_instance.hostname }}.crt ..."
+- name: "Waiting for {{ nebula_certificate_base }}.crt ..."
   debug: msg="..."
 
 - name: "Waiting for host.crt"
   wait_for:
-    path: "{{ playbook_dir }}/vpn/inbox/{{ vpn_instance.name }}-{{ vpn_instance.hostname }}.crt"
+    path: "{{ nebula_certificate_base }}.crt"
     state: present
     timeout: 300
   delegate_to: localhost

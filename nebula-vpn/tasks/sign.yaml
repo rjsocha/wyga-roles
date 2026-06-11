@@ -1,0 +1,66 @@
+- name: "Set Nebula CA for {{ vpn_instance.name }} path ..."
+  set_fact:
+    nebula_instance_config: "vpn/nebula/{{ vpn_instance.name }}"
+    nebula_ca_certificate: "vpn/nebula/{{ vpn_instance.name }}/ca.crt"
+
+- name: "Set Certificate base ..."
+  set_fact:
+    nebula_certificate_base: "{{ playbook_dir }}/vpn/inbox/{{ vpn_instance.name }}-{{ vpn_instance.hostname }}"
+
+- name: "Sign via ssh-agent ..."
+  block:
+    - name: "Check if Nebula CA key is present for {{ vpn_instance.name }} ..."
+      command:  nebula-tool sign ssh -ca-crt "{{ nebula_ca_certificate }}" -test
+      register: nebula_ca_key_present
+      ignore_errors: yes
+      changed_when: false
+      retries: 25
+      delegate_to: localhost
+      until: nebula_ca_key_present is success
+    - name: "Nebula CA key not loaded ..."
+      fail:
+        msg: "Nebula CA key for '{{ vpn_instance.name }}' is not loaded ..."
+      when: nebula_ca_key_present.rc != 0
+    - name: "Sign host certicate via ssh-agent ..."
+      command: >
+        nebula-tool sign ssh -ca-crt {{ nebula_ca_certificate }}
+                          -in-pub  {{ nebula_certificate_base }}.pub
+                          -out-crt {{ nebula_certificate_base }}.crt
+                          -name {{ vpn_instance.hostname }}.{{ vpn.domain | default('vpn') }}
+                          -subnets "{{ ','.join(vpn.subnets if vpn.subnets is defined else node_subnets) }}"
+                          -ip {{ vpn_instance.ip }}
+      delegate_to: localhost
+  when: vpn.ca.agent | default(false)
+
+- name: "Sign via nebula-cert ..."
+  block:
+    - name: "Manual certicate sign ..."
+      include_tasks: sign_cert_manual.yaml
+      when: vpn.ca.encrypted | default(true)
+
+    - name: "Automatic certicate sign ..."
+      include_tasks: sign_cert_auto.yaml
+      when: not vpn.ca.encrypted | default(true)
+  when: not vpn.ca.agent | default(false)
+
+- name: "Get host certicate ..."
+  command: nebula-cert print -path {{ nebula_certificate_base }}.crt
+  register: nebula_host_certificate
+  delegate_to: localhost
+
+- name: "Register certificate fingerprint ..."
+  set_fact:
+    nebula_host_fingerprint: "{{ (nebula_host_certificate.stdout | from_json).fingerprint }}"
+
+- name: "Ensure {{ nebula_instance_config }}/certificate/{{ host.hostname }} exists ..."
+  file:
+    state: directory
+    mode: 0755
+    path: "{{ nebula_instance_config }}/certificate/{{ host.hostname }}"
+  delegate_to: localhost
+
+- name: "Save host certificate ..."
+  copy:
+    src: "{{ nebula_certificate_base }}.crt"
+    dest: "{{ nebula_instance_config }}/certificate/{{ host.hostname }}/{{ nebula_host_fingerprint }}.crt"
+  delegate_to: localhost

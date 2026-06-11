@@ -12,8 +12,8 @@
   command: >
     nebula-cert sign  -ca-crt {{ ca_path }}/ca.crt
                       -ca-key {{ ca_path }}/ca.key
-                      -in-pub {{ playbook_dir }}/vpn/inbox/{{ vpn_instance.name }}-{{ vpn_instance.hostname }}.pub
-                      -out-crt {{ playbook_dir }}/vpn/inbox/{{ vpn_instance.name }}-{{ vpn_instance.hostname }}.crt
+                      -in-pub {{ nebula_certificate_base }}.pub
+                      -out-crt {{ nebula_certificate_base }}.crt
                       -name {{ vpn_instance.hostname }}.{{ vpn.domain | default('vpn') }}
                       -subnets "{{ ','.join(vpn.subnets if vpn.subnets is defined else node_subnets) }}"
                       -ip {{ vpn_instance.ip }}
