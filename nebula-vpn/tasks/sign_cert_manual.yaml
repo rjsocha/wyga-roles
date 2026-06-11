@@ -10,7 +10,7 @@
     hostname: "{{ vpn_instance.hostname }}"
     subnets: "{{ (vpn.subnets if vpn.subnets is defined else node_subnets) | sort }}"
     domain: "{{ vpn.domain | default('vpn') }}"
-  deleagate_to: localhost
+  delegate_to: localhost
 
 - name: "Waiting for {{ nebula_certificate_base }}.crt ..."
   debug: msg="..."
