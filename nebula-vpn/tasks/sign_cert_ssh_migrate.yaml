@@ -1,0 +1,22 @@
+- name: "Check if Nebula CA key is present for {{ vpn_instance.name }} ..."
+  command:  nebula-tool sign ssh -ca-crt "{{ vpn_instance.ca.migrate.crt }}" -test
+  register: nebula_ca_key_present
+  ignore_errors: yes
+  changed_when: false
+  retries: 25
+  delegate_to: localhost
+  until: nebula_ca_key_present is success
+- name: "Nebula CA key not loaded ..."
+  fail:
+    msg: "Nebula CA key for '{{ vpn_instance.name }}' is not loaded ..."
+  when: nebula_ca_key_present.rc != 0
+- name: "Sign host certificate via ssh-agent ..."
+  command: >
+    nebula-tool sign ssh -ca-crt "{{ vpn_instance.ca.migrate.crt }}"
+                      -in-pub "{{ nebula_certificate_base }}.pub"
+                      -out-crt "{{ nebula_certificate_base }}.crt.migrate"
+                      -name "{{ vpn_instance.fqdn }}"
+                      -unsafe-networks "{{ ','.join(vpn_instance.network.subnets) }}"
+                      -ip "{{ ','.join(vpn_instance.ip) }}"
+                      -version "{{ vpn_instance.ca.migrate.version }}"
+  delegate_to: localhost

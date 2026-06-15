@@ -1,7 +1,15 @@
 #jinja2: trim_blocks: True, lstrip_blocks: True
-name: {{ vpn_name }}.{{ vpn_domain }}
-ip: {{ vpn_ip }}
+ca: {{ instance.ca.hash }}
+version: {{ instance.ca.version }}
+hostname: {{ instance.hostname }}
+domain: {{ instance.domain }}
+ip: {{ ','.join(instance.ip) }}
+{% if instance.network.subnets | length > 0 %}
 subnets:
-{% for route in vpn_subnets %}
+{% for route in instance.network.subnets %}
   - {{ route }}
 {% endfor %}
+{% endif %}
+{% if instance.ca.migrate is defined %}
+migration: true
+{% endif %}

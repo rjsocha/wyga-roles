@@ -1,4 +1,8 @@
 ---
+- name: "Platform detection ..."
+  include_role:
+    name: wyga/platform
+
 - name: "Hostname setup ..."
   include_role:
     name: wyga/hostname

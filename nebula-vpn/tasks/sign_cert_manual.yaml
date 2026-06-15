@@ -1,15 +1,24 @@
 ---
+- name: "Verify migration state ..."
+  assert:
+    that:
+      - vpn_instance.ca.migrate is not defined
+    fail_msg: "Migration not supported ..."
+
+- name: "Verify CA configuration ..."
+  assert:
+    that:
+      - vpn_default_ca.key is defined
+      - vpn_default_ca.key is string
+      - vpn_default_ca.key | expandvars is file
+
 - name: "Generate sign script ..."
   template:
     src: "vpn/nebula/sign-certificate"
     dest: "{{ nebula_certificate_base }}-sign"
     mode: 0755
   vars:
-    tl_ip: "{{ vpn_instance.ip }}"
-    tl_name: "{{ vpn_instance.name }}"
-    tl_hostname: "{{ vpn_instance.hostname }}"
-    tl_subnets: "{{ (vpn.subnets if vpn.subnets is defined else node_subnets) | sort }}"
-    tl_domain: "{{ vpn.domain | default('vpn') }}"
+    instance: "{{ vpn_instance }}"
   delegate_to: localhost
 
 - name: "Waiting for {{ nebula_certificate_base }}.crt ..."

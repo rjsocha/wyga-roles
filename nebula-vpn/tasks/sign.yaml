@@ -1,16 +1,12 @@
-- name: "Set Nebula CA for {{ vpn_instance.name }} path ..."
+- name: "Prepare variables ..."
   set_fact:
     nebula_instance_config: "vpn/nebula/{{ vpn_instance.name }}"
-    nebula_ca_certificate: "vpn/nebula/{{ vpn_instance.name }}/ca.crt"
-
-- name: "Set Certificate base ..."
-  set_fact:
     nebula_certificate_base: "{{ playbook_dir }}/vpn/inbox/{{ vpn_instance.name }}-{{ vpn_instance.hostname }}"
 
 - name: "Sign via ssh-agent ..."
   block:
     - name: "Check if Nebula CA key is present for {{ vpn_instance.name }} ..."
-      command:  nebula-tool sign ssh -ca-crt "{{ nebula_ca_certificate }}" -test
+      command:  nebula-tool sign ssh -ca-crt "{{ vpn_instance.ca.crt }}" -test
       register: nebula_ca_key_present
       ignore_errors: yes
       changed_when: false
@@ -21,29 +17,34 @@
       fail:
         msg: "Nebula CA key for '{{ vpn_instance.name }}' is not loaded ..."
       when: nebula_ca_key_present.rc != 0
-    - name: "Sign host certicate via ssh-agent ..."
+    - name: "Sign host certificate via ssh-agent ..."
       command: >
-        nebula-tool sign ssh -ca-crt {{ nebula_ca_certificate }}
-                          -in-pub  {{ nebula_certificate_base }}.pub
-                          -out-crt {{ nebula_certificate_base }}.crt
-                          -name {{ vpn_instance.hostname }}.{{ vpn.domain | default('vpn') }}
-                          -subnets "{{ ','.join(vpn.subnets if vpn.subnets is defined else node_subnets) }}"
-                          -ip {{ vpn_instance.ip }}
+        nebula-tool sign ssh -ca-crt "{{ vpn_instance.ca.crt }}"
+                          -in-pub  "{{ nebula_certificate_base }}.pub"
+                          -out-crt "{{ nebula_certificate_base }}.crt"
+                          -name "{{ vpn_instance.fqdn }}"
+                          -unsafe-networks "{{ ','.join(vpn_instance.network.subnets) }}"
+                          -ip "{{ ','.join(vpn_instance.ip) }}"
+                          -version "{{ vpn_instance.ca.version }}"
       delegate_to: localhost
-  when: vpn.ca.agent | default(false)
+    - name: "Migrate CA path ..."
+      include_tasks: sign_cert_ssh_migrate.yaml
+      when: vpn_instance.ca.migrate is defined
+
+  when: vpn_instance.ca.agent | default(false)
 
 - name: "Sign via nebula-cert ..."
   block:
-    - name: "Manual certicate sign ..."
+    - name: "Manual certificate sign ..."
       include_tasks: sign_cert_manual.yaml
-      when: vpn.ca.encrypted | default(true)
+      when: vpn_instance.ca.encrypted | default(true)
 
-    - name: "Automatic certicate sign ..."
+    - name: "Automatic certificate sign ..."
       include_tasks: sign_cert_auto.yaml
-      when: not vpn.ca.encrypted | default(true)
-  when: not vpn.ca.agent | default(false)
+      when: not vpn_instance.ca.encrypted | default(true)
+  when: not vpn_instance.ca.agent | default(false)
 
-- name: "Get host certicate ..."
+- name: "Get host certificate ..."
   command: nebula-cert print -path {{ nebula_certificate_base }}.crt
   register: nebula_host_certificate
   delegate_to: localhost
@@ -64,3 +65,33 @@
     src: "{{ nebula_certificate_base }}.crt"
     dest: "{{ nebula_instance_config }}/certificate/{{ host.hostname }}/{{ nebula_host_fingerprint }}.crt"
   delegate_to: localhost
+
+# Merge certs
+- name: "Merge migrated certs ..."
+  block:
+    - name: "Set variable ..."
+      set_fact:
+        migrated_cert: ""
+
+    - name: "Concat all CA certs ..."
+      set_fact:
+        migrated_cert: "{{ migrated_cert  ~ (lookup('ansible.builtin.file', cert) | regex_replace('\n+$', '')) ~ '\n' }}"
+      loop:
+        - "{{ nebula_certificate_base }}.crt"
+        - "{{ nebula_certificate_base }}.crt.migrate"
+      loop_control:
+        loop_var: cert
+        label: "{{ cert }}"
+
+    - name: "Save host certificate ..."
+      copy:
+        content: "{{ migrated_cert }}"
+        dest: "{{ nebula_certificate_base }}.crt"
+      delegate_to: localhost
+
+    - name: "Save host certificate ..."
+      file:
+        path: "{{ nebula_certificate_base }}.crt.migrate"
+        state: absent
+      delegate_to: localhost
+  when: vpn_instance.ca.migrate is defined

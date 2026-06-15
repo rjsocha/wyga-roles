@@ -1,114 +1,104 @@
 #jinja2: trim_blocks: True, lstrip_blocks: True
 pki:
-  ca: /etc/site/vpn/{{ vpn_name }}/ca.crt
-  cert: /etc/site/vpn/{{ vpn_name }}/host.crt
-  key: /etc/site/vpn/{{ vpn_name }}/host.key
-{% if vpn.blocklist is defined %}
+  ca: |
+    {{ instance.ca.all | trim | indent(4) }}
+  cert: /etc/site/vpn/{{ instance.name }}/host.crt
+  key: /etc/site/vpn/{{ instance.name }}/host.key
+{% if instance.ca.migrate is defined %}
+  initiating_version: {{ instance.ca.migrate.version }}
+{% endif %}
+{% if instance.config.blocklist is defined %}
   blocklist:
-{% for block in vpn.blocklist %}
+{% for block in instance.config.blocklist %}
     - {{ block }}
 {% endfor %}
 {% endif %}
 
 static_host_map:
-{% for host in vpn.lighthouse.hosts.keys() %}
+{% for host in instance.config.lighthouse.hosts.keys() %}
   "{{ host }}":
-  {% for map in vpn.lighthouse.hosts[host] %}
+  {% for map in instance.config.lighthouse.hosts[host] %}
     - "{{ map }}"
   {% endfor %}
 {% endfor %}
 
-static_map:
-  cadence: 300s
-  network: ip4
-
 lighthouse:
-{% if am_lighthouse %}
+{% if instance.lighthouse %}
   am_lighthouse: true
-  {% if vpn.lighthouse.dns.enable | default(true) %}
+  {% if instance.config.lighthouse.dns.enable | default(true) %}
   serve_dns: true
   dns:
-    host: {{ vpn_ip }}
+    host: {{ instance.config.lighthouse.dns.bind if instance.config.lighthouse.dns.bind is defined else instance.ip | first | ansible.utils.ipaddr('address')  }}
     port: 53
   {% endif %}
 {% endif %}
-  interval: 10
+  interval: {{ instance.config.lighthouse.interval | default(60) }}
   hosts:
-    {% if not vpn_am_lighthouse %}
-    {% for host in vpn.lighthouse.hosts.keys() %}
+    {% if not instance.lighthouse %}
+    {% for host in instance.config.lighthouse.hosts.keys() %}
     - {{ host }}
     {% endfor %}
     {% endif %}
 
+{% if vpn_instance.port > 0 %}
 listen:
-  host: 0.0.0.0
-  port: {{ vpn_port if vpn_am_lighthouse else 0 }}
+  port: {{ vpn_instance.port }}
 
+{% elif instance.lighthouse %}
+listen:
+  port: 4242
+
+{% endif %}
 punchy:
   punch: true
   respond: true
   target_all_remotes: true
 
-cipher: {{ vpn.cipher | default('aes') }}
-{% if vpn_adjacent | length > 0 %}
+cipher: {{ instance.config.cipher | default('aes') }}
+{% if instance.network.adjacent | length > 0 %}
 
 preferred_ranges:
-{% for neig in vpn_adjacent %}
-  - "{{ neig }}"
+{% for neighbour in instance.network.adjacent %}
+  - "{{ neighbour }}"
 {% endfor %}
 {% endif %}
 
 relay:
-  {% if not vpn_am_lighthouse %}
+  {% if not instance.lighthouse %}
   relays:
-  {% for relay in vpn.lighthouse.hosts.keys() %}
+  {% for relay in instance.config.lighthouse.hosts.keys() %}
     - "{{ relay }}"
   {% endfor %}
+  {% if instance.network.relay == false %}
+  use_relays: false
   {% endif %}
-  am_relay: {{ 'true' if vpn_am_lighthouse else 'false' }}
-  use_relays: {{ 'true' if vpn_use_relays else 'false' }}
+  {% else %}
+  am_relay: true
+  use_relays: false
+  {% endif %}
 
 tun:
-  dev: {{ vpn.tun.dev | default('overlay0') }}
+  dev: {{ instance.config.tun.dev | default('overlay0') }}
   drop_local_broadcast: true
   drop_multicast: true
-{% if vpn.routing is defined or instance.routing is defined %}
+{% if instance.network.routing | length > 0 %}
   unsafe_routes:
-    {% if vpn.routing is defined %}
-    {% for via in vpn.routing.keys() if not via == vpn_ip %}
-    {% for route in vpn.routing[via] %}
+    {% for via in instance.network.routing.keys() if via not in instance.ip | map('ansible.utils.ipaddr', 'address') %}
+    {% for route in instance.network.routing[via] if route.to not in instance.network.local %}
     - route: {{ route.to }}
       via: {{ via }}
       metric: {{ route.metric | default(1000) }}
       install: true
     {% endfor %}
     {% endfor %}
-    {% endif %}
-    {% if instance.routing is defined %}
-    {% for via in instance.routing.keys() %}
-    {% for route in instance.routing[via] %}
-    - route: {{ route.to }}
-      via: {{ via }}
-      metric: {{ route.metric | default(1000) }}
-      install: true
-    {% endfor %}
-    {% endfor %}
-    {% endif %}
 {% endif %}
-{%if vpn_systemroute %}
+{%if instance.network.system_route %}
   use_system_route_table: true
 {% endif %}
 
 logging:
   level: fatal
   format: text
-  disable_timestamp: true
-
-handshakes:
-  try_interval: 100ms
-  retries: 10
-  query_buffer: 64
-  trigger_buffer: 64
 
 tunnels:
   drop_inactive: true
@@ -118,61 +108,22 @@ firewall:
   outbound_action: reject
   inbound_action: reject
 
-  conntrack:
-    tcp_timeout: 12m
-    udp_timeout: 3m
-    default_timeout: 10m
-
   outbound:
     - port: any
       proto: any
       host: any
- {% if vpn.routing is defined %}
-    {% for via in vpn.routing.keys() %}
-    {% for route in vpn.routing[via] %}
 
     - port: any
       proto: any
       host: any
-      local_cidr: {{ route.to }}
-    {% endfor %}
-    {% endfor %}
-{% endif %}
-{% if instance.routing is defined %}
-    {% for via in instance.routing.keys() %}
-    {% for route in instance.routing[via] %}
-
-    - port: any
-      proto: any
-      host: any
-      local_cidr: {{ route.to }}
-    {% endfor %}
-    {% endfor %}
-{% endif %}
+      local_cidr: 0.0.0.0/0
 
   inbound:
     - port: any
       proto: any
       host: any
- {% if vpn.routing is defined %}
-    {% for via in vpn.routing.keys() %}
-    {% for route in vpn.routing[via] %}
 
     - port: any
       proto: any
       host: any
-      local_cidr: {{ route.to }}
-    {% endfor %}
-    {% endfor %}
-{% endif %}
-{% if instance.routing is defined %}
-    {% for via in instance.routing.keys() %}
-    {% for route in instance.routing[via] %}
-
-    - port: any
-      proto: any
-      host: any
-      local_cidr: {{ route.to }}
-    {% endfor %}
-    {% endfor %}
-{% endif %}
+      local_cidr: 0.0.0.0/0

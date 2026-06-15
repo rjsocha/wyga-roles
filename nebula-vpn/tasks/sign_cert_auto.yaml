@@ -1,4 +1,17 @@
 ---
+- name: "Verify migration state ..."
+  assert:
+    that:
+      - vpn_instance.ca.migrate is not defined
+    fail_msg: "Migration not supported ..."
+
+- name: "Verify CA configuration ..."
+  assert:
+    that:
+      - vpn_instance.ca.key is defined
+      - vpn_instance.ca.key is string
+      - vpn_instance.ca.key | expandvars is file
+
 - name: "Get Nebula CA path ..."
   set_fact:
     ca_path: "{{ lookup('env', vpn_instance.name | upper ~ '_NEBULA_CA') }}"
@@ -8,13 +21,14 @@
     msg: "missing env {{ vpn_instance.name | upper }}_NEBULA_CA ..."
   when: ca_path | length == 0
 
-- name: "Sign host certicate ..."
+- name: "Sign host certificate ..."
   command: >
-    nebula-cert sign  -ca-crt {{ ca_path }}/ca.crt
-                      -ca-key {{ ca_path }}/ca.key
-                      -in-pub {{ nebula_certificate_base }}.pub
-                      -out-crt {{ nebula_certificate_base }}.crt
-                      -name {{ vpn_instance.hostname }}.{{ vpn.domain | default('vpn') }}
-                      -subnets "{{ ','.join(vpn.subnets if vpn.subnets is defined else node_subnets) }}"
-                      -ip {{ vpn_instance.ip }}
+    nebula-cert sign  -ca-crt "{{ vpn_instance.ca.crt }}"
+                      -ca-key "{{ vpn_instance.ca.key }}"
+                      -in-pub "{{ nebula_certificate_base }}.pub"
+                      -out-crt "{{ nebula_certificate_base }}.crt"
+                      -name "{{ vpn_instance.fqdn }}"
+                      -unsafe-networks "{{ ','.join(vpn_instance.network.subnets) }}"
+                      -ip "{{ ','.join(vpn_instance.ip) }}"
+                      -version "{{ vpn_instance.ca.version }}"
   delegate_to: localhost

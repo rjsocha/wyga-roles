@@ -2,19 +2,14 @@
 set -eufo pipefail
 IFS=$'\t\n'
 
-if [[ -z ${{ '{' }}{{ tl_name | upper }}_NEBULA_CA:-} ]]
-then
-  printf -- "ERROR: {{ tl_name | upper }}_NEBULA_CA not set ..."
-  exit 10
-fi
-
 nebula-cert sign \
-            -ca-crt "${{ '{' }}{{ tl_name | upper }}_NEBULA_CA}/ca.crt" \
-            -ca-key "${{ '{' }}{{ tl_name | upper }}_NEBULA_CA}/ca.key" \
-            -in-pub "{{ playbook_dir }}/vpn/inbox/{{ tl_name }}-{{ tl_hostname }}.pub" \
-            -out-crt "{{ playbook_dir }}/vpn/inbox/{{ tl_name }}-{{ tl_hostname }}.crt" \
-            -name "{{ tl_hostname }}.{{ tl_domain }}" \
-{% if tl_subnets | length > 0 %}
-            -subnets "{{ ','.join(tl_subnets) }}" \
+            -ca-crt "{{ instance.ca.crt }}" \
+            -ca-key "{{ instance.ca.key }}" \
+            -in-pub "{{ playbook_dir }}/vpn/inbox/{{ instance.name }}-{{ instance.hostname }}.pub" \
+            -out-crt "{{ playbook_dir }}/vpn/inbox/{{ instance.name }}-{{ instance.hostname }}.crt" \
+            -name "{{ instance.fqdn }}" \
+{% if instance.network.subnets | length > 0 %}
+            -unsafe-networks "{{ ','.join(instance.network.subnets) }}" \
 {% endif %}
-            -ip "{{ tl_ip }}"
+            -ip "{{ ','.join(instance.ip) }}" \
+            -version "{{ instance.ca.version }}"
