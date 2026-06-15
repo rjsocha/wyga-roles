@@ -124,8 +124,8 @@
           }} if vpn_migrate_ca | length > 0 else {})
       }, recursive=true) }}
 
-- debug:
-    var: vpn_instance
+#- debug:
+#    var: vpn_instance
 
 - name: "Ensure /etc/site/vpn/{{ vpn_instance.name }} exists ..."
   file:
