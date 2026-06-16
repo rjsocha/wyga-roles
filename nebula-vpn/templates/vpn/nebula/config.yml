@@ -81,10 +81,10 @@ tun:
   dev: {{ instance.config.tun.dev | default('overlay0') }}
   drop_local_broadcast: true
   drop_multicast: true
-{% if instance.network.routing | length > 0 %}
+{% if instance.network.route | length > 0 %}
   unsafe_routes:
-    {% for via in instance.network.routing.keys() if via not in instance.ip | map('ansible.utils.ipaddr', 'address') %}
-    {% for route in instance.network.routing[via] if route.to not in instance.network.local %}
+    {% for via in instance.network.route.keys() if via not in instance.ip | map('ansible.utils.ipaddr', 'address') %}
+    {% for route in instance.network.route[via] if route.to not in instance.network.local %}
     - route: {{ route.to }}
       via: {{ via }}
       metric: {{ route.metric | default(1000) }}
@@ -92,7 +92,7 @@ tun:
     {% endfor %}
     {% endfor %}
 {% endif %}
-{%if instance.network.system_route %}
+{%if 'system' in instance.network.routing %}
   use_system_route_table: true
 {% endif %}
 

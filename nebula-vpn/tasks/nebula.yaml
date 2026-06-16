@@ -82,13 +82,18 @@
 
 - name: "Node subnets ..."
   include_tasks: subnets.yaml
-  loop: "{{ vpn.routing | dict2items }}"
+  loop: "{{ vpn.route | dict2items }}"
   loop_control:
     loop_var: nebula_routes
     label: "{{ nebula_routes.key }}"
   when:
-    - vpn.routing is defined
+    - vpn.route is defined
     - nebula_routes.key in (vpn_instance.ip | map('ansible.utils.ipaddr', 'address') | list)
+
+- name: "Add any defined subnets ..."
+  set_fact:
+    node_subnets: "{{ node_subnets + vpn_entry.subnet.add }}"
+  when: vpn_entry.subnet.add is defined
 
 - name: "Update CA for instance ..."
   set_fact:
@@ -103,9 +108,9 @@
           'relay': vpn_instance.relay | default(true),
           'adjacent': vpn_instance.adjacents | default([]),
           'subnets': (vpn.subnets if vpn.subnets is defined else node_subnets) | sort,
-          'routing': vpn.routing | default({}) | combine(vpn_entry.routing | default({}), recursive=true),
+          'route': (vpn.route | default({}) | combine(vpn_entry.route | default({}), recursive=true)) if 'disable' not in (vpn_entry.routing | default([])) else [],
           'local': vpn_entry.local | default([]),
-          'system_route': true if vpn_instance.route is defined and vpn_instance.route == 'system' else false,
+          'routing': vpn_entry.routing | default([]),
         },
         'ca': {
           'crt': vpn_default_ca.crt | expandvars,
