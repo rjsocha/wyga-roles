@@ -49,6 +49,9 @@ baseline:
   - grub-efi-amd64
   - grub-efi-amd64-bin
   - grub-efi-amd64-signed
+  - grub-efi-arm64
+  - grub-efi-arm64-bin
+  - grub-efi-arm64-signed
   - grub-pc
   - grub-pc-bin
   - gzip
@@ -232,6 +235,7 @@ baseline:
   - sed
   - sensible-utils
   - shim-helpers-amd64-signed
+  - shim-helpers-arm64-signed
   - shim-signed
   - shim-signed-common
   - shim-unsigned

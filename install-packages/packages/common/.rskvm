@@ -1,12 +1,9 @@
 require:
-  - kvm-no-cloud-init
+  - dmi-spark
   - btrfs-progs
   - xfsprogs
   - iptables-persistent
   - tcpdump
   - iptraf-ng
-enable:
-  - kvm-no-cloud-init-network.service
-  - kvm-no-cloud-init-no-network.service
 repository:
   - wyga
