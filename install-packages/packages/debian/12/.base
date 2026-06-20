@@ -47,7 +47,6 @@ require:
   - vim
   - wget
   - whiptail
-  - wtmpdb
   - xz-utils
   - zstd
 purge:
