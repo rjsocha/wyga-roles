@@ -1,0 +1,91 @@
+- name: "plotka / build configuration ..."
+  set_fact:
+    plotka: []
+
+- name: "plotka / bind ..."
+  set_fact:
+    plotka: "{{ plotka + ['--bind ' ~ host.setup.plotka.bind] }}"
+  when: host.setup.plotka.bind is defined
+
+- name: "plotka / join ..."
+  set_fact:
+    plotka: "{{ plotka + ['--join ' ~ host.setup.plotka.join | join(',')] }}"
+  when: host.setup.plotka.join is defined
+
+- name: "plotka / advertise ..."
+  set_fact:
+    plotka: "{{ plotka + ['--advertise ' ~ host.setup.plotka.advertise] }}"
+  when: host.setup.plotka.advertise is defined
+
+- name: "plotka / registry.bind ..."
+  set_fact:
+    plotka: "{{ plotka + ['--registry-bind ' ~ host.setup.plotka.registry.bind] }}"
+  when: host.setup.plotka.registry.bind is defined
+
+- name: "plotka / registry.bind.http ..."
+  set_fact:
+    plotka: "{{ plotka + ['--registry-http-port ' ~ host.setup.plotka.registry.http |default('0')] }}"
+
+- name: "plotka / registry.bind.tcp ..."
+  set_fact:
+    plotka: "{{ plotka + ['--registry-tcp-port ' ~ host.setup.plotka.registry.tcp |default('0')] }}"
+
+- name: "plotka / registry.bind.dns ..."
+  set_fact:
+    plotka: "{{ plotka + ['--registry-dns-port ' ~ host.setup.plotka.registry.tcp |default('53')] }}"
+
+- name: "plotka / register ..."
+  set_fact:
+    plotka: "{{ plotka + ['--register ' ~ register] }}"
+  loop: "{{ host.setup.plotka.register | default([]) }}"
+  loop_control:
+    loop_var: register
+    label: "{{ register }}"
+
+- name: "plotka / purge.ttl ..."
+  set_fact:
+    plotka: "{{ plotka + ['--purge-ttl ' ~ host.setup.plotka.purge.ttl] }}"
+  when: host.setup.plotka.purge.ttl is defined
+
+- name: "plotka / purge.interval ..."
+  set_fact:
+    plotka: "{{ plotka + ['--purge-interval ' ~ host.setup.plotka.purge.interval] }}"
+  when: host.setup.plotka.purge.interval is defined
+
+- name: "plotka / verbose ..."
+  set_fact:
+    plotka: "{{ plotka + ['--verbose'] }}"
+  when: host.setup.plotka.verbose | default(false) | bool
+
+- name: "plotka / name ..."
+  set_fact:
+    plotka: "{{ plotka + ['--node-name ' ~ host.setup.plotka.name] }}"
+  when: host.setup.plotka.name is defined
+
+- name: "plotka / install ..."
+  include_role:
+    name: wyga/install-packages
+  vars:
+    packages:
+      - plotka
+
+- name: "plotka / config ..."
+  template:
+    src: "plotka/default"
+    dest: "/etc/default/plotka"
+    group: root
+    owner: root
+    mode: 0600
+  vars:
+    plotka: "{{ plotka }}"
+  notify:
+    - plotka-restart
+
+- name: "plotka / enable ..."
+  systemd:
+    name: "plotka.service"
+    enabled: true
+    daemon_reload: true
+    masked: no
+  notify:
+    - plotka-restart

@@ -20,6 +20,11 @@
   <ip address='{{ vm_gw }}' netmask='{{ vm_subnet | ansible.utils.ipaddr('netmask') }}'>
     <dhcp>
       <range start='{{ vm_dhcp_start }}' end='{{ vm_dhcp_end }}'/>
+{% if host.setup.kvm.network.dhcp.reservation is defined %}
+{% for reservation in host.setup.kvm.network.dhcp.reservation %}
+      <host mac="{{ reservation.mac }}"{{ ' name="' ~ reservation.name ~ '"' if reservation.name is defined else '' }} ip="{{ reservation.ip }}"/>
+{% endfor %}
+{% endif %}
     </dhcp>
   </ip>
 {% if host.setup.kvm.network.dhcp.rapid | default(true) %}

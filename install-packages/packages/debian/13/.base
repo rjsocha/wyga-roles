@@ -25,6 +25,7 @@ require:
   - iputils-ping
   - less
   - libpam-systemd
+  - libpam-wtmpdb
   - linux-sysctl-defaults
   - locales
   - logrotate
@@ -59,6 +60,7 @@ require:
   - vim
   - wget
   - whiptail
+  - wtmpdb
   - xz-utils
   - zstd
 purge:

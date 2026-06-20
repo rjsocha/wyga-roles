@@ -1,0 +1,5 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+{% if confidential.plotka.key is defined %}
+PLOTKA_CLUSTER_KEY="{{ confidential.plotka.key }}"
+{% endif %}
+PLOTKA_ARGS="{{ ' '.join(plotka) }}"

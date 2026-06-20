@@ -20,6 +20,8 @@ require:
   - iputils-ping
   - less
   - lsb-release
+  - libpam-systemd
+  - libpam-wtmpdb
   - lsof
   - mc
   - mtr-tiny
@@ -43,6 +45,8 @@ require:
   - unzip
   - vim
   - wget
+  - whiptail
+  - wtmpdb
   - xz-utils
   - zstd
 purge:

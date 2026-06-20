@@ -171,6 +171,11 @@
     name: wyga/ingress/fetch-tls
   when: host.setup.ingress.tls.fetch is defined
 
+- name: "Configure plotka Service ..."
+  include_role:
+    name: wyga/plotka
+  when: host.setup.plotka is defined
+
 - name: "Policy marker ..."
   include_tasks: "mark-policy.yaml"
 

@@ -1,0 +1,5 @@
+---
+- name: plotka-restart
+  systemd:
+    name: plotka
+    state: restarted

@@ -19,6 +19,7 @@ require:
   - iptables-persistent
   - less
   - libpam-systemd
+  - libpam-wtmpdb
   - lsb-release
   - lsof
   - mc
@@ -47,6 +48,7 @@ require:
   - vim
   - wget
   - whiptail
+  - wtmpdb
   - xz-utils
   - zstd
 purge:
