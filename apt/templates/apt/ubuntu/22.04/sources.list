@@ -1,4 +1,22 @@
 # HOST-POLICY IN USE - DO NOT EDIT BY HAND
+{% if platform.arch.package == "arm64" %}
+deb http://ports.ubuntu.com/ubuntu-ports jammy main restricted
+deb http://ports.ubuntu.com/ubuntu-ports jammy-updates main restricted
+deb http://ports.ubuntu.com/ubuntu-ports jammy-security main restricted
+{% if apt.universe %}
+deb http://ports.ubuntu.com/ubuntu-ports jammy universe
+deb http://ports.ubuntu.com/ubuntu-ports jammy-updates universe
+deb http://ports.ubuntu.com/ubuntu-ports jammy-security universe
+{% endif %}
+{% if apt.multiverse %}
+deb http://ports.ubuntu.com/ubuntu-ports jammy multiverse
+deb http://ports.ubuntu.com/ubuntu-ports jammy-updates multiverse
+deb http://ports.ubuntu.com/ubuntu-ports jammy-security multiverse
+{% endif %}
+{% if apt.backports %}
+deb http://ports.ubuntu.com/ubuntu-ports jammy-backports main restricted{% if apt.universe %} universe{% endif %}{% if apt.multiverse %} multiverse{% endif %}
+{% endif %}
+{% else %}
 {% if apt.mirror == "cdn" %}
 deb http://archive.ubuntu.com/ubuntu jammy main restricted
 deb http://archive.ubuntu.com/ubuntu jammy-updates main restricted
@@ -32,5 +50,6 @@ deb http://{{ apt.mirror }}.archive.ubuntu.com/ubuntu jammy-security multiverse
 {% endif %}
 {% if apt.backports %}
 deb http://{{ apt.mirror }}.archive.ubuntu.com/ubuntu jammy-backports main restricted{% if apt.universe %} universe{% endif %}{% if apt.multiverse %} multiverse{% endif %}
+{% endif %}
 {% endif %}
 {% endif %}
