@@ -1,4 +1,17 @@
 # managed by host-policy
+{% if platform.arch.package == "arm64" %}
+Types: deb
+URIs: http://ports.ubuntu.com/ubuntu-ports/
+Suites: noble noble-updates noble-backports
+Components: main universe restricted multiverse
+Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
+
+Types: deb
+URIs: http://ports.ubuntu.com/ubuntu-ports/
+Suites: noble-security
+Components: main universe restricted multiverse
+Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
+{% else %}
 {% if apt.mirror == "cdn" %}
 Types: deb
 URIs: http://archive.ubuntu.com/ubuntu/
@@ -18,3 +31,4 @@ URIs: http://security.ubuntu.com/ubuntu/
 Suites: noble-security
 Components: main universe restricted multiverse
 Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
+{% endif %}

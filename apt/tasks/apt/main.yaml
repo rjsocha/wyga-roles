@@ -60,6 +60,7 @@
     - sources.list~
     - sources.list.bak
     - sources.list.curtin.orig
+    - sources.list.d/ubuntu.sources.curtin.orig
 
 - name: "APT / Cleanup apt cache after sources change ..."
   shell: "find /var/lib/apt/lists /var/cache/apt -type f -delete && apt-get clean"
