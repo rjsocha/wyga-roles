@@ -115,6 +115,8 @@
 
 - name: "Workstation / GNOME Settings ..."
   block:
+    - debug:
+        var: host.setup.workstation.user
     - name: "Workstation / GNOME Settings ..."
       remote_user: "{{ host.setup.workstation.user }}"
       command:
