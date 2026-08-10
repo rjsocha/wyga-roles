@@ -1,6 +1,6 @@
 - name: "Use port/udp/tcp ..."
   set_fact:
-    fwrule: "{{ {} | combine({ 'dport': rule | split('/') | first, 'match': 'udp', 'proto': 'udp' }) }}"
+    fwrule: "{{ {} | combine({ 'dport': rule | split('/') | first | replace('-', ':'), 'match': 'udp', 'proto': 'udp' }) }}"
     rule_parsed: true
 
 - name: "Append rule ..."
@@ -9,7 +9,7 @@
 
 - name: "Use port/udp/tcp ..."
   set_fact:
-    fwrule: "{{ {} | combine({ 'dport': rule | split('/') | first, 'match': 'tcp', 'proto': 'tcp' }) }}"
+    fwrule: "{{ {} | combine({ 'dport': rule | split('/') | first | replace('-', ':'), 'match': 'tcp', 'proto': 'tcp' }) }}"
 
 - name: "Append rule ..."
   set_fact:

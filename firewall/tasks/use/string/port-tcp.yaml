@@ -1,6 +1,6 @@
 - name: "Use port/tcp ..."
   set_fact:
-    fwrule: "{{ {} | combine({ 'dport': rule | split('/') | first, 'match': 'tcp', 'proto': 'tcp' }) }}"
+    fwrule: "{{ {} | combine({ 'dport': rule | split('/') | first | replace('-', ':'), 'match': 'tcp', 'proto': 'tcp' }) }}"
     rule_parsed: true
 
 - name: "Append rule ..."
