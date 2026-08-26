@@ -17,7 +17,7 @@ Address={{ ip if '/' in ip else ip ~ '/32' }}
 DNS={{ interface.dns | ansible.utils.ipaddr('address') | join(' ') }}
 {% endif %}
 {% if interface.domains is defined %}
-Domains={{ interface.domains }}
+Domains={{ interface.domains if interface.domains is string else interface.domains | join(' ') }}
 {% endif %}
 LLMNR=no
 {% for route in routes %}

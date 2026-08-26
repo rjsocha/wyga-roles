@@ -6,6 +6,12 @@ Name={{ interface.name }}
 {% for ip in interface.ip %}
 Address={{ ip if '/' in ip else ip ~ '/32' }}
 {% endfor %}
+{% if interface.dns is defined %}
+DNS={{ [ interface.dns ] | flatten | ansible.utils.ipaddr('address') | join(' ') }}
+{% endif %}
+{% if interface.domains is defined %}
+Domains={{ interface.domains if interface.domains is string else interface.domains | join(' ') }}
+{% endif %}
 LLMNR=no
 LLDP=no
 IPv6AcceptRA=no

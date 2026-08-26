@@ -1,8 +1,3 @@
 - name: "Apply dummy template ..."
   set_fact:
-    interface:
-      match:
-        type: dummy
-      name: "{{ if_name }}"
-      method: static
-      ip: "{{ interface_entry.ip }}"
+    interface: "{{ {} | combine({'match': {'type': 'dummy' }, 'name': if_name, 'method': 'static' }) | combine(interface_entry) | combine({'use': omit}) }}"

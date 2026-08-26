@@ -9,6 +9,6 @@ IgnoreCarrierLoss=yes
 LinkLocalAddressing=no
 DNS={{ interface.dns | ansible.utils.ipaddr('address') | join(' ') }}
 {% if interface.domains is defined %}
-Domains={{ interface.domains }}
+Domains={{ interface.domains if interface.domains is string else interface.domains | join(' ') }}
 {% endif %}
 LLMNR=no
