@@ -77,7 +77,6 @@ require:
   - yaru-theme-gtk
   - yaru-theme-icon
   - yaru-theme-sound
-# gnome-core
   - gdm3
   - gnome-backgrounds
   - gnome-control-center
@@ -130,7 +129,6 @@ require:
   - make
   - sshpass
   - terraform
-  - tilix
   - flameshot
   - upx-ucl
   - build-essential
@@ -161,9 +159,12 @@ require:
   - unrar
   - graphicsmagick
   - python3-protobuf
-  - yad
   - ipv6calc
   - google-cloud-cli
   - google-cloud-cli-gke-gcloud-auth-plugin
   - aws-cli-v2
   - kubectl
+  - google-chrome-stable
+  - wyga-btsync
+  - kexec-reboot
+  - konsole

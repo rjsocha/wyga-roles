@@ -120,12 +120,12 @@ night-light-schedule-automatic=false
 [org/gnome/shell]
 app-picker-layout=[{'org.gnome.Settings.desktop': <{'position': <0>}>, 'gimp.desktop': <{'position': <1>}>, 'org.gnome.Connections.desktop': <{'position': <2>}>, 'a1b66376-8814-4599-a9f6-5ae65bad8010': <{'position': <3>}>, '674d515c-9884-49bb-82be-1ad460cd847b': <{'position': <4>}>, 'Utilities': <{'position': <5>}>, 'System': <{'position': <6>}>}]
 enabled-extensions=['dash-to-panel@jderose9.github.com', 'ubuntu-appindicators@ubuntu.com']
-favorite-apps=['org.gnome.Nautilus.desktop', 'com.gexperts.Tilix.desktop', 'google-chrome.desktop', 'firefox-esr.desktop', 'virt-manager.desktop', 'org.keepassxc.KeePassXC.desktop', 'slack.desktop', 'org.gnome.gedit.desktop']
+favorite-apps=['org.gnome.Nautilus.desktop', 'org.kde.konsole.desktop', 'google-chrome.desktop', 'firefox-esr.desktop', 'virt-manager.desktop', 'org.keepassxc.KeePassXC.desktop', 'slack.desktop', 'org.gnome.gedit.desktop']
 
 [org/gnome/shell/extensions/dash-to-panel]
 animate-app-switch=false
 animate-window-launch=false
-context-menu-entries='[{"title":"Terminal","cmd":"tilix"},{"title":"System monitor","cmd":"gnome-system-monitor"},{"title":"Extensions","cmd":"extension-manager"}]'
+context-menu-entries='[{"title":"Terminal","cmd":"konsole"},{"title":"System monitor","cmd":"gnome-system-monitor"},{"title":"Extensions","cmd":"extension-manager"}]'
 dot-position='BOTTOM'
 hide-overview-on-startup=true
 hotkeys-overlay-combo='TEMPORARILY'
