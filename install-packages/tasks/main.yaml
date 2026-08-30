@@ -23,7 +23,7 @@
   assert:
     that:
       - platform.distribution in [ 'ubuntu', 'debian' ]
-      - platform.version in [ "22.04", "24.04", "26.04", "12", "13" ]
+      - platform.version in [ "22.04", "24.04", "26.04", "12", "13", "14" ]
     fail_msg: "Unsupported distribution: {{ platform.distribution }} {{ platform.version }}"
     quiet: true
 

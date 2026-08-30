@@ -1,0 +1,27 @@
+{% set mirror_url = 'http://deb.debian.org/debian' if apt.mirror == 'cdn' else 'http://ftp.' ~ apt.mirror ~ '.debian.org/debian' %}
+# managed by host-policy
+Types: deb
+URIs: {{ mirror_url }}
+Suites: forky
+Components: main contrib non-free non-free-firmware
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+
+Types: deb
+URIs: {{ mirror_url }}
+Suites: forky-updates
+Components: main contrib non-free non-free-firmware
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+
+{% if apt.backports %}
+Types: deb
+URIs: {{ mirror_url }}
+Suites: forky-backports
+Components: main contrib non-free non-free-firmware
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+{% endif %}
+
+Types: deb
+URIs: http://deb.debian.org/debian-security
+Suites: forky-security
+Components: main contrib non-free non-free-firmware
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg

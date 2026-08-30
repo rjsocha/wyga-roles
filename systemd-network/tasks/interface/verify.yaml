@@ -136,6 +136,14 @@
     msg: "Unable to continue, check interface configuration ..."
   when: interface.method == 'dhcp'
 
+- name: "Verify configuration for interface.cid ..."
+  assert:
+    that:
+      - interface.method == 'dhcp'
+      - interface.cid in [ 'mac', 'duid' ]
+    msg: "Unable to continue, check interface configuration - 'cid' requires dhcp method and must be 'mac' or 'duid' ..."
+  when: interface.cid is defined
+
 - name: "Verify configuration for interface.mac ..."
   assert:
     that:

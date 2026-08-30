@@ -32,3 +32,6 @@ GatewayOnLink=yes
 RouteMetric=100
 UseMTU=yes
 UseHostname={{ 'yes' if interface.dhcp.usehostname | default(false) else 'no' }}
+{% if interface.cid is defined %}
+ClientIdentifier={{ interface.cid }}
+{% endif %}

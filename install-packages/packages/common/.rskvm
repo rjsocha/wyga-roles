@@ -4,6 +4,5 @@ require:
   - xfsprogs
   - iptables-persistent
   - tcpdump
-  - iptraf-ng
 repository:
   - wyga

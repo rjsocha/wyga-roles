@@ -8,7 +8,6 @@
     state: present
     key: "{{ lookup('file', playbook_dir ~ '/key/user/' ~ user_key) }}"
   become: true
-  become_method: "{{ method | default('sudo') }}"
   become_user: root
 
 - name: "Save connected user ..."

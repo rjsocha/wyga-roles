@@ -1,0 +1,6 @@
+require:
+  - linux-image-cloud-amd64:amd64
+  - linux-image-cloud-arm64:arm64
+  - qemu-guest-agent
+  - waagent
+  - hyperv-daemons
