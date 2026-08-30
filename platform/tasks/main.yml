@@ -17,3 +17,6 @@
     distribution: "{{ ansible_distribution | lower }}"
     version: "{{ ansible_distribution_version }}"
     arch: "{{ ansible_architecture }}"
+    allow_unsupported: "{{ allow_unsupported | default(false) | bool }}"
+    force_distribution: "{{ force_distribution | default(omit) }}"
+    force_distribution_version: "{{ force_distribution_version | default(omit) }}"

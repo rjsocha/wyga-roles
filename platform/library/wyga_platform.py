@@ -11,7 +11,8 @@ description:
     devices=['auto'], otherwise passes the provided list through.
   - Normalizes arch (x86_64 -> amd64, aarch64 -> arm64).
   - Validates distribution+version against the supported matrix; fails
-    on unsupported combinations. This makes the module the single
+    on unsupported combinations unless allow_unsupported is set, in
+    which case it only warns. This makes the module the single
     gate for "is this host supported" — other roles can trust 'platform'.
   - Currently supported - debian 12/13, ubuntu 22.04/24.04/26.04,
     on x86_64/aarch64.
@@ -39,6 +40,24 @@ options:
     description: Architecture as reported by ansible (e.g. 'x86_64', 'aarch64').
     type: str
     required: true
+  allow_unsupported:
+    description:
+      - Downgrade the distribution and version checks from fail to warn.
+      - Architecture is never bypassed; an unmapped arch always fails
+        because 'platform.arch.package' would have no valid value.
+    type: bool
+    default: false
+  force_distribution:
+    description:
+      - Replace the detected distribution name.
+      - Requires allow_unsupported; fails otherwise.
+    type: str
+  force_distribution_version:
+    description:
+      - Replace the detected distribution version, before normalization.
+      - Meant for releases ansible cannot report yet (e.g. debian testing).
+      - Requires allow_unsupported; fails otherwise.
+    type: str
 """
 
 RETURN = """
@@ -157,6 +176,9 @@ def main():
             distribution=dict(type='str', required=True),
             version=dict(type='str', required=True),
             arch=dict(type='str', required=True),
+            allow_unsupported=dict(type='bool', default=False),
+            force_distribution=dict(type='str'),
+            force_distribution_version=dict(type='str'),
         ),
         supports_check_mode=True,
     )
@@ -164,16 +186,33 @@ def main():
     distribution = module.params['distribution']
     version_raw = module.params['version']
     arch_raw = module.params['arch']
+    allow_unsupported = module.params['allow_unsupported']
+    force_distribution = module.params['force_distribution']
+    force_distribution_version = module.params['force_distribution_version']
+
+    if (force_distribution or force_distribution_version) and not allow_unsupported:
+        module.fail_json(
+            msg="force_distribution/force_distribution_version require allow_unsupported=true"
+        )
+    if force_distribution:
+        distribution = force_distribution.lower()
+    if force_distribution_version:
+        version_raw = force_distribution_version
+
+    def _reject(msg):
+        if not allow_unsupported:
+            module.fail_json(msg=msg)
+        module.warn(f"{msg}; accepted because allow_unsupported is set")
 
     if distribution not in _SUPPORTED:
-        module.fail_json(
-            msg=f"unsupported distribution {distribution!r}; "
+        _reject(
+            f"unsupported distribution {distribution!r}; "
             f"supported: {sorted(_SUPPORTED.keys())}"
         )
     version = _normalize_version(distribution, version_raw)
-    if version not in _SUPPORTED[distribution]:
-        module.fail_json(
-            msg=f"unsupported version {version_raw!r} (normalized {version!r}) "
+    if distribution in _SUPPORTED and version not in _SUPPORTED[distribution]:
+        _reject(
+            f"unsupported version {version_raw!r} (normalized {version!r}) "
             f"for {distribution!r}; supported: {_SUPPORTED[distribution]}"
         )
     if arch_raw not in _ARCH_MAP:
