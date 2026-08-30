@@ -1,3 +1,4 @@
 dependencies:
   - role: wyga/minimal-facts
+  - role: wyga/platform
   - role: wyga/ansible-tmp-directory

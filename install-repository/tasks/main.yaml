@@ -12,12 +12,12 @@
   include_tasks: "{{ lookup('first_found', params) }}"
   vars:
     repository: "{{ repository_name }}"
-    target: "{{ target_distribution }}"
-    version: "{{ target_distribution_version }}"
-    arch: "{{ target_arch }}"
+    target: "{{ platform.distribution }}"
+    version: "{{ platform.version }}"
+    arch: "{{ platform.arch.package }}"
     params:
       - files:
-          - "repository/{{ repository_name }}/{{ target_distribution }}/{{ target_distribution_version }}/main.yaml"
+          - "repository/{{ repository_name }}/{{ platform.distribution }}/{{ platform.version }}/main.yaml"
           - "repository/{{ repository_name }}/common/main.yaml"
-          - "local/tasks/repository/{{ target_distribution }}/{{ target_distribution_version }}/{{ repository_name }}.yml"
+          - "local/tasks/repository/{{ platform.distribution }}/{{ platform.version }}/{{ repository_name }}.yml"
           - "local/tasks/repository/generic/{{ repository_name }}.yml"

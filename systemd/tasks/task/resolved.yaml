@@ -12,7 +12,7 @@
         packages:
           - systemd-resolved
       when: "'systemd-resolved' is not in ansible_facts.packages"
-  when: target_distribution not in [ 'ubuntu' ] and target_distribution_version not in [ "22.04" ]
+  when: platform.distribution not in [ 'ubuntu' ] and platform.version not in [ "22.04" ]
 
 - name: "SYSTEMD / Resolved ..."
   file:

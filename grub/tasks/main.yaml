@@ -22,8 +22,8 @@
 - name: "Check if Distribution is supported ..."
   assert:
     that:
-      - target_distribution in ['ubuntu','debian']
-    fail_msg: "Unsupported distribution: {{ target_distribution }} {{ target_distribution_version }}"
+      - platform.distribution in ['ubuntu','debian']
+    fail_msg: "Unsupported distribution: {{ platform.distribution }} {{ platform.version }}"
     quiet: true
 
 - name: "GRUB / Site directory ..."

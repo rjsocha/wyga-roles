@@ -16,7 +16,7 @@
   register: _action
   retries: 25
   until: _action is success or ('Failed to lock apt for exclusive operation' not in _action.msg and '/var/lib/dpkg/lock' not in _action.msg)
-  when: target_distribution_version == '22.04'
+  when: platform.version == '22.04'
 
 - name: "Purge needrestart (Ubuntu 24.04) ..."
   apt:
@@ -28,7 +28,7 @@
   register: _action
   retries: 25
   until: _action is success or ('Failed to lock apt for exclusive operation' not in _action.msg and '/var/lib/dpkg/lock' not in _action.msg)
-  when: target_distribution_version == '24.04'
+  when: platform.version == '24.04'
 
 - name: "Purge packages (Ubuntu 24.04) ..."
   apt:
@@ -49,7 +49,7 @@
   register: _action
   retries: 25
   until: _action is success or ('Failed to lock apt for exclusive operation' not in _action.msg and '/var/lib/dpkg/lock' not in _action.msg)
-  when: target_distribution_version == '24.04'
+  when: platform.version == '24.04'
 
 - name: "Purge packages (Ubuntu 26.04) ..."
   apt:
@@ -67,7 +67,7 @@
   register: _action
   retries: 25
   until: _action is success or ('Failed to lock apt for exclusive operation' not in _action.msg and '/var/lib/dpkg/lock' not in _action.msg)
-  when: target_distribution_version == '26.04'
+  when: platform.version == '26.04'
 
 - name: "Cleanup after netplan ..."
   file:
