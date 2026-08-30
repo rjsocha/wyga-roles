@@ -1,19 +1,25 @@
 - name: "Check migration status ..."
-  stat:
-    path: /etc/site/network/mode
+  slurp:
+    src: /etc/site/network/mode
   register: net_migration_status
+  ignore_errors: true
+  no_log: true
+
+- name: "Current migration mode ..."
+  set_fact:
+    net_migration_mode: "{{ (net_migration_status.content | b64decode | trim) if net_migration_status.content is defined else '' }}"
 
 - name: "Migration ..."
   block:
-    - name: "Detect distribution ..."
-      include_role:
-        name: wyga/minimal-facts
+    - name: "Debian 14 network migration ..."
+      include_tasks: migrate/debian-14.yaml
+      when: platform.distribution == 'debian' and platform.version == '14'
 
     - name: "Debian network migration ..."
       include_tasks: migrate/debian.yaml
-      when: target_distribution == 'debian'
+      when: platform.distribution == 'debian' and platform.version != '14'
 
     - name: "Ubuntu network migration ..."
       include_tasks: migrate/ubuntu.yaml
-      when: target_distribution == 'ubuntu'
-  when: not net_migration_status.stat.exists
+      when: platform.distribution == 'ubuntu'
+  when: net_migration_mode != 'systemd-networkd'

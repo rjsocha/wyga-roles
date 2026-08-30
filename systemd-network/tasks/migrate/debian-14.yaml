@@ -1,0 +1,159 @@
+- name: "Read current boot id ..."
+  slurp:
+    src: /proc/sys/kernel/random/boot_id
+  register: net_migration_boot_id
+
+- name: "Current boot id ..."
+  set_fact:
+    net_boot_id: "{{ net_migration_boot_id.content | b64decode | trim }}"
+
+- name: "Network migration - stage 1 ..."
+  block:
+    - name: "Purge dhcpcd-base ..."
+      apt:
+        name:
+          - dhcpcd-base
+        state: absent
+        autoremove: yes
+        purge: yes
+      register: _action
+      retries: 25
+      until: _action is success or ('Failed to lock apt for exclusive operation' not in _action.msg and '/var/lib/dpkg/lock' not in _action.msg)
+
+    - name: "Disable networking.service ..."
+      systemd:
+        name: networking.service
+        enabled: false
+      ignore_errors: true
+      no_log: true
+
+    - name: "Enable systemd-networkd.service ..."
+      systemd:
+        name: systemd-networkd.service
+        enabled: true
+        masked: false
+
+    - name: "Create /etc/site/network directory ..."
+      file:
+        path: "/etc/site/network"
+        state: directory
+
+    - name: "Store boot id ..."
+      copy:
+        content: "{{ net_boot_id }}"
+        dest: "/etc/site/network/boot-id"
+        mode: "0644"
+        owner: "root"
+        group: "root"
+
+    - name: "Create migration marker (stage 1) ..."
+      copy:
+        content: "stage-1"
+        dest: "/etc/site/network/mode"
+        mode: "0644"
+        owner: "root"
+        group: "root"
+  when: net_migration_mode == ''
+
+- name: "Network migration - stage 2 ..."
+  block:
+    - name: "Read boot id stored by stage 1 ..."
+      slurp:
+        src: /etc/site/network/boot-id
+      register: net_migration_boot_id_stage_1
+      ignore_errors: true
+      no_log: true
+
+    - name: "Boot id stored by stage 1 ..."
+      set_fact:
+        net_boot_id_stage_1: "{{ (net_migration_boot_id_stage_1.content | b64decode | trim) if net_migration_boot_id_stage_1.content is defined else '' }}"
+
+    - name: "Waiting for reboot to finish the migration ..."
+      debug:
+        msg:
+          - "Network migration is in stage 1 - host has not been rebooted yet."
+          - "Reboot is required to complete the migration."
+      when: net_boot_id_stage_1 == net_boot_id
+
+    - name: "Cleanup ..."
+      block:
+        - name: "Check systemd-networkd.service state ..."
+          command: systemctl is-active systemd-networkd.service
+          register: net_networkd_state
+          changed_when: false
+          failed_when: false
+
+        - name: "Check networking.service state ..."
+          command: systemctl is-active networking.service
+          register: net_ifupdown_state
+          changed_when: false
+          failed_when: false
+
+        - name: "Verify the host came up on systemd-networkd ..."
+          assert:
+            that:
+              - net_networkd_state.stdout | trim == 'active'
+              - net_ifupdown_state.stdout | trim != 'active'
+            fail_msg: >
+              refusing to clean up - systemd-networkd is
+              '{{ net_networkd_state.stdout | trim }}' and networking.service is
+              '{{ net_ifupdown_state.stdout | trim }}'
+
+        - name: "Purge packages ..."
+          apt:
+            name:
+              - ifupdown
+              - isc-dhcp-client
+              - dhcp-client
+              - dhcpcd-base
+              - netplan.io
+            state: absent
+            autoremove: yes
+            purge: yes
+          register: _action
+          retries: 25
+          until: _action is success or ('Failed to lock apt for exclusive operation' not in _action.msg and '/var/lib/dpkg/lock' not in _action.msg)
+
+        - name: "Remove /etc/network/interfaces ..."
+          file:
+            path: /etc/network/interfaces
+            state: absent
+
+        - name: "Cleanup after netplan ..."
+          file:
+            path: "{{ netplan_cleanup }}"
+            state: absent
+          loop:
+            - /etc/netplan
+            - /usr/share/netplan
+            - /usr/lib/python3/dist-packages/netplan
+          loop_control:
+            loop_var: netplan_cleanup
+            label: "{{ netplan_cleanup }}"
+
+        # Digital Ocean
+        - name: "Cleanup providers files ..."
+          file:
+            path: "{{ provider_cleanup }}"
+            state: absent
+          loop:
+            - /etc/udev/rules.d/70-persistent-net.rules
+            - /etc/udev/rules.d/99-digitalocean-automount.rules
+          loop_control:
+            loop_var: provider_cleanup
+            label: "{{ provider_cleanup }}"
+
+        - name: "Update migration marker ..."
+          copy:
+            content: "systemd-networkd"
+            dest: "/etc/site/network/mode"
+            mode: "0644"
+            owner: "root"
+            group: "root"
+
+        - name: "Drop the stage 1 boot id ..."
+          file:
+            path: /etc/site/network/boot-id
+            state: absent
+      when: net_boot_id_stage_1 != net_boot_id
+  when: net_migration_mode == 'stage-1'
