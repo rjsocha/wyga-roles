@@ -187,6 +187,10 @@
 - name: "Trigger any pending reboots ..."
   meta: flush_handlers
 
+- name: "Network configuration (final) ..."
+  include_role:
+    name: wyga/systemd-network
+
 - name: "Process KITs ..."
   include_role:
     name: wyga/kit
