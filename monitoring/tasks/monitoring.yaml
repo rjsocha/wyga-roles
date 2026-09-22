@@ -76,6 +76,20 @@
     loop_var: agent
     label: "{{ agent }}"
 
+- name: "Resolve agent tokens (shared or per host) ..."
+  set_fact:
+    magent_token: >-
+      {{ magent_token | default({}) | combine({
+           agent: ((msecrets[agent].token ~ ':' ~ host.hostname) | hash('sha256'))
+                  if (msecrets[agent].per_host | default(false) | bool)
+                  else msecrets[agent].token
+         }) }}
+  loop: "{{ monitoring_config.host }}"
+  loop_control:
+    loop_var: agent
+    label: "{{ agent }}"
+  no_log: true
+
 - name: "Install check-mk-agent-push ..."
   include_role:
     name: wyga/install-packages
@@ -93,6 +107,8 @@
   vars:
     agents: "{{ monitoring_config.host }}"
     access: "{{ msecrets }}"
+    token: "{{ magent_token }}"
+    hostname: "{{ host.hostname }}"
 
 - name: "Cleanup ..."
   set_fact:
