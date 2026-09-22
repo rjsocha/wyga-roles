@@ -101,10 +101,35 @@
         ssh_firewall_file: "any"
       when: rule.allow is regex('(?i)^ssh$')
 
+    - name: "Find ssh hosts file ..."
+      set_fact:
+        ssh_firewall_path: "{{ query('first_found', params) | first | default('') }}"
+      vars:
+        ssh_firewall_dir: "{{ playbook_dir }}/site/{{ host_policy_site }}/firewall/ssh"
+        params:
+          skip: true
+          files:
+            - "{{ ssh_firewall_dir }}/{{ host.hostname }}/{{ ssh_firewall_file }}.yaml"
+            - "{{ ssh_firewall_dir }}/{{ host.hostname }}/{{ ssh_firewall_file }}"
+            - "{{ ssh_firewall_dir }}/{{ ssh_firewall_file }}.yaml"
+            - "{{ ssh_firewall_dir }}/{{ ssh_firewall_file }}"
+      when: ssh_firewall_file != 'any'
+
+    - name: "ERROR ..."
+      fail:
+        msg:
+          - "Unable to find ssh hosts file for {{ rule.allow }}"
+      when: ssh_firewall_file != 'any' and ssh_firewall_path == ''
+
     - name: "Load ssh hosts ..."
       include_vars:
-        file: "site/{{ host_policy_site }}/firewall/ssh/{{ ssh_firewall_file }}"
-        name: ssh_firewall_hosts
+        file: "{{ ssh_firewall_path }}"
+        name: ssh_firewall_loaded
+      when: ssh_firewall_file != 'any'
+
+    - name: "Select loaded ssh hosts ..."
+      set_fact:
+        ssh_firewall_hosts: "{{ ssh_firewall_loaded }}"
       when: ssh_firewall_file != 'any'
 
     - name: "Define 'any' ..."
@@ -116,10 +141,40 @@
 
     - name: "ERROR ..."
       fail:
-      when: ssh_firewall_hosts.hosts is not defined
+        msg:
+          - "Invalid ssh hosts file {{ ssh_firewall_path }}"
+      when: ssh_firewall_hosts.hosts is not defined and ssh_firewall_hosts.firewall.allow is not defined
 
     - name: "Append rule ..."
       set_fact:
         fwrules: "{{ fwrules + [ { 'match': 'tcp', 'proto': 'tcp', 'src': ssh_firewall_hosts.hosts, 'dport': 22 } ] }}"
+      when: ssh_firewall_hosts.hosts is defined
+
+    - name: "Process extended ssh hosts ..."
+      block:
+        - name: "ERROR ..."
+          fail:
+            msg:
+              - "Missing src in {{ ssh_firewall_path }}"
+          when: ssh_firewall_hosts.firewall.allow | rejectattr('src', 'defined') | list | length > 0
+
+        - name: "Append rules ..."
+          set_fact:
+            fwrules: "{{ fwrules + [ ssh_firewall_rule ] }}"
+          loop: "{{ ssh_firewall_hosts.firewall.allow }}"
+          loop_control:
+            loop_var: ssh_firewall_entry
+            label: "{{ ssh_firewall_entry }}"
+          vars:
+            ssh_firewall_rule: "{{
+              { 'match': 'tcp', 'proto': 'tcp', 'src': [ ssh_firewall_entry.src ] | flatten, 'dport': 22 }
+              | combine({ 'dst': [ ssh_firewall_entry.dst ] | flatten } if ssh_firewall_entry.dst is defined else {})
+              | combine({ 'iface': ssh_firewall_entry.iface } if ssh_firewall_entry.iface is defined else {})
+              | combine({ 'comment': ssh_firewall_entry.comment } if ssh_firewall_entry.comment is defined else {})
+            }}"
+      when: ssh_firewall_hosts.hosts is not defined
+
+    - name: "Rule parsed ..."
+      set_fact:
         rule_parsed: true
   when: rule.allow is regex('(?i)^ssh/[a-z][a-z0-9-]{1,18}[a-z0-9]$') or rule.allow is regex('(?i)^ssh$')
