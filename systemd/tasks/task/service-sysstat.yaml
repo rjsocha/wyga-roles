@@ -1,4 +1,13 @@
 ---
+- name: "SYSTEMD / Service / sysstat / debconf ..."
+  debconf:
+    name: sysstat
+    question: sysstat/enable
+    vtype: boolean
+    value: "{{ 'true' if systemdConfig.service.sysstat.enable | default(false) else 'false' }}"
+  notify:
+    - systemd-service-sysstat
+
 - name: "SYSTEMD / Service / sysstat / timer ..."
   file:
     path: "/etc/systemd/system/sysstat-collect.timer.d"
