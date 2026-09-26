@@ -1,7 +1,7 @@
 # wyga/maintenance
 
 Periodic maintenance scripts driven by host policy. Each maintenance type
-(currently `docker`) gets:
+(`docker`, `gitlab-runner`) gets:
 
 - `/opt/maintenance/<type>` - the script, shipped by the role
 - `/etc/site/maintenance/<type>` - bash array `MAINTENANCE=(...)` with the
@@ -55,6 +55,17 @@ after boot.
 | `container` | `docker container prune --force` |
 | `network` | `docker network prune --force` |
 
+### GitLab Runner actions
+
+| action | command |
+|---|---|
+| `cache` | remove every `cache.zip` under `/home/gitlab-runner/cache` |
+
+Only `cache.zip` files are removed, directories stay. The runner saves a
+cache into a temporary file and renames it over `cache.zip`, so a job that
+is restoring or saving cache during the cleanup is not affected - the
+next job without a cache starts from scratch.
+
 An unknown action fails the playbook.
 
 ## Examples
@@ -81,6 +92,17 @@ maintenance:
     run:
       - system
       - volume
+```
+
+### Shell runner with growing local cache
+
+Terraform providers pile up in a cache key on every provider bump:
+
+```yaml
+maintenance:
+  gitlab-runner:
+    run:
+      - cache
 ```
 
 ### Disable

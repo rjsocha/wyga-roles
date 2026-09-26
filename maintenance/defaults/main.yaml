@@ -1,5 +1,6 @@
 maintenance_types:
   - docker
+  - gitlab-runner
 
 maintenance_schedule: weekly
 maintenance_timezone: UTC
@@ -27,6 +28,9 @@ maintenance_actions:
     - builder
     - container
     - network
+  gitlab-runner:
+    - cache
 
 maintenance_after:
   docker: docker.service
+  gitlab-runner: gitlab-runner.service

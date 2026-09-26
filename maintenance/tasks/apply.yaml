@@ -70,3 +70,4 @@
     enabled: true
     daemon_reload: "{{ maintenance_units.changed }}"
     state: "{{ 'restarted' if maintenance_units.changed else 'started' }}"
+  when: not (ansible_check_mode and maintenance_units.changed)

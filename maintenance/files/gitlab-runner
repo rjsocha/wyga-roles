@@ -1,0 +1,28 @@
+#!/bin/bash
+set -eufo pipefail
+IFS=$'\t\n'
+
+CONFIG="/etc/site/maintenance/gitlab-runner"
+CACHE="/home/gitlab-runner/cache"
+
+MAINTENANCE=()
+[[ -s ${CONFIG} ]] && source "${CONFIG}"
+
+cache() {
+  [[ -d ${CACHE} ]] || {
+    printf -- 'cache: %s not found, skipped\n' "${CACHE}"
+    return 0
+  }
+  find "${CACHE}" -type f -name cache.zip -print -delete
+}
+
+for action in ${MAINTENANCE[@]}; do
+  printf -- 'gitlab-runner / %s\n' "${action}"
+  case "${action}" in
+    cache) cache ;;
+    *)
+      printf -- 'gitlab-runner / %s: unknown action\n' "${action}" >&2
+      exit 1
+      ;;
+  esac
+done
