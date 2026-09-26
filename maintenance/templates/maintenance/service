@@ -1,0 +1,11 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+# managed by host-policy
+[Unit]
+Description=Maintenance ({{ maintenance_type }})
+{% if maintenance_after[maintenance_type] is defined %}
+After={{ maintenance_after[maintenance_type] }}
+{% endif %}
+
+[Service]
+Type=oneshot
+ExecStart=/opt/maintenance/{{ maintenance_type }}

@@ -1,0 +1,46 @@
+#!/bin/bash
+set -eufo pipefail
+IFS=$'\t\n'
+
+CONFIG="/etc/site/maintenance/docker"
+BUILDKIT_AGE="$(( 12 * 60 * 60 ))"
+
+MAINTENANCE=()
+[[ -s ${CONFIG} ]] && source "${CONFIG}"
+
+buildkit() {
+  local now started
+  now="$(date +%s)"
+  for container in $(docker container ls --all --format '{{.Names}}'); do
+    [[ ${container} == buildx_buildkit_* ]] || continue
+    started="$(date -d "$(docker container inspect --format '{{.State.StartedAt}}' "${container}")" +%s)"
+    if (( now - started < BUILDKIT_AGE )); then
+      printf -- 'buildkit: %s younger than %ss, skipped\n' "${container}" "${BUILDKIT_AGE}"
+      continue
+    fi
+    docker container rm --force "${container}"
+  done
+  for volume in $(docker volume ls --quiet); do
+    [[ ${volume} == buildx_buildkit_*_state ]] || continue
+    docker container inspect "${volume%_state}" &>/dev/null && continue
+    docker volume rm "${volume}" || printf -- 'buildkit: volume %s in use, skipped\n' "${volume}" >&2
+  done
+}
+
+for action in ${MAINTENANCE[@]}; do
+  printf -- 'docker / %s\n' "${action}"
+  case "${action}" in
+    buildkit) buildkit ;;
+    image) docker image prune --all --force ;;
+    volume) docker volume prune --all --force ;;
+    anonymous-volumes) docker volume prune --force ;;
+    system) docker system prune --all --force --volumes ;;
+    builder) docker builder prune --all --force ;;
+    container) docker container prune --force ;;
+    network) docker network prune --force ;;
+    *)
+      printf -- 'docker / %s: unknown action\n' "${action}" >&2
+      exit 1
+      ;;
+  esac
+done

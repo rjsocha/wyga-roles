@@ -136,6 +136,10 @@
     name: wyga/docker
   when: host.setup.docker is defined
 
+- name: "Maintenance ..."
+  include_role:
+    name: wyga/maintenance
+
 - name: "Firewall ..."
   include_role:
     name: wyga/firewall

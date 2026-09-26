@@ -1,0 +1,13 @@
+- name: "Maintenance / Apply ..."
+  include_tasks: apply.yaml
+  loop: "{{ maintenance_types }}"
+  loop_control:
+    loop_var: maintenance_type
+  when: maintenance_type in host.maintenance | default({})
+
+- name: "Maintenance / Remove ..."
+  include_tasks: remove.yaml
+  loop: "{{ maintenance_types }}"
+  loop_control:
+    loop_var: maintenance_type
+  when: maintenance_type not in host.maintenance | default({})

@@ -1,0 +1,32 @@
+maintenance_types:
+  - docker
+
+maintenance_schedule: weekly
+maintenance_timezone: UTC
+
+maintenance_calendar:
+  hourly: "*-*-* *:00:00"
+  daily: "*-*-* 03:00:00"
+  weekly: "Sun *-*-* 03:00:00"
+  monthly: "*-*-01 03:00:00"
+  monday: "Mon *-*-* 03:00:00"
+  tuesday: "Tue *-*-* 03:00:00"
+  wednesday: "Wed *-*-* 03:00:00"
+  thursday: "Thu *-*-* 03:00:00"
+  friday: "Fri *-*-* 03:00:00"
+  saturday: "Sat *-*-* 03:00:00"
+  sunday: "Sun *-*-* 03:00:00"
+
+maintenance_actions:
+  docker:
+    - buildkit
+    - image
+    - volume
+    - anonymous-volumes
+    - system
+    - builder
+    - container
+    - network
+
+maintenance_after:
+  docker: docker.service

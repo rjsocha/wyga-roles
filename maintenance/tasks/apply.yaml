@@ -1,0 +1,72 @@
+- name: "Maintenance / {{ maintenance_type }} / Prepare configuration ..."
+  set_fact:
+    maintenance_run: "{{ maintenance_config.run | default([], true) }}"
+    maintenance_on_calendar: "{{ maintenance_calendar[maintenance_config.schedule | default(maintenance_schedule)] | default('') }} {{ maintenance_config.timezone | default(maintenance_timezone) }}"
+  vars:
+    maintenance_config: "{{ host.maintenance[maintenance_type] | default({}, true) }}"
+
+- name: "Maintenance / {{ maintenance_type }} / Checks ..."
+  assert:
+    that:
+      - (host.maintenance[maintenance_type] | default({}, true)).schedule | default(maintenance_schedule) in maintenance_calendar
+      - maintenance_run is sequence and maintenance_run is not string
+      - maintenance_run | difference(maintenance_actions[maintenance_type]) | length == 0
+    fail_msg:
+      - "maintenance.{{ maintenance_type }} ..."
+      - "schedule: {{ maintenance_calendar.keys() | join(', ') }}"
+      - "run: {{ maintenance_actions[maintenance_type] | join(', ') }}"
+
+- name: "Maintenance / {{ maintenance_type }} / Verify calendar ..."
+  command: "systemd-analyze calendar '{{ maintenance_on_calendar }}'"
+  check_mode: false
+  changed_when: false
+
+- name: "Maintenance / {{ maintenance_type }} / Directories ..."
+  file:
+    path: "{{ maintenance_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+  loop:
+    - /etc/site/maintenance
+    - /opt/maintenance
+  loop_control:
+    loop_var: maintenance_dir
+
+- name: "Maintenance / {{ maintenance_type }} / Configuration ..."
+  template:
+    src: maintenance/config
+    dest: "/etc/site/maintenance/{{ maintenance_type }}"
+    owner: root
+    group: root
+    mode: 0644
+
+- name: "Maintenance / {{ maintenance_type }} / Script ..."
+  copy:
+    src: "{{ maintenance_type }}"
+    dest: "/opt/maintenance/{{ maintenance_type }}"
+    owner: root
+    group: root
+    mode: 0755
+
+- name: "Maintenance / {{ maintenance_type }} / Units ..."
+  template:
+    src: "maintenance/{{ maintenance_unit }}"
+    dest: "/etc/systemd/system/maintenance-{{ maintenance_type }}.{{ maintenance_unit }}"
+    owner: root
+    group: root
+    mode: 0644
+  loop:
+    - service
+    - timer
+  loop_control:
+    loop_var: maintenance_unit
+  register: maintenance_units
+
+- name: "Maintenance / {{ maintenance_type }} / Timer ..."
+  systemd:
+    name: "maintenance-{{ maintenance_type }}.timer"
+    enabled: true
+    daemon_reload: "{{ maintenance_units.changed }}"
+    state: "{{ 'restarted' if maintenance_units.changed else 'started' }}"

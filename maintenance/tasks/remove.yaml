@@ -1,0 +1,28 @@
+- name: "Maintenance / {{ maintenance_type }} / Check timer ..."
+  stat:
+    path: "/etc/systemd/system/maintenance-{{ maintenance_type }}.timer"
+  register: maintenance_timer
+
+- name: "Maintenance / {{ maintenance_type }} / Disable timer ..."
+  systemd:
+    name: "maintenance-{{ maintenance_type }}.timer"
+    enabled: false
+    state: stopped
+  when: maintenance_timer.stat.exists
+
+- name: "Maintenance / {{ maintenance_type }} / Remove files ..."
+  file:
+    path: "{{ maintenance_file }}"
+    state: absent
+  loop:
+    - "/etc/systemd/system/maintenance-{{ maintenance_type }}.timer"
+    - "/etc/systemd/system/maintenance-{{ maintenance_type }}.service"
+    - "/etc/site/maintenance/{{ maintenance_type }}"
+    - "/opt/maintenance/{{ maintenance_type }}"
+  loop_control:
+    loop_var: maintenance_file
+
+- name: "Maintenance / {{ maintenance_type }} / Reload systemd ..."
+  systemd:
+    daemon_reload: true
+  when: maintenance_timer.stat.exists

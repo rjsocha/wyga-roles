@@ -1,0 +1,11 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+# managed by host-policy
+[Unit]
+Description=Maintenance ({{ maintenance_type }}) timer
+
+[Timer]
+OnCalendar={{ maintenance_on_calendar }}
+Persistent=true
+
+[Install]
+WantedBy=timers.target
