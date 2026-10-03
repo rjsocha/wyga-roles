@@ -503,15 +503,13 @@ def process_ingress_config(ingress):
 
     create_chain = True
     if 'redirect' in cfg:
-      redir = list(set(cfg["redirect"]))
-      redirects_list = []
-      redirects = []
+      redir = cfg["redirect"]
       if isinstance(redir, string_types):
-        redirects_list.append(redir)
-      elif is_sequence(redir):
-        redirects_list.extend(redir)
-      else:
+        redir = [ redir ]
+      elif not is_sequence(redir):
         raise AnsibleFilterError("redirect must be string or list, got %s instead (%s) ..." % (type(redir), entry_count))
+      redirects_list = list(dict.fromkeys(redir))
+      redirects = []
       if redirect:
         to = vhost['to']
       else:
