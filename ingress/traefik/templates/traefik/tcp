@@ -1,4 +1,5 @@
 #jinja2: trim_blocks: True, lstrip_blocks: True
+{% from 'traefik/tls-options' import tls_options %}
 {% set weighted = tcp.servers | selectattr('weight', 'defined') | list | length > 0 %}
 tcp:
   routers:
@@ -14,6 +15,9 @@ tcp:
         passthrough: true
 {% elif tcp.tls != "none" %}
       tls:
+  {% if tcp.alpn %}
+        options: tcp-{{ tcp.id }}
+  {% endif %}
         certResolver: {{ tcp.tls }}
         domains:
           - main: '{{ tcp.sni[0] }}'
@@ -23,6 +27,9 @@ tcp:
               - '{{ san }}'
     {% endfor %}
   {% endif %}
+{% elif tcp.alpn %}
+      tls:
+        options: tcp-{{ tcp.id }}
 {% else %}
       tls: {}
 {% endif %}
@@ -48,6 +55,17 @@ tcp:
         servers:
   {% for server in tcp.servers %}
           - address: "{{ server.address }}"
+  {% endfor %}
+{% endif %}
+{% if tcp.alpn %}
+
+tls:
+  options:
+    tcp-{{ tcp.id }}:
+      {{ tls_options() | indent(6) }}
+      alpnProtocols:
+  {% for protocol in tcp.alpn %}
+        - {{ protocol | to_json }}
   {% endfor %}
 {% endif %}
 {# PROXY protocol (not implemented): a tcp.serversTransports entry with proxyProtocol.version, referenced by serversTransport on each loadBalancer above. #}

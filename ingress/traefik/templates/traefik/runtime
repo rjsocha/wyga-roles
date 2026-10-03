@@ -1,4 +1,5 @@
 #jinja2: trim_blocks: True, lstrip_blocks: True
+{% from 'traefik/tls-options' import tls_options %}
 {% set dashboard_users = confidential.setup.ingress.traefik.dashboard.users | default(confidential.ingress.dashboard.users | default([])) %}
 http:
   middlewares:
@@ -141,13 +142,4 @@ tls:
 {% endif %}
   options:
     default:
-      sniStrict: false
-      minVersion: VersionTLS12
-      # Based on https://ssl-config.mozilla.org/#server=traefik&version=2.1.2&config=intermediate&guideline=5.6
-      cipherSuites:
-        - TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256
-        - TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-        - TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384
-        - TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-        - TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305
-        - TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305
+      {{ tls_options() | indent(6) }}

@@ -177,7 +177,7 @@ def expand_redirects(ingress):
         urls.append(src)
     vhosts.append({ "to": to, "config": { "url": urls } })
 
-TCP_KEYS = ( "sni", "upstream", "tls", "passthrough" )
+TCP_KEYS = ( "sni", "upstream", "tls", "passthrough", "alpn" )
 TCP_NAME = re.compile(r"^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?(\.[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)*$")
 TCP_HOST = re.compile(r"^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?(\.[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)*|\[[0-9a-f:.]+\])$")
 
@@ -201,6 +201,15 @@ def tcp_address(address, entry_count):
   if not port.isdigit() or not 0 < int(port) < 65536:
     raise AnsibleFilterError("tcp upstream '%s' has an invalid port (tcp %s) ..." % (address, entry_count))
   return address
+
+def tcp_alpn(alpn, entry_count):
+  protocols = [ alpn ] if isinstance(alpn, string_types) else alpn
+  if not is_sequence(protocols) or not protocols:
+    raise AnsibleFilterError("tcp alpn must be a protocol or a non-empty list of protocols (tcp %s) ..." % entry_count)
+  for protocol in protocols:
+    if not isinstance(protocol, string_types) or not protocol or len(protocol.encode("utf-8")) > 255 or any(c.isspace() for c in protocol):
+      raise AnsibleFilterError("tcp alpn '%s' must be a non-empty protocol id without spaces, e.g. h2 or http/1.1 (tcp %s) ..." % (protocol, entry_count))
+  return noduplicates(protocols)
 
 def tcp_servers(upstream, entry_count):
   entries = [ upstream ] if isinstance(upstream, string_types) else upstream
@@ -258,6 +267,11 @@ def process_tcp(ingress, providers, runtime_files, tls_domains):
     if not isinstance(passthrough, bool):
       raise AnsibleFilterError("tcp passthrough must be true or false (tcp %s) ..." % entry_count)
     tls = entry.get("tls")
+    alpn = None
+    if "alpn" in entry:
+      if passthrough:
+        raise AnsibleFilterError("tcp 'alpn' needs terminated TLS, it does not work with 'passthrough' (tcp %s) ..." % entry_count)
+      alpn = tcp_alpn(entry["alpn"], entry_count)
     if passthrough:
       if tls is not None:
         raise AnsibleFilterError("tcp 'tls' and 'passthrough' are mutually exclusive (tcp %s) ..." % entry_count)
@@ -278,6 +292,7 @@ def process_tcp(ingress, providers, runtime_files, tls_domains):
       "entrypoints": [ entrypoint ],
       "passthrough": passthrough,
       "tls": tls,
+      "alpn": alpn,
       "servers": tcp_servers(entry["upstream"], entry_count),
     })
   ingress["tcp"] = config

@@ -274,6 +274,7 @@ tcp:
 | `upstream`    | -       | `host:port`, or a list of `host:port` / `{ address: host:port, weight: N }`. IPv6 hosts go in brackets (`[::1]:80`). With any `weight` set, the servers are balanced by weight (missing weight = 1). |
 | `tls`         | `http` if the http resolver exists, else `none` | Cert resolver for the terminated TLS, as for vhosts. `none` uses the static certificates (`tls.certificates`). |
 | `passthrough` | `false` | `true` passes the TLS connection to the upstream untouched; the upstream holds the certificate. Mutually exclusive with `tls`. |
+| `alpn`        | -       | A protocol or a list of protocols Traefik offers in the TLS handshake (ALPN), e.g. `http/1.1`, `h2`. Terminated TLS only: an error with `passthrough`. See [ALPN](#alpn). |
 
 - Terminated routes get a certificate for their names (first name `main`, the
   rest `sans`) and the names go to `tls-domains`, like vhost names.
@@ -283,6 +284,33 @@ tcp:
   take the connection.
 - Each entry renders to `runtime/tcp-<first sni>.yaml`; the file is removed
   when the entry goes away.
+
+### ALPN
+
+```yaml
+tcp:
+  - sni: legacy.example.com
+    upstream: 100.65.0.70:80
+    tls: http
+    alpn: [ http/1.1 ]
+```
+
+Without `alpn` a terminated route uses the `default` TLS options, which
+offer `h2`, `http/1.1` and `acme-tls/1`. A browser picks `h2`, and since a
+TCP route only copies bytes, the upstream receives HTTP/2 frames. Set
+`alpn: [ http/1.1 ]` when the upstream speaks only HTTP/1.1 and cannot do
+h2c; the client then falls back to HTTP/1.1.
+
+- The entry gets its own TLS options `tcp-<id>` (same id as its router),
+  rendered into its `tcp-<first sni>.yaml`: a copy of the role's `default`
+  options (same `minVersion`, `cipherSuites`, ...) plus `alpnProtocols`.
+  The router references it with `tls.options`.
+- Usual values: `http/1.1`, `h2`. Any non-empty protocol id without spaces
+  is accepted, in the given order (server preference).
+- `acme-tls/1` does not need to be listed: Traefik answers TLS-ALPN-01
+  challenges before router matching, and this role uses HTTP-01 anyway.
+- lukd plain listeners accept h2c (HTTP/2 with prior knowledge), so routes
+  to them need no `alpn`.
 
 ### Why a TCP route
 
