@@ -248,6 +248,64 @@ vhost:
 
 ---
 
+## TCP routes
+
+`tcp` is a list of TCP routes on the `https` entrypoint, matched by the TLS SNI
+(`HostSNI`). Traefik does not parse HTTP on them: the bytes after the TLS
+handshake are copied to the upstream as they are.
+
+```yaml
+tcp:
+  - sni: endpoint.drop.socha.it          # TLS terminated here, plain TCP to the upstream
+    upstream: 100.65.1.50:80
+    tls: http
+  - sni: [ a.example.com, b.example.com ] # HostSNI(`a.example.com`) || HostSNI(`b.example.com`)
+    upstream:
+      - 10.0.0.1:80
+      - { address: 10.0.0.2:80, weight: 3 }
+  - sni: git.example.com                 # TLS goes to the upstream untouched
+    upstream: 100.65.0.60:443
+    passthrough: true
+```
+
+| key           | default | meaning |
+|---------------|---------|---------|
+| `sni`         | -       | A host name or a list of host names. Plain names only: no scheme, path, port or wildcard. |
+| `upstream`    | -       | `host:port`, or a list of `host:port` / `{ address: host:port, weight: N }`. IPv6 hosts go in brackets (`[::1]:80`). With any `weight` set, the servers are balanced by weight (missing weight = 1). |
+| `tls`         | `http` if the http resolver exists, else `none` | Cert resolver for the terminated TLS, as for vhosts. `none` uses the static certificates (`tls.certificates`). |
+| `passthrough` | `false` | `true` passes the TLS connection to the upstream untouched; the upstream holds the certificate. Mutually exclusive with `tls`. |
+
+- Terminated routes get a certificate for their names (first name `main`, the
+  rest `sans`) and the names go to `tls-domains`, like vhost names.
+  Passthrough names do not.
+- A name may appear in one tcp entry only and must not be served over https
+  by a vhost or the dashboard: on the same entrypoint the TCP router would
+  take the connection.
+- Each entry renders to `runtime/tcp-<first sni>.yaml`; the file is removed
+  when the entry goes away.
+
+### Why a TCP route
+
+- **No HTTP timeouts.** On an http router the `https` entrypoint applies
+  `respondingTimeouts.readTimeout` to the whole request, so a long upload is
+  cut when the timeout expires. On a TCP route Traefik clears the connection
+  deadline right after reading the ClientHello and only copies bytes, so a
+  long upload runs until it is done. Timeouts are the upstream's business.
+- **End-to-end TLS** (`passthrough`) when the upstream must hold its own
+  certificate or see the client's TLS (e.g. client certificates).
+
+What is lost compared to a vhost:
+
+- **The client IP is not visible to the upstream.** It sees Traefik's
+  address; there is no `X-Forwarded-For` (Traefik does not touch the HTTP
+  stream). The PROXY protocol would carry it, but it is not supported here
+  yet.
+- No http->https redirect, middlewares, `Host` rewriting or health checks.
+  A plain `http://` request for the name still needs a vhost (or the
+  entrypoint redirect) on `http`.
+
+---
+
 ## Dashboard
 
 ```yaml
@@ -333,5 +391,6 @@ file for Traefik).
 | `templates/traefik/main` | static config (`config.yaml`): entrypoints, providers, ACME |
 | `templates/traefik/runtime` | shared dynamic config: middlewares, TLS options, static certificates |
 | `templates/traefik/vhost` | per-vhost routers/services |
+| `templates/traefik/tcp` | per-tcp-entry routers/services |
 | `templates/traefik/redirect` | redirect (move) chains |
 | `templates/traefik/tls-domains` | list of domains needing certificates |

@@ -1,4 +1,5 @@
 import hashlib
+import re
 from ansible.errors import  AnsibleFilterError
 from ansible.module_utils.six import string_types
 from ansible.module_utils.common.collections import is_sequence
@@ -176,6 +177,111 @@ def expand_redirects(ingress):
         urls.append(src)
     vhosts.append({ "to": to, "config": { "url": urls } })
 
+TCP_KEYS = ( "sni", "upstream", "tls", "passthrough" )
+TCP_NAME = re.compile(r"^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?(\.[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)*$")
+TCP_HOST = re.compile(r"^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?(\.[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)*|\[[0-9a-f:.]+\])$")
+
+def tcp_names(sni, entry_count):
+  names = [ sni ] if isinstance(sni, string_types) else sni
+  if not is_sequence(names) or not names:
+    raise AnsibleFilterError("tcp sni must be a name or a non-empty list of names (tcp %s) ..." % entry_count)
+  result = []
+  for name in names:
+    if not isinstance(name, string_types) or not TCP_NAME.match(name.lower()):
+      raise AnsibleFilterError("tcp sni '%s' is not a plain host name, no scheme, path, port or wildcard (tcp %s) ..." % (name, entry_count))
+    result.append(name.lower())
+  return noduplicates(result)
+
+def tcp_address(address, entry_count):
+  if not isinstance(address, string_types) or ":" not in address:
+    raise AnsibleFilterError("tcp upstream '%s' must be host:port (tcp %s) ..." % (address, entry_count))
+  host, port = address.rsplit(":", 1)
+  if not TCP_HOST.match(host.lower()):
+    raise AnsibleFilterError("tcp upstream '%s' has an invalid host, IPv6 goes in brackets (tcp %s) ..." % (address, entry_count))
+  if not port.isdigit() or not 0 < int(port) < 65536:
+    raise AnsibleFilterError("tcp upstream '%s' has an invalid port (tcp %s) ..." % (address, entry_count))
+  return address
+
+def tcp_servers(upstream, entry_count):
+  entries = [ upstream ] if isinstance(upstream, string_types) else upstream
+  if not is_sequence(entries) or not entries:
+    raise AnsibleFilterError("tcp upstream must be host:port or a non-empty list (tcp %s) ..." % entry_count)
+  servers = []
+  for entry in entries:
+    if isinstance(entry, string_types):
+      servers.append({ "address": tcp_address(entry, entry_count) })
+    elif isinstance(entry, dict):
+      unknown = set(entry) - { "address", "weight" }
+      if unknown:
+        raise AnsibleFilterError("tcp upstream server has unknown keys %s (tcp %s) ..." % (sorted(unknown), entry_count))
+      server = { "address": tcp_address(entry.get("address"), entry_count) }
+      if "weight" in entry:
+        weight = entry["weight"]
+        if isinstance(weight, bool) or not isinstance(weight, int) or weight < 0:
+          raise AnsibleFilterError("tcp upstream weight '%s' must be a non-negative integer (tcp %s) ..." % (weight, entry_count))
+        server["weight"] = weight
+      servers.append(server)
+    else:
+      raise AnsibleFilterError("tcp upstream server must be host:port or a dict, got %s instead (tcp %s) ..." % (type(entry), entry_count))
+  return servers
+
+def process_tcp(ingress, providers, runtime_files, tls_domains):
+  entries = ingress.get("tcp")
+  if entries is None:
+    return
+  if not is_sequence(entries):
+    raise AnsibleFilterError("tcp must be a list, got %s instead ..." % type(entries))
+  entrypoint = "https"
+  if ingress["entrypoint"].get(entrypoint, {}).get("type") != "https":
+    raise AnsibleFilterError("tcp routes need the https-type entrypoint '%s' ..." % entrypoint)
+  https_hosts = set(tls_domains)
+  seen_sni = set()
+  config = []
+  entry_count = 0
+  for entry in entries:
+    entry_count = entry_count + 1
+    if not isinstance(entry, dict):
+      raise AnsibleFilterError("tcp entry must be a dict, got %s instead (tcp %s) ..." % (type(entry), entry_count))
+    unknown = set(entry) - set(TCP_KEYS)
+    if unknown:
+      raise AnsibleFilterError("tcp entry has unknown keys %s (tcp %s) ..." % (sorted(unknown), entry_count))
+    if "sni" not in entry or "upstream" not in entry:
+      raise AnsibleFilterError("tcp entry needs 'sni' and 'upstream' (tcp %s) ..." % entry_count)
+    names = tcp_names(entry["sni"], entry_count)
+    for name in names:
+      if name in seen_sni:
+        raise AnsibleFilterError("tcp sni '%s' already defined (tcp %s) ..." % (name, entry_count))
+      if name in https_hosts:
+        raise AnsibleFilterError("tcp sni '%s' is already served over https by a vhost or the dashboard (tcp %s) ..." % (name, entry_count))
+      seen_sni.add(name)
+    passthrough = entry.get("passthrough", False)
+    if not isinstance(passthrough, bool):
+      raise AnsibleFilterError("tcp passthrough must be true or false (tcp %s) ..." % entry_count)
+    tls = entry.get("tls")
+    if passthrough:
+      if tls is not None:
+        raise AnsibleFilterError("tcp 'tls' and 'passthrough' are mutually exclusive (tcp %s) ..." % entry_count)
+      tls = None
+    else:
+      if tls is None:
+        tls = "http" if "http" in providers else "none"
+      elif tls not in providers:
+        raise AnsibleFilterError("TLS provider '%s' used in tcp %s is not defined (tcp %s) ..." % (tls, names[0], entry_count))
+      tls_domains.update(names)
+    tcp_file = "tcp-%s.yaml" % names[0]
+    runtime_files.append(tcp_file)
+    config.append({
+      "id": hashlib.md5(tcp_file.encode("utf-8")).hexdigest()[:12],
+      "file": tcp_file,
+      "sni": names,
+      "rule": " || ".join("HostSNI(`%s`)" % name for name in names),
+      "entrypoints": [ entrypoint ],
+      "passthrough": passthrough,
+      "tls": tls,
+      "servers": tcp_servers(entry["upstream"], entry_count),
+    })
+  ingress["tcp"] = config
+
 def process_ingress_config(ingress):
   normalize_entrypoints(ingress)
   normalize_certificates(ingress)
@@ -215,6 +321,7 @@ def process_ingress_config(ingress):
       tls_domains.add(urlsplit(dashboard_url).hostname)
 
   if 'vhost' not in ingress:
+    process_tcp(ingress, providers, runtime_files, tls_domains)
     ingress["files"] = runtime_files
     ingress["tls_domains"] = list(tls_domains)
     return ingress
@@ -508,6 +615,8 @@ def process_ingress_config(ingress):
     wildcards = wildcard_domains(sans)
     wildcard_provider.update({wildcard: tls for wildcard in wildcards})
     config.append(runtime)
+
+  process_tcp(ingress, providers, runtime_files, tls_domains)
 
   seen_san=list(seen_san)
   ingress["wildcard"] = {}

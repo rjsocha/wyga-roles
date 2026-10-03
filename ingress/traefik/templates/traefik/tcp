@@ -1,0 +1,53 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+{% set weighted = tcp.servers | selectattr('weight', 'defined') | list | length > 0 %}
+tcp:
+  routers:
+    tcp-{{ tcp.id }}:
+      entryPoints:
+      {% for entrypoint in tcp.entrypoints %}
+        - {{ entrypoint }}
+      {% endfor %}
+      service: tcp-service-{{ tcp.id }}
+      rule: {{ tcp.rule }}
+{% if tcp.passthrough %}
+      tls:
+        passthrough: true
+{% elif tcp.tls != "none" %}
+      tls:
+        certResolver: {{ tcp.tls }}
+        domains:
+          - main: '{{ tcp.sni[0] }}'
+  {% if tcp.sni[1:] | length > 0 %}
+            sans:
+    {% for san in tcp.sni[1:] %}
+              - '{{ san }}'
+    {% endfor %}
+  {% endif %}
+{% else %}
+      tls: {}
+{% endif %}
+
+  services:
+{% if weighted %}
+    tcp-service-{{ tcp.id }}:
+      weighted:
+        services:
+  {% for server in tcp.servers %}
+          - name: tcp-service-{{ tcp.id }}-{{ loop.index }}
+            weight: {{ server.weight | default(1) }}
+  {% endfor %}
+  {% for server in tcp.servers %}
+    tcp-service-{{ tcp.id }}-{{ loop.index }}:
+      loadBalancer:
+        servers:
+          - address: "{{ server.address }}"
+  {% endfor %}
+{% else %}
+    tcp-service-{{ tcp.id }}:
+      loadBalancer:
+        servers:
+  {% for server in tcp.servers %}
+          - address: "{{ server.address }}"
+  {% endfor %}
+{% endif %}
+{# PROXY protocol (not implemented): a tcp.serversTransports entry with proxyProtocol.version, referenced by serversTransport on each loadBalancer above. #}

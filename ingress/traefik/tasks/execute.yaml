@@ -156,6 +156,21 @@
     label: "{{ vhost.file }}"
   when: IngressConfig.config is defined
 
+- name: "Traefik Ingress / TCP / Generate configuration ..."
+  template:
+    src: "traefik/tcp"
+    dest: "{{ IngressConfig.runtime.path }}/runtime/{{ tcp.file }}"
+    owner: root
+    group: traefik-ingress
+    mode: 0640
+  notify:
+    - traefik-ingress-restart
+  loop: "{{ IngressConfig.tcp }}"
+  loop_control:
+    loop_var: tcp
+    label: "{{ tcp.file }}"
+  when: IngressConfig.tcp is defined
+
 - name: "Traefik Ingress / Domains list ..."
   template:
     src: "traefik/tls-domains"
