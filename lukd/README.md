@@ -11,7 +11,7 @@ under `setup.lukd`; secrets come from `confidential.lukd`.
   `wyga/lukd`).
 - The client side is `wyga/luk`.
 
-Written against lukd 0.1.4. The configuration reference below is a summary;
+Written against lukd 0.1.5. The configuration reference below is a summary;
 the authority is `lukd check` and the annotated example the package ships
 in `/usr/share/doc/lukd/examples/config.yaml`.
 
@@ -70,7 +70,8 @@ policy:
 | `package` | extra deb packages, installed with `lukd` |
 | `run` | `/etc/site/lukd/run.d/<job>.yaml`, root:root 0644; `lukd-run.socket` |
 | `path` | the directory, luk:luk 0750; `ReadWritePaths=` drop-ins of both roles |
-| `confidential.lukd.credential` | `/etc/site/lukd/credentials/<name>`, root:root 0600 |
+| `docker` | `SupplementaryGroups=docker` drop-in of the process role |
+| `confidential.lukd.credential` | `/etc/site/lukd/credentials.d/<name>`, root:root 0600 |
 | `confidential.lukd.basic` | `expose.<name>.auth.basic` in `config.yaml` |
 | `confidential.lukd.config` | merged over `config` |
 
@@ -107,7 +108,9 @@ identity:
 
 Lists of CA names for host and user certificates. Each
 `key/ca/host/<name>` or `key/ca/user/<name>` (one CA public key per line;
-several lines during a rotation) becomes the CA `<name>`. A certificate of
+several lines during a rotation) becomes the CA `<name>`. When `<name>` is
+a directory, as in the layout of `wyga/ssh-host-certificate`, the role
+takes `<name>/host-ca.pub` or `<name>/user-ca.pub`. A certificate of
 that CA is the identity `<name>:<Key ID>`.
 
 ```yaml
@@ -171,6 +174,13 @@ storage base on another volume, or a place a `run` program writes. The
 role creates each one for `luk` and grants it to both lukd roles. A change
 restarts lukd.
 
+### `docker`
+
+`true` lets the programs of `run` steps use the docker socket: the process
+role gets the group `docker`. The host must have docker installed. Members
+of that group are root on the host in effect; the receive role does not get
+it. A change restarts lukd.
+
 ### `bcrypt`
 
 Cost of the `auth.basic` hashes, 4 to 31. Default 10.
@@ -206,7 +216,7 @@ confidential:
 ## Behaviour
 
 - **Exclusive directories.** `ssh.d`, `ssh.d/ca/host`, `ssh.d/ca/user`,
-  `gpg.d`, `run.d` and `credentials` hold only what the policy lists; any
+  `gpg.d`, `run.d` and `credentials.d` hold only what the policy lists; any
   other file there is removed. Taking a name off the policy takes its
   access away. `/opt/luk` is not cleaned, packages install there too.
 - **Validation before activation.** `config.yaml` is checked with
@@ -375,12 +385,39 @@ Steps:
 | `catalog` | keep `<base>/.db/catalog.json` |
 | `ttl.user`, `ttl.min`, `ttl.max` | whether the client ttl counts, and its bounds; `max` alone is a fixed lifetime |
 | `cleanup.age` | remove files without an expiry after that age |
+| `retention` | rules that keep a number of files per series and prune the rest (below) |
 | `random.alphabet`, `random.length` | characters and length of `.Random` |
 
 Variables of `path`: `.Sender`, `.Endpoint`, `.Year`, `.Month`, `.Day`,
 `.Hour`, `.Minute`, `.Seconds`, `.Id`, `.Random`, `.File`, `.Tags`,
 `.Hostname` (the `--backup` hostname) and `.Origin` (`.Hostname` when set,
 else `.Sender`).
+
+Retention (lukd 0.1.5) thins backups per series, grandfather-father-son:
+
+```yaml
+retention:
+  - origin: ["db1-prod", "*-prod"]     # globs on the origin; first matching rule wins
+    keep: {last: 3, daily: 14, weekly: 8, monthly: 12}
+  - origin: ["*-stage"]
+    keep: {daily: 7}
+  - keep: {daily: 7, weekly: 4}        # no origin: every other origin; must be last
+```
+
+- A series is one pipeline, origin and file name. The origin is the
+  `--backup` hostname, else the sender.
+- `last: N` keeps the N newest files; `daily`, `weekly`, `monthly` and
+  `yearly` keep the newest file of each of the last N days, ISO weeks,
+  months and years that have a file. The kept set is the union.
+- A series no rule matches is never pruned. Retention counts files, not
+  age: when a host stops sending, its last copies stay.
+- It works next to `ttl` and `cleanup.age`; a file goes when any of them
+  removes it.
+- A file name that carries the date (`db-20261004.sql.gz`) is a series of
+  its own every day, so retention never prunes it. Send a constant name
+  and put the date in `path`, or bound such files with `ttl`.
+- `lukd storage retention --storage <name>` prints the plan (KEEP with the
+  reason, or PRUNE) without removing anything.
 
 ### `expose.<name>`
 
@@ -443,5 +480,6 @@ lukd queue rm --id <id>
 lukd tls pin                   # pins of the self and files listeners
 lukd quota ls                  # buckets per endpoint and identity
 lukd storage ls                # stored files
+lukd storage retention --storage <name>   # retention plan, removes nothing
 journalctl -u 'lukd*' -f       # both roles and the job units
 ```

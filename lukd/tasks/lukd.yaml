@@ -15,6 +15,7 @@
     lukd_gpg_ext: '\.(asc|gpg|pgp|key)$'
     lukd_script: "{{ lukd_setup.script | default([]) }}"
     lukd_path: "{{ lukd_setup.path | default([]) }}"
+    lukd_docker: "{{ lukd_setup.docker | default(false) | bool }}"
     lukd_run: "{{ lukd_setup.run | default({}) }}"
     lukd_credential: "{{ lukd_secret.credential | default({}) }}"
 
@@ -57,7 +58,7 @@
     mode: "{{ dir.mode }}"
   loop:
     - { path: "{{ lukd_opt }}", mode: '0755' }
-    - { path: "{{ lukd_etc }}/credentials", mode: '0700' }
+    - { path: "{{ lukd_etc }}/credentials.d", mode: '0700' }
   loop_control:
     loop_var: dir
     label: "{{ dir.path }}"
@@ -73,6 +74,11 @@
   loop_control:
     loop_var: path
 
+- name: "lukd / Former credentials directory ..."
+  file:
+    path: "{{ lukd_etc }}/credentials"
+    state: absent
+
 - name: "lukd / Identities ..."
   copy:
     src: "{{ playbook_dir }}/key/user/{{ name }}"
@@ -87,7 +93,7 @@
 
 - name: "lukd / Certificate authorities ..."
   copy:
-    src: "{{ playbook_dir }}/key/ca/{{ ca.0 }}/{{ ca.1 }}"
+    src: "{{ lookup('first_found', lukd_ca_files) }}"
     dest: "{{ lukd_etc }}/ssh.d/ca/{{ ca.0 }}/{{ ca.1 }}.pub"
     owner: root
     group: luk
@@ -96,6 +102,10 @@
   loop_control:
     loop_var: ca
     label: "{{ ca.0 }}/{{ ca.1 }}"
+  vars:
+    lukd_ca_files:
+      - "{{ playbook_dir }}/key/ca/{{ ca.0 }}/{{ ca.1 }}/{{ ca.0 }}-ca.pub"
+      - "{{ playbook_dir }}/key/ca/{{ ca.0 }}/{{ ca.1 }}"
   notify: lukd-reload
 
 - name: "lukd / OpenPGP keys ..."
@@ -132,7 +142,7 @@
 - name: "lukd / Credentials ..."
   copy:
     content: "{{ lukd_credential[name] }}"
-    dest: "{{ lukd_etc }}/credentials/{{ name }}"
+    dest: "{{ lukd_etc }}/credentials.d/{{ name }}"
     owner: root
     group: root
     mode: "0600"
@@ -172,7 +182,7 @@
       path: "{{ lukd_etc }}/run.d"
       keep: "{{ lukd_run.keys() | map('regex_replace', '$', '.yaml') | list }}"
     - what: credentials
-      path: "{{ lukd_etc }}/credentials"
+      path: "{{ lukd_etc }}/credentials.d"
       keep: "{{ lukd_credential.keys() | list }}"
   loop_control:
     loop_var: exclusive
@@ -188,7 +198,7 @@
   loop: [receive, process]
   loop_control:
     loop_var: role
-  when: lukd_path | length > 0
+  when: lukd_path | length > 0 or (lukd_docker and role == 'process')
 
 - name: "lukd / Unit drop-ins ..."
   template:
@@ -200,7 +210,7 @@
   loop: [receive, process]
   loop_control:
     loop_var: role
-  when: lukd_path | length > 0
+  when: lukd_path | length > 0 or (lukd_docker and role == 'process')
   notify: lukd-restart
 
 - name: "lukd / Unit drop-ins / Cleanup ..."
@@ -210,7 +220,7 @@
   loop: [receive, process]
   loop_control:
     loop_var: role
-  when: lukd_path | length == 0
+  when: lukd_path | length == 0 and not (lukd_docker and role == 'process')
   notify: lukd-restart
 
 - name: "lukd / Basic authentication ..."

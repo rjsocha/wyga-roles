@@ -2,7 +2,7 @@
 {% set spec = job.value | dict2items | rejectattr('key', 'eq', 'credentials') | list | items2dict %}
 {% set credentials = {} %}
 {% for name in job.value.credentials | default([]) %}
-{%   set _ = credentials.update({name: lukd_etc ~ '/credentials/' ~ name}) %}
+{%   set _ = credentials.update({name: lukd_etc ~ '/credentials.d/' ~ name}) %}
 {% endfor %}
 {% if credentials %}
 {%   set _ = spec.update({'credentials': credentials}) %}
