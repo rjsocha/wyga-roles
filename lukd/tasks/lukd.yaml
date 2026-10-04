@@ -29,6 +29,13 @@
     fail_msg: "setup.lukd: config must be a map (the lukd configuration), run a map of jobs, path a list of absolute paths"
     quiet: true
 
+- name: "lukd / Verify confidential ..."
+  assert:
+    that:
+      - lukd_secret.basic is not defined
+    fail_msg: "confidential.lukd.basic is now confidential.lukd.auth.basic"
+    quiet: true
+
 - name: "lukd / Verify jobs ..."
   assert:
     that:
@@ -225,7 +232,7 @@
 
 - name: "lukd / Basic authentication ..."
   set_fact:
-    lukd_basic: "{{ lukd_secret.basic | default({}) | lukd_basic(host.hostname, lukd_setup.bcrypt | default(10)) }}"
+    lukd_basic: "{{ (lukd_secret.auth | default({})).basic | default({}) | lukd_basic(host.hostname, lukd_setup.bcrypt | default(10)) }}"
   no_log: true
 
 - name: "lukd / config.yaml ..."

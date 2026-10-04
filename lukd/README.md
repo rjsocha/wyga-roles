@@ -72,7 +72,7 @@ policy:
 | `path` | the directory, luk:luk 0750; `ReadWritePaths=` drop-ins of both roles |
 | `docker` | `SupplementaryGroups=docker` drop-in of the process role |
 | `confidential.lukd.credential` | `/etc/site/lukd/credentials.d/<name>`, root:root 0600 |
-| `confidential.lukd.basic` | `expose.<name>.auth.basic` in `config.yaml` |
+| `confidential.lukd.auth.basic` | `expose.<name>.auth.basic` in `config.yaml` |
 | `confidential.lukd.config` | merged over `config` |
 
 Units: `lukd.service` (enabled, groups `lukd-receive.service` and
@@ -190,9 +190,10 @@ Cost of the `auth.basic` hashes, 4 to 31. Default 10.
 ```yaml
 confidential:
   lukd:
-    basic:                   # users of expose.<name>.auth.basic, plain passwords
-      publish:               # expose name
-        dev: "plain password"
+    auth:
+      basic:                 # users of expose.<name>.auth.basic, plain passwords
+        publish:             # expose name
+          dev: "plain password"
     credential:              # files for the jobs of run
       s3: |
         [default]
@@ -204,10 +205,12 @@ confidential:
             eab: { kid: "KEY_ID", key: "..." }
 ```
 
-- `basic`: the role hashes each password with bcrypt and adds the entries
+- `auth.basic`: the role hashes each password with bcrypt and adds the entries
   to the expose. The salt is derived from the host name, the expose and
-  the user, so a hash changes only when its password does. The controller
-  needs the Python module `bcrypt` in the environment Ansible runs in.
+  the user, so a hash changes only when its password does. The hash is
+  made by crypt(3) of the system libcrypt on the controller (no Python
+  package needed); without a libcrypt that knows bcrypt the Python module
+  `bcrypt` is used.
 - `credential`: every name a job lists in `credentials` must be present
   here; the role refuses the policy otherwise.
 - `config`: merged recursively; use it for the few secret values that live
@@ -425,7 +428,7 @@ retention:
 | --- | --- |
 | `listen` | listener name or list of names |
 | `path` | URL prefix; the longest matching prefix wins |
-| `auth.basic` | users, from `confidential.lukd.basic` |
+| `auth.basic` | users, from `confidential.lukd.auth.basic` |
 | `auth.ssh.allow` | signed `luk get` only; who downloads `--private --any` files |
 | `plain` | no authentication on purpose; silences the warnings |
 | `index` | HTML listing of directory URLs; not with `auth.ssh`, not on a sharded storage |
