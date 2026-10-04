@@ -1,5 +1,7 @@
+import os
 import re
 
+import yaml
 from ansible.errors import AnsibleFilterError
 
 _PRINCIPAL = re.compile(r'^[A-Za-z0-9*][A-Za-z0-9._:*-]*$')
@@ -14,36 +16,67 @@ def _addresses(entry):
     return [str(a).split('/')[0] for a in ip]
 
 
-def _marked(entries, default, what):
+def _marked(entry, default, what):
+    """The addresses of entry its certificate mark selects; None when the
+    mark turns the entry off."""
+    have = _addresses(entry)
+    mark = entry.get('certificate', default)
+    if mark is True:
+        return have
+    if mark is False or mark is None:
+        return None
+    if isinstance(mark, str):
+        mark = [mark]
     out = []
-    for entry in entries or []:
-        if not isinstance(entry, dict):
-            continue
-        have = _addresses(entry)
-        mark = entry.get('certificate', default)
-        if mark is True:
-            out += have
-        elif mark is False or mark is None:
-            continue
-        else:
-            if isinstance(mark, str):
-                mark = [mark]
-            for a in mark:
-                a = str(a).split('/')[0]
-                if a not in have:
-                    raise AnsibleFilterError("%s: certificate address %s is not an address of the entry" % (what, a))
-                out.append(a)
+    for a in mark:
+        a = str(a).split('/')[0]
+        if a not in have:
+            raise AnsibleFilterError("%s: certificate address %s is not an address of the entry" % (what, a))
+        out.append(a)
     return out
 
 
-def ssh_host_principals(host):
+def _interfaces(host):
+    out = []
+    for entry in (host.get('network') or {}).get('interface') or []:
+        if isinstance(entry, dict):
+            out += _marked(entry, False, 'network.interface') or []
+    return out
+
+
+def _vpn_domain(playbook_dir, name):
+    path = os.path.join(playbook_dir, 'vpn', 'nebula', str(name), 'config.yaml')
+    try:
+        with open(path) as f:
+            config = yaml.safe_load(f) or {}
+    except OSError as e:
+        raise AnsibleFilterError("setup.vpn %s: %s" % (name, e))
+    return config.get('domain') or 'vpn'
+
+
+def _vpn(host, playbook_dir):
+    out = []
+    for entry in (host.get('setup') or {}).get('vpn') or []:
+        if not isinstance(entry, dict) or 'name' not in entry:
+            continue
+        addresses = _marked(entry, True, 'setup.vpn')
+        if addresses is None:
+            continue
+        out.append('%s.%s' % (entry.get('hostname') or host['hostname'], _vpn_domain(playbook_dir, entry['name'])))
+        out += addresses
+    return out
+
+
+def ssh_host_principals(host, playbook_dir):
     """The principals of the SSH host certificate of a host policy.
 
     setup.ssh.host.principal lists names, addresses and the keywords
-    hostname, vpn and address; without the key it is [hostname]. vpn is
-    the addresses of setup.vpn (an entry limits them with certificate:
-    false or a list), address the addresses of the network interfaces
-    marked certificate: true or with a list."""
+    hostname, vpn and address; without the key it is [hostname]. vpn is,
+    for every entry of setup.vpn, the name of the host in the VPN
+    (<hostname>.<domain>, as wyga/nebula-vpn names it) and its addresses;
+    certificate: false on the entry leaves it out, a list limits the
+    addresses. address is the addresses of the network interfaces marked
+    certificate: true or with a list."""
     setup = host.get('setup') or {}
     ssh = (setup.get('ssh') or {}).get('host') or {}
     listed = ssh.get('principal', ['hostname'])
@@ -51,8 +84,8 @@ def ssh_host_principals(host):
         raise AnsibleFilterError("setup.ssh.host.principal must be a list")
     keyword = {
         'hostname': lambda: [host['hostname']],
-        'vpn': lambda: _marked(setup.get('vpn'), True, 'setup.vpn'),
-        'address': lambda: _marked((host.get('network') or {}).get('interface'), False, 'network.interface'),
+        'vpn': lambda: _vpn(host, playbook_dir),
+        'address': lambda: _interfaces(host),
     }
     out = []
     for entry in listed:

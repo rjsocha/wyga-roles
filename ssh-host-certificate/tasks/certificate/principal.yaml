@@ -1,7 +1,7 @@
 ---
 - name: "Certificate principals ..."
   set_fact:
-    wyga_ssh_principals: "{{ host | ssh_host_principals }}"
+    wyga_ssh_principals: "{{ host | ssh_host_principals(playbook_dir) }}"
 
 - name: "Certificate state ..."
   set_fact:
