@@ -36,5 +36,5 @@
   when: _copy_keys == True
 
 - name: "Generate missing {{ item }} key"
-  include: "generate-new-host-key.yaml"
+  include_tasks: "generate-new-host-key.yaml"
   when: _copy_keys == False

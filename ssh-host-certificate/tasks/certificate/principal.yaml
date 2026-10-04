@@ -1,0 +1,28 @@
+---
+- name: "Certificate principals ..."
+  set_fact:
+    wyga_ssh_principals: "{{ host.setup.ssh.host.principal | default(['hostname']) | map('regex_replace', '^hostname$', host.hostname) | unique | list }}"
+
+- name: "Verify certificate principals ..."
+  assert:
+    that:
+      - host.setup.ssh.host.principal | default([]) is sequence
+      - host.setup.ssh.host.principal | default([]) is not string
+      - wyga_ssh_principals | select('match', '^[A-Za-z0-9*][A-Za-z0-9._:*-]*$') | list | length == wyga_ssh_principals | length
+    fail_msg: "setup.ssh.host.principal must be a list of host names or addresses"
+    quiet: true
+
+- name: "Certificate state ..."
+  set_fact:
+    wyga_ssh_certificate_file: /etc/site/ssh/ca/certificate.yaml
+    wyga_ssh_certificate_state: "{{ {'principal': wyga_ssh_principals} | to_nice_yaml(indent=2) }}"
+
+- name: "Read {{ wyga_ssh_certificate_file }} ..."
+  slurp:
+    src: "{{ wyga_ssh_certificate_file }}"
+  register: _wyga_ssh_certificate_state
+  failed_when: false
+
+- name: "Check if the certificate state changed ..."
+  set_fact:
+    wyga_ssh_certificate_changed: "{{ _wyga_ssh_certificate_state.content is not defined or _wyga_ssh_certificate_state.content | b64decode != wyga_ssh_certificate_state }}"

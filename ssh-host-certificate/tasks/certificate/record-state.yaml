@@ -1,0 +1,16 @@
+---
+- name: "Create {{ wyga_ssh_certificate_file | dirname }} ..."
+  file:
+    state: directory
+    path: "{{ wyga_ssh_certificate_file | dirname }}"
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: "Record {{ wyga_ssh_certificate_file }} ..."
+  copy:
+    content: "{{ wyga_ssh_certificate_state }}"
+    dest: "{{ wyga_ssh_certificate_file }}"
+    owner: root
+    group: root
+    mode: "0644"

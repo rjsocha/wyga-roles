@@ -18,9 +18,17 @@
     - name: "Check CA key..."
       include_tasks: "certificate/check-ca-key.yaml"
 
+    - name: "Certificate principals..."
+      include_tasks: "certificate/principal.yaml"
+
     - name: "Check host certificates..."
       include_tasks: "certificate/check-host-cert.yaml"
       with_items: "{{ wyga_ssh_host_keys }}"
+
+    - name: "Sign again after a change of the certificate state..."
+      set_fact:
+        wyga_generate_certs: "{{ wyga_ssh_host_keys }}"
+      when: wyga_ssh_certificate_changed
 
     - name: "Parse 'generate' option..."
       include_tasks: "certificate/parse-generate.yaml"
@@ -68,6 +76,9 @@
     - name: "Copy keys to /etc/ssh"
       include_tasks: "certificate/copy-host-key.yaml"
       with_items: "{{ wyga_generate_certs }}"
+
+    - name: "Record certificate state..."
+      include_tasks: "certificate/record-state.yaml"
 
     - name: "Prepare generation list for /etc/ssh/sshd_config"
       block:
