@@ -11,7 +11,7 @@ under `setup.lukd`; secrets come from `confidential.lukd`.
   `wyga/lukd`).
 - The client side is `wyga/luk`.
 
-Written against lukd 0.1.5. The configuration reference below is a summary;
+Written against lukd 0.1.10. The configuration reference below is a summary;
 the authority is `lukd check` and the annotated example the package ships
 in `/usr/share/doc/lukd/examples/config.yaml`.
 
@@ -77,7 +77,12 @@ policy:
 
 Units: `lukd.service` (enabled, groups `lukd-receive.service` and
 `lukd-process.service`) and `lukd-run.socket` (enabled when `run` has jobs,
-else disabled).
+else disabled). The package needs systemd 257 or newer.
+
+The unit of the process role hides the TLS, ACME and nonce directories at
+their default places below `/var/lib/luk` and `/run/luk`. A configuration
+that moves `root`, the `tls` files or `auth.nonces` needs a drop-in of its
+own for `lukd-process.service`; the role does not write one.
 
 ## Policy: `setup.lukd`
 
@@ -255,6 +260,10 @@ appear in `endpoint.<n>.allow`, in every capability list and in
 | `*` | every identity lukd knows |
 
 A capability list that is absent or `[]` grants the capability to no one.
+`true` and `false` in place of a list fail `lukd check`.
+
+RSA keys shorter than 2048 bits and DSA keys are refused, as are `ssh-rsa`
+(SHA-1) signatures.
 
 ### Top level
 
@@ -330,7 +339,12 @@ Capabilities, each a list of identities granted on top of `allow`:
 | `backup.hostname.principal` | may send only a principal of its own certificate as the hostname |
 
 Without the `backup.hostname` block every admitted identity may send any
-hostname. With it, an identity on neither list is refused `--backup`.
+hostname. With it, an identity on neither list is refused `--backup` with
+403, before the body. On such an endpoint `.Origin` in a storage path can
+be trusted.
+
+`pretty` and `secret` need their `allow`; a `--secret` upload of an
+identity outside `secret.allow` is answered 422.
 
 Quota, a token bucket per identity:
 
@@ -350,7 +364,8 @@ quota:
 
 A pipeline runs for an upload when the upload's endpoint is in `endpoint`
 and the upload carries every tag in `tags`. All matching pipelines run,
-unless one has `claim: true`: then it runs alone.
+unless one has `claim: true`: then it runs alone. A pipeline name matches
+`[A-Za-z0-9_][A-Za-z0-9_.-]*`.
 
 | Key | Meaning |
 | --- | --- |
@@ -389,19 +404,20 @@ Steps:
 | `ttl.user`, `ttl.min`, `ttl.max` | whether the client ttl counts, and its bounds; `max` alone is a fixed lifetime |
 | `cleanup.age` | remove files without an expiry after that age |
 | `retention` | rules that keep a number of files per series and prune the rest (below) |
+| `watch` | thresholds that report a series as late, too small, too large or unchanged (below) |
 | `random.alphabet`, `random.length` | characters and length of `.Random` |
 
 Variables of `path`: `.Sender`, `.Endpoint`, `.Year`, `.Month`, `.Day`,
 `.Hour`, `.Minute`, `.Seconds`, `.Id`, `.Random`, `.File`, `.Tags`,
 `.Hostname` (the `--backup` hostname) and `.Origin` (`.Hostname` when set,
-else `.Sender`).
+else `.Sender`). The time variables are UTC; there is no `.Date`.
 
-Retention (lukd 0.1.5) thins backups per series, grandfather-father-son:
+Retention thins backups per series, grandfather-father-son:
 
 ```yaml
 retention:
   - origin: ["db1-prod", "*-prod"]     # globs on the origin; first matching rule wins
-    keep: {last: 3, daily: 14, weekly: 8, monthly: 12}
+    keep: {last: 3, daily: 14, weekly: 8, monthly: 12, within: 2d}
   - origin: ["*-stage"]
     keep: {daily: 7}
   - keep: {daily: 7, weekly: 4}        # no origin: every other origin; must be last
@@ -411,7 +427,9 @@ retention:
   `--backup` hostname, else the sender.
 - `last: N` keeps the N newest files; `daily`, `weekly`, `monthly` and
   `yearly` keep the newest file of each of the last N days, ISO weeks,
-  months and years that have a file. The kept set is the union.
+  months and years that have a file. `within: 2d` keeps every file of
+  the last two days, so a burst of uploads cannot push the older copies
+  out. The kept set is the union.
 - A series no rule matches is never pruned. Retention counts files, not
   age: when a host stops sending, its last copies stay.
 - It works next to `ttl` and `cleanup.age`; a file goes when any of them
@@ -419,8 +437,31 @@ retention:
 - A file name that carries the date (`db-20261004.sql.gz`) is a series of
   its own every day, so retention never prunes it. Send a constant name
   and put the date in `path`, or bound such files with `ttl`.
+- `retention` together with `conflict: replace` fails `lukd check`.
 - `lukd storage retention --storage <name>` prints the plan (KEEP with the
   reason, or PRUNE) without removing anything.
+
+Watch reports a series that breaks a threshold. Only the thresholds written
+here count; nothing is learned from history:
+
+```yaml
+watch:
+  - origin: ["db1-prod"]               # globs on the origin
+    file: ["db.sql*"]                  # globs on the file name
+    every: 26h                         # a newer file is expected within this time
+    size: {min: 2G, max: 20G, step: 500M}   # bounds, and the largest change between two files
+    same: 3                            # this many identical files in a row is a problem
+```
+
+- The result is in `status.json`, which is the object
+  `{"pipelines": [...], "watch": [...]}` (older versions wrote a plain list).
+- The Checkmk check of the package, `contrib/checkmk/luk_status`, turns
+  each watched series into a service `luk watch <storage> <pipeline>
+  <origin>/<file>`. Replace the deployed check when lukd is upgraded: an
+  older check does not read the new `status.json`. The role does not
+  install the check.
+- `lukd storage watch --storage <name> --suggest` proposes thresholds from
+  the files stored so far.
 
 ### `expose.<name>`
 
@@ -429,9 +470,14 @@ retention:
 | `listen` | listener name or list of names |
 | `path` | URL prefix; the longest matching prefix wins |
 | `auth.basic` | users, from `confidential.lukd.auth.basic` |
-| `auth.ssh.allow` | signed `luk get` only; who downloads `--private --any` files |
+| `auth.ssh.allow` | signed `luk get` only; who downloads `--private --any` files, or every file when it is the `expose` of a storage |
 | `plain` | no authentication on purpose; silences the warnings |
-| `index` | HTML listing of directory URLs; not with `auth.ssh`, not on a sharded storage |
+| `index` | HTML listing of directory URLs; not with `auth.ssh`; on a sharded storage it fails `lukd check` |
+
+An `auth.ssh` expose has two uses. As the `protect` of a storage it serves
+the private files (`luk send --private`). As the `expose` of a storage it
+serves every file of that storage, to the identities of `allow` and to
+signed requests only; its listener needs a public `https` URL.
 
 ## Recipes
 
@@ -472,6 +518,28 @@ endpoint:
       list: [robert.socha]
 ```
 
+Backups readable by one restore host, and by nobody over plain HTTP:
+
+```yaml
+expose:
+  archive:
+    listen: intake
+    path: /a/
+    auth:
+      ssh:
+        allow: ["hosts#restore.example.net"]
+storage:
+  archive:
+    type: local
+    base: /storage/archive
+    expose: archive
+```
+
+```sh
+luk get luk://backup.example.net:8443/a/db1-prod/              # listing (--json, -r)
+luk get luk://backup.example.net:8443/a/db1-prod/ -o restore/  # the directory; identical files are skipped
+```
+
 ## On the host
 
 ```sh
@@ -484,5 +552,6 @@ lukd tls pin                   # pins of the self and files listeners
 lukd quota ls                  # buckets per endpoint and identity
 lukd storage ls                # stored files
 lukd storage retention --storage <name>   # retention plan, removes nothing
+lukd storage watch --storage <name> --suggest   # thresholds proposed from the stored files
 journalctl -u 'lukd*' -f       # both roles and the job units
 ```

@@ -10,7 +10,7 @@ an SSH key, so the server decides by who signed it.
 - Alone: the playbook `luk-config` (`load-policy`, `wyga/luk`).
 - The server side is `wyga/lukd`.
 
-Written against luk 0.1.4.
+Written against luk 0.1.10.
 
 ## Quick start
 
@@ -117,12 +117,22 @@ Options of `luk send` worth knowing in a policy context:
 | `--ttl` | lifetime, or `max`; the storage decides whether it counts |
 | `--dry-run` | every server check, no body, nothing stored |
 | `--bwlimit` | upload rate limit |
-| `--quiet` | print only the URL or the upload id |
+| `--quiet` | print only the URL; nothing on a `respond: accept` endpoint |
 | `--json` | print the server answer |
 
 Links, secrets and private files (`--mutable`, `--secret`, `--private`,
 `luk link`, `luk get`) need the matching capability on the endpoint; see
 `wyga/lukd`.
+
+`luk get` downloads with a signed request. A URL that ends with a slash
+names a directory of an expose that serves a whole storage to signed
+requests (`auth.ssh` as the `expose` of a storage):
+
+```sh
+luk get luk://backup.example.net/a/db1-prod/               # listing; -r recursive, --json
+luk get luk://backup.example.net/a/db1-prod/ -o restore/   # every file below; identical files are skipped
+luk get luk://backup.example.net/a/db1-prod/db.sql.gz.gpg -c | gpg -d | zcat   # one file to stdout
+```
 
 Exit codes of `luk send`: 0 ok, 1 usage or configuration, 2 rejected by
 the server, 3 transfer or server error, 4 hash mismatch, 130 interrupted.
