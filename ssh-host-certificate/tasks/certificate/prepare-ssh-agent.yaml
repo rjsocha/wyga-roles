@@ -7,6 +7,8 @@
       changed_when: false
       retries: 25
       delegate_to: localhost
+      environment:
+        SSH_AUTH_SOCK: "{{ SSH_CA_AGENT | default(lookup('env', 'SSH_CA_AGENT'), true) | default(lookup('env', 'SSH_AUTH_SOCK'), true) }}"
       until: _ca_key_is_present is success
 
     - name: "Host CA key not loaded ..."

@@ -12,6 +12,8 @@
       changed_when: false
       retries: 25
       delegate_to: localhost
+      environment:
+        SSH_AUTH_SOCK: "{{ SSH_CA_AGENT | default(lookup('env', 'SSH_CA_AGENT'), true) | default(lookup('env', 'SSH_AUTH_SOCK'), true) }}"
       until: nebula_ca_key_present is success
     - name: "Nebula CA key not loaded ..."
       fail:
@@ -27,6 +29,8 @@
                           -ip "{{ ','.join(vpn_instance.ip) }}"
                           -version "{{ vpn_instance.ca.version }}"
       delegate_to: localhost
+      environment:
+        SSH_AUTH_SOCK: "{{ SSH_CA_AGENT | default(lookup('env', 'SSH_CA_AGENT'), true) | default(lookup('env', 'SSH_AUTH_SOCK'), true) }}"
     - name: "Migrate CA path ..."
       include_tasks: sign_cert_ssh_migrate.yaml
       when: vpn_instance.ca.migrate is defined
