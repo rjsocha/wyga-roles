@@ -29,13 +29,6 @@
     fail_msg: "setup.lukd: config must be a map (the lukd configuration), run a map of jobs, path a list of absolute paths"
     quiet: true
 
-- name: "lukd / Verify confidential ..."
-  assert:
-    that:
-      - lukd_secret.basic is not defined
-    fail_msg: "confidential.lukd.basic is now confidential.lukd.auth.basic"
-    quiet: true
-
 - name: "lukd / Verify jobs ..."
   assert:
     that:
