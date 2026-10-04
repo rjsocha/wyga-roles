@@ -1,16 +1,7 @@
 ---
 - name: "Certificate principals ..."
   set_fact:
-    wyga_ssh_principals: "{{ host.setup.ssh.host.principal | default(['hostname']) | map('regex_replace', '^hostname$', host.hostname) | unique | list }}"
-
-- name: "Verify certificate principals ..."
-  assert:
-    that:
-      - host.setup.ssh.host.principal | default([]) is sequence
-      - host.setup.ssh.host.principal | default([]) is not string
-      - wyga_ssh_principals | select('match', '^[A-Za-z0-9*][A-Za-z0-9._:*-]*$') | list | length == wyga_ssh_principals | length
-    fail_msg: "setup.ssh.host.principal must be a list of host names or addresses"
-    quiet: true
+    wyga_ssh_principals: "{{ host | ssh_host_principals }}"
 
 - name: "Certificate state ..."
   set_fact:
