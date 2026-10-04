@@ -1,0 +1,61 @@
+---
+- name: "luk / Configuration ..."
+  set_fact:
+    luk_etc: /etc/site/luk
+    luk_setup: "{{ host.setup.luk }}"
+    luk_endpoint: "{{ host.setup.luk.endpoint | default({}) }}"
+    luk_host_key: ""
+
+- name: "luk / Verify configuration ..."
+  assert:
+    that:
+      - luk_endpoint is mapping
+      - luk_setup.default is not defined or luk_setup.default in luk_endpoint
+    fail_msg: "setup.luk: endpoint must be a map of endpoints and default one of them"
+    quiet: true
+
+- name: "luk / Install ..."
+  include_role:
+    name: wyga/install-packages
+  vars:
+    packages:
+      - luk
+
+- name: "luk / Host key ..."
+  block:
+    - name: "luk / Host key / Looking ..."
+      stat:
+        path: "/etc/ssh/ssh_host_{{ type }}_key"
+      loop: [ed25519, rsa, ecdsa]
+      loop_control:
+        loop_var: type
+      register: luk_host_keys
+
+    - name: "luk / Host key / Select ..."
+      set_fact:
+        luk_host_key: "{{ luk_host_keys.results | selectattr('stat.exists') | map(attribute='stat.path') | first | default('') }}"
+
+    - name: "luk / Host key / Verify ..."
+      assert:
+        that:
+          - luk_host_key | length > 0
+        fail_msg: "setup.luk: key: host, but no SSH host key (ed25519, rsa, ecdsa) in /etc/ssh"
+        quiet: true
+  when: "'host' in [luk_setup.key | default('')] + luk_endpoint.values() | map(attribute='key', default='') | list"
+
+- name: "luk / Directory ..."
+  file:
+    state: directory
+    path: "{{ luk_etc }}"
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: "luk / config.yaml ..."
+  template:
+    src: luk/config.yaml
+    dest: "{{ luk_etc }}/config.yaml"
+    owner: root
+    group: root
+    mode: "0644"
+    validate: "env LUK_GLOBAL_CONFIG=%s LUK_CONFIG=/nonexistent luk config check"

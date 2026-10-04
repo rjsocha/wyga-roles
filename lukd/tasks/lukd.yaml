@@ -1,0 +1,266 @@
+---
+- name: "lukd / Configuration ..."
+  set_fact:
+    lukd_etc: /etc/site/lukd
+    lukd_opt: /opt/luk
+    lukd_setup: "{{ host.setup.lukd }}"
+    lukd_secret: "{{ (confidential | default({})).lukd | default({}) }}"
+
+- name: "lukd / Inputs ..."
+  set_fact:
+    lukd_identity: "{{ lukd_setup.identity | default([]) }}"
+    lukd_ca_host: "{{ (lukd_setup.ca | default({})).host | default([]) }}"
+    lukd_ca_user: "{{ (lukd_setup.ca | default({})).user | default([]) }}"
+    lukd_gpg: "{{ lukd_setup.gpg | default([]) }}"
+    lukd_gpg_ext: '\.(asc|gpg|pgp|key)$'
+    lukd_script: "{{ lukd_setup.script | default([]) }}"
+    lukd_path: "{{ lukd_setup.path | default([]) }}"
+    lukd_run: "{{ lukd_setup.run | default({}) }}"
+    lukd_credential: "{{ lukd_secret.credential | default({}) }}"
+
+- name: "lukd / Verify configuration ..."
+  assert:
+    that:
+      - lukd_setup.config is defined
+      - lukd_setup.config is mapping
+      - lukd_run is mapping
+      - lukd_path | select('match', '^/') | list | length == lukd_path | length
+    fail_msg: "setup.lukd: config must be a map (the lukd configuration), run a map of jobs, path a list of absolute paths"
+    quiet: true
+
+- name: "lukd / Verify jobs ..."
+  assert:
+    that:
+      - job.key is match('^[a-z0-9][a-z0-9._-]*$')
+      - job.value.command is defined
+      - job.value.command is match('^/')
+      - job.value.credentials | default([]) | difference(lukd_credential.keys() | list) | length == 0
+    fail_msg: "setup.lukd.run.{{ job.key }}: name of [a-z0-9._-], an absolute command, and every credential present in confidential.lukd.credential"
+    quiet: true
+  loop: "{{ lukd_run | dict2items }}"
+  loop_control:
+    loop_var: job
+    label: "{{ job.key }}"
+
+- name: "lukd / Install ..."
+  include_role:
+    name: wyga/install-packages
+  vars:
+    packages: "{{ ['lukd'] + lukd_setup.package | default([]) }}"
+
+- name: "lukd / Directories ..."
+  file:
+    state: directory
+    path: "{{ dir.path }}"
+    owner: "{{ dir.o | default('root') }}"
+    group: "{{ dir.g | default('root') }}"
+    mode: "{{ dir.mode }}"
+  loop:
+    - { path: "{{ lukd_opt }}", mode: '0755' }
+    - { path: "{{ lukd_etc }}/credentials", mode: '0700' }
+  loop_control:
+    loop_var: dir
+    label: "{{ dir.path }}"
+
+- name: "lukd / Paths ..."
+  file:
+    state: directory
+    path: "{{ path }}"
+    owner: luk
+    group: luk
+    mode: "0750"
+  loop: "{{ lukd_path }}"
+  loop_control:
+    loop_var: path
+
+- name: "lukd / Identities ..."
+  copy:
+    src: "{{ playbook_dir }}/key/user/{{ name }}"
+    dest: "{{ lukd_etc }}/ssh.d/{{ name }}.pub"
+    owner: root
+    group: luk
+    mode: "0640"
+  loop: "{{ lukd_identity }}"
+  loop_control:
+    loop_var: name
+  notify: lukd-reload
+
+- name: "lukd / Certificate authorities ..."
+  copy:
+    src: "{{ playbook_dir }}/key/ca/{{ ca.0 }}/{{ ca.1 }}"
+    dest: "{{ lukd_etc }}/ssh.d/ca/{{ ca.0 }}/{{ ca.1 }}.pub"
+    owner: root
+    group: luk
+    mode: "0640"
+  loop: "{{ ['host'] | product(lukd_ca_host) | list + ['user'] | product(lukd_ca_user) | list }}"
+  loop_control:
+    loop_var: ca
+    label: "{{ ca.0 }}/{{ ca.1 }}"
+  notify: lukd-reload
+
+- name: "lukd / OpenPGP keys ..."
+  copy:
+    src: "{{ playbook_dir }}/key/gpg/{{ name }}"
+    dest: "{{ lukd_etc }}/gpg.d/{{ name if name is search(lukd_gpg_ext) else name ~ '.asc' }}"
+    owner: root
+    group: luk
+    mode: "0640"
+  loop: "{{ lukd_gpg }}"
+  loop_control:
+    loop_var: name
+  notify: lukd-reload
+
+- name: "lukd / Scripts ..."
+  copy:
+    src: "{{ playbook_dir }}/site/luk/{{ name }}"
+    dest: "{{ lukd_opt }}/{{ name }}"
+    owner: root
+    group: root
+    mode: "0755"
+  loop: "{{ lukd_script }}"
+  loop_control:
+    loop_var: name
+
+- name: "lukd / Job users ..."
+  getent:
+    database: passwd
+    key: "{{ name }}"
+  loop: "{{ lukd_run.values() | selectattr('user', 'defined') | map(attribute='user') | unique | list }}"
+  loop_control:
+    loop_var: name
+
+- name: "lukd / Credentials ..."
+  copy:
+    content: "{{ lukd_credential[name] }}"
+    dest: "{{ lukd_etc }}/credentials/{{ name }}"
+    owner: root
+    group: root
+    mode: "0600"
+  loop: "{{ lukd_credential.keys() | list }}"
+  loop_control:
+    loop_var: name
+  no_log: true
+
+- name: "lukd / Jobs ..."
+  template:
+    src: lukd/job.yaml
+    dest: "{{ lukd_etc }}/run.d/{{ job.key }}.yaml"
+    owner: root
+    group: root
+    mode: "0644"
+  loop: "{{ lukd_run | dict2items }}"
+  loop_control:
+    loop_var: job
+    label: "{{ job.key }}"
+
+- name: "lukd / Unmanaged files ..."
+  include_tasks: exclusive.yaml
+  loop:
+    - what: identities
+      path: "{{ lukd_etc }}/ssh.d"
+      keep: "{{ lukd_identity | map('regex_replace', '$', '.pub') | list }}"
+    - what: host certificate authorities
+      path: "{{ lukd_etc }}/ssh.d/ca/host"
+      keep: "{{ lukd_ca_host | map('regex_replace', '$', '.pub') | list }}"
+    - what: user certificate authorities
+      path: "{{ lukd_etc }}/ssh.d/ca/user"
+      keep: "{{ lukd_ca_user | map('regex_replace', '$', '.pub') | list }}"
+    - what: OpenPGP keys
+      path: "{{ lukd_etc }}/gpg.d"
+      keep: "{{ lukd_gpg | select('search', lukd_gpg_ext) | list + lukd_gpg | reject('search', lukd_gpg_ext) | map('regex_replace', '$', '.asc') | list }}"
+    - what: jobs
+      path: "{{ lukd_etc }}/run.d"
+      keep: "{{ lukd_run.keys() | map('regex_replace', '$', '.yaml') | list }}"
+    - what: credentials
+      path: "{{ lukd_etc }}/credentials"
+      keep: "{{ lukd_credential.keys() | list }}"
+  loop_control:
+    loop_var: exclusive
+    label: "{{ exclusive.what }}"
+
+- name: "lukd / Unit drop-ins / Directories ..."
+  file:
+    state: directory
+    path: "/etc/systemd/system/lukd-{{ role }}.service.d"
+    owner: root
+    group: root
+    mode: "0755"
+  loop: [receive, process]
+  loop_control:
+    loop_var: role
+  when: lukd_path | length > 0
+
+- name: "lukd / Unit drop-ins ..."
+  template:
+    src: lukd/policy.conf
+    dest: "/etc/systemd/system/lukd-{{ role }}.service.d/policy.conf"
+    owner: root
+    group: root
+    mode: "0644"
+  loop: [receive, process]
+  loop_control:
+    loop_var: role
+  when: lukd_path | length > 0
+  notify: lukd-restart
+
+- name: "lukd / Unit drop-ins / Cleanup ..."
+  file:
+    path: "/etc/systemd/system/lukd-{{ role }}.service.d/policy.conf"
+    state: absent
+  loop: [receive, process]
+  loop_control:
+    loop_var: role
+  when: lukd_path | length == 0
+  notify: lukd-restart
+
+- name: "lukd / Basic authentication ..."
+  set_fact:
+    lukd_basic: "{{ lukd_secret.basic | default({}) | lukd_basic(host.hostname, lukd_setup.bcrypt | default(10)) }}"
+  no_log: true
+
+- name: "lukd / config.yaml ..."
+  copy:
+    content: "{{ lukd_setup.config
+                 | combine(lukd_secret.config | default({}), recursive=true)
+                 | combine(lukd_basic, recursive=true)
+                 | to_nice_yaml(indent=2, sort_keys=false, width=4096) }}"
+    dest: "{{ lukd_etc }}/config.yaml"
+    owner: root
+    group: luk
+    mode: "0640"
+    validate: "sh -c 'install -o root -g luk -m 0640 %s {{ lukd_etc }}/.check.yaml && lukd check -c {{ lukd_etc }}/.check.yaml --no-running; rc=$?; rm -f {{ lukd_etc }}/.check.yaml; exit $rc'"
+  no_log: "{{ lukd_secret | length > 0 }}"
+  notify: lukd-reload
+
+- name: "lukd / Self-signed certificates ..."
+  command: runuser -u luk -- lukd tls generate
+  register: lukd_tls
+  changed_when: lukd_tls.stdout_lines | reject('search', '\\(exists\\)$') | list | length > 0
+  when: lukd_setup.config.listen | default({}) | dict2items | selectattr('value.tls', 'defined') | selectattr('value.tls.mode', 'eq', 'self') | list | length > 0
+  notify: lukd-reload
+
+- name: "lukd / Enable ..."
+  systemd:
+    name: lukd.service
+    enabled: true
+    state: started
+    daemon_reload: true
+    masked: no
+
+- name: "lukd / Roles ..."
+  shell: |
+    for unit in lukd-receive.service lukd-process.service
+    do
+      systemctl is-active --quiet "${unit}" && continue
+      systemctl reset-failed "${unit}"
+      systemctl start "${unit}"
+      printf -- '%s started\n' "${unit}"
+    done
+  register: lukd_roles
+  changed_when: lukd_roles.stdout | length > 0
+
+- name: "lukd / Job socket ..."
+  systemd:
+    name: lukd-run.socket
+    enabled: "{{ lukd_run | length > 0 }}"
+    state: "{{ 'started' if lukd_run | length > 0 else 'stopped' }}"

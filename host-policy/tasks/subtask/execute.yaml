@@ -180,6 +180,16 @@
     name: wyga/plotka
   when: host.setup.plotka is defined
 
+- name: "Configure lukd Service ..."
+  include_role:
+    name: wyga/lukd
+  when: host.setup.lukd is defined
+
+- name: "Configure luk Client ..."
+  include_role:
+    name: wyga/luk
+  when: host.setup.luk is defined
+
 - name: "Policy marker ..."
   include_tasks: "mark-policy.yaml"
 

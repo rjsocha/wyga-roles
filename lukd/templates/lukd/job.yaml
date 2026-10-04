@@ -1,0 +1,10 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+{% set spec = job.value | dict2items | rejectattr('key', 'eq', 'credentials') | list | items2dict %}
+{% set credentials = {} %}
+{% for name in job.value.credentials | default([]) %}
+{%   set _ = credentials.update({name: lukd_etc ~ '/credentials/' ~ name}) %}
+{% endfor %}
+{% if credentials %}
+{%   set _ = spec.update({'credentials': credentials}) %}
+{% endif %}
+{{ spec | to_nice_yaml(indent=2, sort_keys=false, width=4096) }}

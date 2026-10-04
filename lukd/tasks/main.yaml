@@ -1,0 +1,3 @@
+- name: "lukd configuration ..."
+  include_tasks: lukd.yaml
+  when: host.setup.lukd is defined and not host.setup.lukd.skip|default(false)

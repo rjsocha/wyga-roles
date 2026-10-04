@@ -1,0 +1,23 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+{% set config = {} %}
+{% if luk_setup.default is defined %}
+{%   set _ = config.update({'default': luk_setup.default}) %}
+{% endif %}
+{% if luk_setup.key is defined %}
+{%   set _ = config.update({'key': luk_host_key if luk_setup.key == 'host' else luk_setup.key}) %}
+{% endif %}
+{% set endpoints = {} %}
+{% for name, endpoint in luk_endpoint.items() %}
+{%   set entry = dict(endpoint) %}
+{%   if entry.key | default('') == 'host' %}
+{%     set _ = entry.update({'key': luk_host_key}) %}
+{%   endif %}
+{%   set _ = endpoints.update({name: entry}) %}
+{% endfor %}
+{% set _ = config.update({'endpoint': endpoints}) %}
+{% for section in ['link', 'alias'] %}
+{%   if luk_setup[section] is defined %}
+{%     set _ = config.update({section: luk_setup[section]}) %}
+{%   endif %}
+{% endfor %}
+{{ config | to_nice_yaml(indent=2, sort_keys=false, width=4096) }}

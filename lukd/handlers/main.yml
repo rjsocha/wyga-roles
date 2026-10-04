@@ -1,0 +1,15 @@
+---
+- name: lukd-restart
+  systemd:
+    name: lukd
+    state: restarted
+    daemon_reload: true
+
+- name: lukd-reload
+  shell: |
+    for unit in lukd-receive.service lukd-process.service
+    do
+      systemctl reload "${unit}" && continue
+      systemctl reset-failed "${unit}"
+      systemctl restart "${unit}"
+    done

@@ -1,0 +1,18 @@
+---
+- name: "lukd / Unmanaged {{ exclusive.what }} / Looking ..."
+  find:
+    paths: "{{ exclusive.path }}"
+    file_type: any
+    hidden: true
+  register: lukd_unmanaged
+
+- name: "lukd / Unmanaged {{ exclusive.what }} / Cleanup ..."
+  file:
+    path: "{{ unmanaged.path }}"
+    state: absent
+  loop: "{{ lukd_unmanaged.files | rejectattr('isdir') | list }}"
+  loop_control:
+    loop_var: unmanaged
+    label: "{{ unmanaged.path | basename }}"
+  when: unmanaged.path | basename not in exclusive.keep
+  notify: lukd-reload
