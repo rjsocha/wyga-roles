@@ -1,0 +1,7 @@
+---
+- name: "Revoke archived certificates of removed key types of {{ host.hostname }} ..."
+  command:
+    argv: "{{ [role_path ~ '/files/ssh-certificate-archive', 'types', wyga_ssh_archive] + wyga_ssh_host_keys }}"
+  register: _wyga_ssh_archive_types
+  changed_when: _wyga_ssh_archive_types.stdout | length > 0
+  delegate_to: localhost

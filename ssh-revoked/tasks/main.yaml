@@ -1,0 +1,69 @@
+---
+- name: "ssh-revoked / Check ssh/revoked.json ..."
+  stat:
+    path: "{{ playbook_dir }}/ssh/revoked.json"
+  register: ssh_revoked_file
+  delegate_to: localhost
+
+- name: "ssh-revoked / Verify ssh/revoked.json ..."
+  assert:
+    that:
+      - ssh_revoked_file.stat.exists
+    fail_msg: "ssh/revoked.json is missing: generate it with ./ssh-revoked"
+    quiet: true
+
+- name: "ssh-revoked / Read ssh/revoked.json ..."
+  set_fact:
+    ssh_revoked: "{{ lookup('file', playbook_dir ~ '/ssh/revoked.json') | from_json }}"
+
+- name: "ssh-revoked / Verify the list ..."
+  assert:
+    that:
+      - ssh_revoked.version | default(0) == 1
+      - ssh_revoked.sequence is defined
+      - ssh_revoked.ssh is defined
+      - ssh_revoked.ssh | map(attribute='fingerprint') | select('match', '^SHA256:[A-Za-z0-9+/]{43}$') | list | length == ssh_revoked.ssh | length
+    fail_msg: "ssh/revoked.json: unknown version or a malformed fingerprint"
+    quiet: true
+
+- name: "ssh-revoked / Create /etc/site/ssh/ca ..."
+  file:
+    state: directory
+    path: /etc/site/ssh/ca
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: "ssh-revoked / Update /etc/site/ssh/ca/revoked.spec ..."
+  copy:
+    content: |
+      # sequence {{ ssh_revoked.sequence }}
+      {% for entry in ssh_revoked.ssh %}
+      hash: {{ entry.fingerprint }}
+      {% endfor %}
+    dest: /etc/site/ssh/ca/revoked.spec
+    owner: root
+    group: root
+    mode: "0644"
+  register: ssh_revoked_spec
+
+- name: "ssh-revoked / Check /etc/site/ssh/ca/revoked.krl ..."
+  stat:
+    path: /etc/site/ssh/ca/revoked.krl
+  register: ssh_revoked_krl
+
+- name: "ssh-revoked / Build /etc/site/ssh/ca/revoked.krl ..."
+  shell: |
+    set -eu
+    umask 022
+    ssh-keygen -q -k -f /etc/site/ssh/ca/.revoked.krl /etc/site/ssh/ca/revoked.spec
+    mv -f /etc/site/ssh/ca/.revoked.krl /etc/site/ssh/ca/revoked.krl
+  when: ssh_revoked_spec is changed or not ssh_revoked_krl.stat.exists
+
+- name: "ssh-revoked / Configure /etc/ssh/ssh_config.d/revoked.conf ..."
+  copy:
+    content: "RevokedHostKeys /etc/site/ssh/ca/revoked.krl\n"
+    dest: /etc/ssh/ssh_config.d/revoked.conf
+    owner: root
+    group: root
+    mode: "0644"

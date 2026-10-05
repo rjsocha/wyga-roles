@@ -27,6 +27,24 @@
       when: host.setup.ssh.host.id is defined and cert_keyid.stdout != host.setup.ssh.host.id
   when: cert_exists
 
+- name: "Verify the validity of the certificate ..."
+  block:
+    - name: "Fetch the time left of the certificate ..."
+      shell: |
+        valid=$(ssh-keygen -L -f '/etc/ssh/ssh_host_{{item}}_key-cert.pub' | sed -n 's/^ *Valid: //p')
+        case "$valid" in
+          forever) echo forever ;;
+          *) echo $(( $(date -d "${valid##* to }" +%s) - $(date +%s) )) ;;
+        esac
+      register: cert_left
+      changed_when: false
+
+    - name: "Force certificate regeneration (validity) ..."
+      set_fact:
+        cert_exists: false
+      when: cert_left.stdout == 'forever' or cert_left.stdout | int < wyga_ssh_rotation.renew | ssh_interval_seconds
+  when: cert_exists and wyga_ssh_rotation | length > 0
+
 - name: "Append {{item}} to generation list..."
   set_fact:
     wyga_generate_certs: "{{ wyga_generate_certs + [ item ] }}"

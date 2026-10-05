@@ -1,3 +1,6 @@
+import base64
+import binascii
+import hashlib
 import os
 import re
 
@@ -107,6 +110,36 @@ def ssh_host_principals(host, playbook_dir):
     return out
 
 
+_INTERVAL = re.compile(r'^(?:[0-9]+[smhdw])+$')
+_UNIT = {'s': 1, 'm': 60, 'h': 3600, 'd': 86400, 'w': 604800}
+
+
+def ssh_interval_seconds(value):
+    """An interval in the form ssh-keygen -V takes (26w, 90d, 1w2d) as
+    seconds."""
+    value = str(value)
+    if not _INTERVAL.match(value):
+        raise AnsibleFilterError("invalid interval %r: use a number and s, m, h, d or w, as in 26w or 1w2d" % value)
+    return sum(int(n) * _UNIT[u] for n, u in re.findall(r'([0-9]+)([smhdw])', value))
+
+
+def ssh_fingerprint_hex(line):
+    """The SHA256 fingerprint of a public key line (type, base64 blob,
+    comment), in hex: the form that names a file."""
+    fields = str(line).split()
+    if len(fields) < 2:
+        raise AnsibleFilterError("ssh_fingerprint_hex: not a public key line")
+    try:
+        blob = base64.b64decode(fields[1], validate=True)
+    except (binascii.Error, ValueError):
+        raise AnsibleFilterError("ssh_fingerprint_hex: not a public key line")
+    return hashlib.sha256(blob).hexdigest()
+
+
 class FilterModule(object):
     def filters(self):
-        return {'ssh_host_principals': ssh_host_principals}
+        return {
+            'ssh_host_principals': ssh_host_principals,
+            'ssh_interval_seconds': ssh_interval_seconds,
+            'ssh_fingerprint_hex': ssh_fingerprint_hex,
+        }

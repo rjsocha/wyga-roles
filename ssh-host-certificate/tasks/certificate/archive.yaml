@@ -1,0 +1,14 @@
+---
+- name: "Archive directory of {{ host.hostname }} ..."
+  file:
+    state: directory
+    path: "{{ wyga_ssh_archive }}"
+    mode: "0755"
+  delegate_to: localhost
+
+- name: "Archive the {{ item }} certificate ..."
+  copy:
+    src: "{{ _ltmp.path }}/ssh_host_{{ item }}_key-cert.pub"
+    dest: "{{ wyga_ssh_archive }}/{{ lookup('file', _ltmp.path ~ '/ssh_host_' ~ item ~ '_key.pub') | ssh_fingerprint_hex }}.pub"
+    mode: "0644"
+  delegate_to: localhost

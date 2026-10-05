@@ -18,7 +18,7 @@
   loop_control:
     loop_var: key_file
     label: "{{ key_file.path | basename }}"
-  when: key_file.path | regex_search( wyga_ssh_host_keys | join('|')) is none
+  when: key_file.path | basename | regex_replace('^ssh_host_(.+)_key(\\.pub|-cert\\.pub)?$', '\\1') not in wyga_ssh_host_keys
 
 - name: "Remove SSH key files ..."
   file:

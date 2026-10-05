@@ -1,11 +1,11 @@
 ---
 - name: "Sign host {{ item }} key"
-  command: ssh-keygen -s "{{_ca_private_file}}" -I "{{ host.setup.ssh.host.id if host.setup.ssh.host.id is defined else host.hostname }}" -z "{{ _date_serial }}" -h{{ (' -n ' ~ (wyga_ssh_principals | join(',') | quote)) if wyga_ssh_principals else '' }} "{{ _ltmp.path }}/ssh_host_{{ item }}_key"
+  command: ssh-keygen -s "{{_ca_private_file}}" -I "{{ host.setup.ssh.host.id if host.setup.ssh.host.id is defined else host.hostname }}" -z "{{ _date_serial }}" -h{{ (' -n ' ~ (wyga_ssh_principals | join(',') | quote)) if wyga_ssh_principals else '' }}{{ (' -V ' ~ (('-5m:+' ~ wyga_ssh_rotation.valid) | quote)) if wyga_ssh_rotation else '' }} "{{ _ltmp.path }}/ssh_host_{{ item }}_key"
   when: use_ssh_agent | bool == False
   delegate_to: localhost
 
 - name: "Sign host {{ item }} key via ssh-agent"
-  command: ssh-keygen -Us "{{_ca_public_file}}" -I "{{ host.setup.ssh.host.id if host.setup.ssh.host.id is defined else host.hostname }}" -z "{{ _date_serial }}" -h{{ (' -n ' ~ (wyga_ssh_principals | join(',') | quote)) if wyga_ssh_principals else '' }} "{{ _ltmp.path }}/ssh_host_{{ item }}_key"
+  command: ssh-keygen -Us "{{_ca_public_file}}" -I "{{ host.setup.ssh.host.id if host.setup.ssh.host.id is defined else host.hostname }}" -z "{{ _date_serial }}" -h{{ (' -n ' ~ (wyga_ssh_principals | join(',') | quote)) if wyga_ssh_principals else '' }}{{ (' -V ' ~ (('-5m:+' ~ wyga_ssh_rotation.valid) | quote)) if wyga_ssh_rotation else '' }} "{{ _ltmp.path }}/ssh_host_{{ item }}_key"
   delegate_to: localhost
   environment:
     SSH_AUTH_SOCK: "{{ SSH_CA_AGENT | default(lookup('env', 'SSH_CA_AGENT'), true) | default(lookup('env', 'SSH_AUTH_SOCK'), true) }}"

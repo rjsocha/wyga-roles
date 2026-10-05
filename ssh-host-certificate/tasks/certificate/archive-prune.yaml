@@ -1,0 +1,10 @@
+---
+- name: "Remove expired certificates from the archive of {{ host.hostname }} ..."
+  command:
+    argv:
+      - "{{ role_path }}/files/ssh-certificate-archive"
+      - prune
+      - "{{ wyga_ssh_archive }}"
+  register: _wyga_ssh_archive_prune
+  changed_when: _wyga_ssh_archive_prune.stdout | length > 0
+  delegate_to: localhost

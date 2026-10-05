@@ -9,6 +9,41 @@
 - name: "Setup task ..."
   set_fact:
     ssh_ca_group: "{{ host.setup.ssh.host.group }}"
+    wyga_ssh_archive: "{{ playbook_dir }}/ssh/certificate/{{ host.setup.ssh.host.group }}/{{ host.hostname }}"
+
+- name: "Host key types ..."
+  set_fact:
+    wyga_ssh_host_keys: "{{ wyga_ssh_host_keys_known if _keys == 'all' else ([_keys] if _keys is string else _keys) }}"
+  vars:
+    _keys: "{{ host.setup.ssh.host['keys'] }}"
+  when: "'keys' in host.setup.ssh.host"
+
+- name: "Verify host key types ..."
+  assert:
+    that:
+      - wyga_ssh_host_keys is sequence
+      - wyga_ssh_host_keys is not string
+      - wyga_ssh_host_keys is not mapping
+      - wyga_ssh_host_keys | length > 0
+      - wyga_ssh_host_keys | difference(wyga_ssh_host_keys_known) | length == 0
+      - wyga_ssh_host_keys | unique | list | length == wyga_ssh_host_keys | length
+    fail_msg: "setup.ssh.host.keys must be all, or one or a list of {{ wyga_ssh_host_keys_known | join(', ') }}, each once"
+    quiet: true
+
+- name: "Certificate rotation ..."
+  set_fact:
+    wyga_ssh_rotation: "{{ ((host.security | default({}, true)).rotation | default({}, true)).ssh | default({}, true) }}"
+
+- name: "Verify certificate rotation ..."
+  assert:
+    that:
+      - wyga_ssh_rotation is mapping
+      - wyga_ssh_rotation.valid is defined
+      - wyga_ssh_rotation.renew is defined
+      - wyga_ssh_rotation.valid | ssh_interval_seconds > wyga_ssh_rotation.renew | ssh_interval_seconds
+    fail_msg: "security.rotation.ssh needs valid and renew (intervals as 26w or 90d), renew shorter than valid"
+    quiet: true
+  when: wyga_ssh_rotation | length > 0
 
 - name: "Sign SSH host keys..."
   block:
@@ -53,12 +88,6 @@
 
     - name: "Generate new host keys"
       include_tasks: "certificate/generate-new-host-key.yaml"
-      when: sign_existing | bool == False
-      with_items: "{{ wyga_generate_certs }}"
-
-    - name: "Prepare existing host keys"
-      include_tasks: "certificate/prepare-host-key.yaml"
-      when: sign_existing | bool == True
       with_items: "{{ wyga_generate_certs }}"
 
     - name: "Fetch host public keys..."
@@ -69,6 +98,10 @@
       include_tasks: "certificate/sign-host-key.yaml"
       with_items: "{{ wyga_generate_certs }}"
 
+    - name: "Archive certificates..."
+      include_tasks: "certificate/archive.yaml"
+      with_items: "{{ wyga_generate_certs }}"
+
     - name: "Transfer certificates to remote host..."
       include_tasks: "certificate/transfer-host-certificate.yaml"
       with_items: "{{ wyga_generate_certs }}"
@@ -76,6 +109,10 @@
     - name: "Copy keys to /etc/ssh"
       include_tasks: "certificate/copy-host-key.yaml"
       with_items: "{{ wyga_generate_certs }}"
+
+    - name: "Prune the certificate archive..."
+      include_tasks: "certificate/archive-prune.yaml"
+      when: wyga_generate_certs | length > 0
 
     - name: "Record certificate state..."
       include_tasks: "certificate/record-state.yaml"
@@ -92,6 +129,9 @@
 
     - name: "Cleanup unwanted keys ..."
       include_tasks: "certificate/ssh-remove-keys.yaml"
+
+    - name: "Revoke certificates of removed key types..."
+      include_tasks: "certificate/archive-types.yaml"
 
     - name: "Preapre /etc/sshd_config"
       include_tasks: "certificate/ssh-prepare.yaml"
