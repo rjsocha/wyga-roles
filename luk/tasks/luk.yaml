@@ -3,7 +3,7 @@
   set_fact:
     luk_etc: /etc/site/luk
     luk_setup: "{{ host.setup.luk }}"
-    luk_endpoint: "{{ host.setup.luk.endpoint | default({}) }}"
+    luk_endpoint: "{{ host.setup.luk.endpoint | default({}) | luk_endpoints }}"
     luk_host_key: ""
 
 - name: "luk / Verify configuration ..."

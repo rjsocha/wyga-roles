@@ -10,7 +10,7 @@ an SSH key, so the server decides by who signed it.
 - Alone: the playbook `luk-config` (`load-policy`, `wyga/luk`).
 - The server side is `wyga/lukd`.
 
-Written against luk 0.1.10.
+Written against luk 0.2.0.
 
 ## Quick start
 
@@ -24,9 +24,7 @@ policy:
       key: host
       default: backup
       endpoint:
-        backup:
-          url: https://backup.example.net:8443/backup
-          pin: sha256//le9hzIonjKDQHk4tgHlfRu/AE+4jU5+Vd4GvPe/uswQ=
+        backup: https://backup.example.net:8443/backup#lusab-babad-gutih-tugad-hajop-kizof
 ```
 
 On the host, as root:
@@ -41,14 +39,17 @@ luk send --backup --file /var/backups/db.sql.gz
 | --- | --- |
 | `key` | signing key of every endpoint without its own: `host`, an absolute path, `~/...` or `SHA256:...` |
 | `default` | endpoint used without `--endpoint`; must be one of `endpoint` |
-| `endpoint.<name>.url` | URL of the lukd endpoint (required) |
-| `endpoint.<name>.pin` | `sha256//...` pin of the server certificate |
+| `endpoint.<name>` | the URL of the lukd endpoint, with the pins in its fragment; or a map (below) |
+| `endpoint.<name>.url` | URL of the lukd endpoint (required); may carry the pins in its fragment |
+| `endpoint.<name>.pin` | pins of the lukd key: one, or a list; joined with those of the URL |
 | `endpoint.<name>.key` | signing key of this endpoint, same forms as `key` |
 | `link` | map of a link host to the endpoint `luk link` uses for its URLs |
 | `alias` | map of a command name to its arguments |
 | `skip` | `true` turns the role off |
 
-Everything except `key: host` is written to the configuration as it stands.
+Everything except `key: host` and the endpoint shorthand is written to the
+configuration as it stands: an endpoint given as a URL becomes `url`, and
+the fragment of a URL becomes `pin`, a list.
 
 ### `key`
 
@@ -71,11 +72,24 @@ serves root.
 
 ### `pin`
 
-Needed for a lukd listener with a self-signed certificate or one from
-files: the pin replaces the CA check. Read it on the server with
-`lukd tls pin`. Leave it out for a server whose certificate verifies
-against the system CAs (an ACME listener, or a reverse proxy with a public
-certificate); a pin there breaks the endpoint at the next renewal.
+The pin is the identity key of lukd: luk talks to an endpoint only through
+a channel with the server that holds that key, whatever TLS is in between.
+Without a pin luk refuses the endpoint. Read it on the server with
+`lukd key`, which prints the key (43 characters) and its six-word form
+(`lusab-babad-gutih-tugad-hajop-kizof`); both are pins. Several pins (a
+list, or comma-separated in the fragment) let a key be rotated: the server
+is accepted when its key matches any of them.
+
+```yaml
+endpoint:
+  backup: https://backup.example.net:8443/backup#lusab-babad-gutih-tugad-hajop-kizof
+  drop:
+    url: https://backup.example.net:8443/drop#lusab-babad-gutih-tugad-hajop-kizof
+    key: /etc/site/luk/drop.key
+```
+
+The TLS pin of older versions (`sha256//...`) is not a pin of lukd; luk
+refuses it with `an endpoint pin is the lukd key: run luk scan URL`.
 
 ### `link` and `alias`
 
