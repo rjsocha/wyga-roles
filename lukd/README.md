@@ -72,8 +72,8 @@ policy:
 | `path` | the directory, luk:luk 0750; `ReadWritePaths=` drop-ins of both roles |
 | `docker` | `SupplementaryGroups=docker` drop-in of the process role |
 | `confidential.lukd.credential` | `/etc/site/lukd/credentials.d/<name>`, root:root 0600 |
-| `confidential.lukd.password` | `/etc/site/lukd/password.d/<name>`, root:luk 0640 |
-| `confidential.lukd.auth.basic` | `expose.<name>.auth.basic` in `config.yaml` |
+| `confidential.lukd.encrypt.password` | `/etc/site/lukd/password.d/<name>`, root:luk 0640 |
+| `confidential.lukd.auth.basic` | user sets; an expose names one with `auth.basic: <set>` and gets its users in `config.yaml` |
 | `confidential.lukd.config` | merged over `config` |
 
 Units: `lukd.service` (enabled, groups `lukd-receive.service` and
@@ -197,15 +197,16 @@ Cost of the `auth.basic` hashes, 4 to 31. Default 10.
 confidential:
   lukd:
     auth:
-      basic:                 # users of expose.<name>.auth.basic, plain passwords
-        publish:             # expose name
+      basic:                 # user sets, plain passwords
+        developers:          # named by expose.<name>.auth.basic: developers
           dev: "plain password"
     credential:              # files for the jobs of run
       s3: |
         [default]
         aws_access_key_id = ...
-    password:                # passwords of encrypt.insecure, by name
-      receiver-a: "long random password"
+    encrypt:
+      password:              # passwords of encrypt.insecure, by name
+        receiver-a: "long random password"
     config:                  # any part of the lukd configuration, merged over setup.lukd.config
       listen:
         web:
@@ -213,15 +214,19 @@ confidential:
             eab: { kid: "KEY_ID", key: "..." }
 ```
 
-- `auth.basic`: the role hashes each password with bcrypt and adds the entries
-  to the expose. The salt is derived from the host name, the expose and
-  the user, so a hash changes only when its password does. The hash is
-  made by crypt(3) of the system libcrypt on the controller (no Python
-  package needed); without a libcrypt that knows bcrypt the Python module
-  `bcrypt` is used.
+- `auth.basic`: user sets. An expose of the policy names one with
+  `auth.basic: <set>`, so the policy shows that basic authentication is
+  on and with which users, and the vault holds the passwords. Several
+  exposes may name one set. The role hashes each password with bcrypt and
+  puts the entries in place of the name. A set named by an expose and
+  missing here, or a set here that no expose names, fail the role. The
+  salt is derived from the host name, the set and the user, so a hash
+  changes only when its password does. The hash is made by crypt(3)
+  of the system libcrypt on the controller (no Python package needed);
+  without a libcrypt that knows bcrypt the Python module `bcrypt` is used.
 - `credential`: every name a job lists in `credentials` must be present
   here; the role refuses the policy otherwise.
-- `password`: the passwords an `encrypt` step names under `insecure`
+- `encrypt.password`: the passwords an `encrypt` step names under `insecure`
   (`symmetric`, `openssl.key`). The file holds the password and one newline;
   trailing newlines of the value are dropped, so a block scalar works. Only
   the process role of lukd reads them. A password the configuration names
@@ -396,7 +401,7 @@ Steps:
 | `encrypt:` | OpenPGP-encrypt for `wkd:` and `key:` recipients; `strict: true` fails on any unusable recipient; `insecure:` adds passwords (below) |
 
 `encrypt.insecure` is for receivers without an OpenPGP key. The passwords
-come from `confidential.lukd.password`:
+come from `confidential.lukd.encrypt.password`:
 
 ```yaml
 - encrypt:
@@ -496,7 +501,7 @@ watch:
 | --- | --- |
 | `listen` | listener name or list of names |
 | `path` | URL prefix; the longest matching prefix wins |
-| `auth.basic` | users, from `confidential.lukd.auth.basic` |
+| `auth.basic` | name of a user set of `confidential.lukd.auth.basic` |
 | `auth.ssh.allow` | signed `luk get` only; who downloads `--private --any` files, or every file when it is the `expose` of a storage |
 | `plain` | no authentication on purpose; silences the warnings |
 | `index` | HTML listing of directory URLs; not with `auth.ssh`; on a sharded storage it fails `lukd check` |

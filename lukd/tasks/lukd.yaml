@@ -18,7 +18,7 @@
     lukd_docker: "{{ lukd_setup.docker | default(false) | bool }}"
     lukd_run: "{{ lukd_setup.run | default({}) }}"
     lukd_credential: "{{ lukd_secret.credential | default({}) }}"
-    lukd_password: "{{ lukd_secret.password | default({}) }}"
+    lukd_password: "{{ (lukd_secret.encrypt | default({})).password | default({}) }}"
 
 - name: "lukd / Verify configuration ..."
   assert:
@@ -242,7 +242,7 @@
 
 - name: "lukd / Basic authentication ..."
   set_fact:
-    lukd_basic: "{{ (lukd_secret.auth | default({})).basic | default({}) | lukd_basic(host.hostname, lukd_setup.bcrypt | default(10)) }}"
+    lukd_basic: "{{ (lukd_secret.auth | default({})).basic | default({}) | lukd_basic(host.hostname, lukd_setup.bcrypt | default(10), lukd_setup.config) }}"
   no_log: true
 
 - name: "lukd / config.yaml ..."
