@@ -18,6 +18,7 @@
     lukd_docker: "{{ lukd_setup.docker | default(false) | bool }}"
     lukd_run: "{{ lukd_setup.run | default({}) }}"
     lukd_credential: "{{ lukd_secret.credential | default({}) }}"
+    lukd_password: "{{ lukd_secret.password | default({}) }}"
 
 - name: "lukd / Verify configuration ..."
   assert:
@@ -59,6 +60,7 @@
   loop:
     - { path: "{{ lukd_opt }}", mode: '0755' }
     - { path: "{{ lukd_etc }}/credentials.d", mode: '0700' }
+    - { path: "{{ lukd_etc }}/password.d", g: luk, mode: '0750' }
   loop_control:
     loop_var: dir
     label: "{{ dir.path }}"
@@ -151,6 +153,18 @@
     loop_var: name
   no_log: true
 
+- name: "lukd / Passwords ..."
+  copy:
+    content: "{{ lukd_password[name] | string | regex_replace('\\n+$', '') }}\n"
+    dest: "{{ lukd_etc }}/password.d/{{ name }}"
+    owner: root
+    group: luk
+    mode: "0640"
+  loop: "{{ lukd_password.keys() | list }}"
+  loop_control:
+    loop_var: name
+  no_log: true
+
 - name: "lukd / Jobs ..."
   template:
     src: lukd/job.yaml
@@ -184,6 +198,9 @@
     - what: credentials
       path: "{{ lukd_etc }}/credentials.d"
       keep: "{{ lukd_credential.keys() | list }}"
+    - what: passwords
+      path: "{{ lukd_etc }}/password.d"
+      keep: "{{ lukd_password.keys() | list }}"
   loop_control:
     loop_var: exclusive
     label: "{{ exclusive.what }}"

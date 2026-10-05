@@ -72,6 +72,7 @@ policy:
 | `path` | the directory, luk:luk 0750; `ReadWritePaths=` drop-ins of both roles |
 | `docker` | `SupplementaryGroups=docker` drop-in of the process role |
 | `confidential.lukd.credential` | `/etc/site/lukd/credentials.d/<name>`, root:root 0600 |
+| `confidential.lukd.password` | `/etc/site/lukd/password.d/<name>`, root:luk 0640 |
 | `confidential.lukd.auth.basic` | `expose.<name>.auth.basic` in `config.yaml` |
 | `confidential.lukd.config` | merged over `config` |
 
@@ -203,6 +204,8 @@ confidential:
       s3: |
         [default]
         aws_access_key_id = ...
+    password:                # passwords of encrypt.insecure, by name
+      receiver-a: "long random password"
     config:                  # any part of the lukd configuration, merged over setup.lukd.config
       listen:
         web:
@@ -218,13 +221,19 @@ confidential:
   `bcrypt` is used.
 - `credential`: every name a job lists in `credentials` must be present
   here; the role refuses the policy otherwise.
+- `password`: the passwords an `encrypt` step names under `insecure`
+  (`symmetric`, `openssl.key`). The file holds the password and one newline;
+  trailing newlines of the value are dropped, so a block scalar works. Only
+  the process role of lukd reads them. A password the configuration names
+  and this map lacks fails the validation of `config.yaml`. lukd reads a
+  password when the step runs, so a changed one needs no reload.
 - `config`: merged recursively; use it for the few secret values that live
   inside the lukd configuration.
 
 ## Behaviour
 
 - **Exclusive directories.** `ssh.d`, `ssh.d/ca/host`, `ssh.d/ca/user`,
-  `gpg.d`, `run.d` and `credentials.d` hold only what the policy lists; any
+  `gpg.d`, `run.d`, `credentials.d` and `password.d` hold only what the policy lists; any
   other file there is removed. Taking a name off the policy takes its
   access away. `/opt/luk` is not cleaned, packages install there too.
 - **Validation before activation.** `config.yaml` is checked with
@@ -384,7 +393,25 @@ Steps:
 | `store: <storage>` or a list | store the current files |
 | `run: /path` | run a program as `luk` on the files; `env:` adds variables; `tee: true` keeps the input for the next step |
 | `relay: <job>` | run a job of `run` (role key) on the files as its user; the next step gets the same files |
-| `encrypt:` | OpenPGP-encrypt for `wkd:` and `key:` recipients; `strict: true` fails on any unusable recipient |
+| `encrypt:` | OpenPGP-encrypt for `wkd:` and `key:` recipients; `strict: true` fails on any unusable recipient; `insecure:` adds passwords (below) |
+
+`encrypt.insecure` is for receivers without an OpenPGP key. The passwords
+come from `confidential.lukd.password`:
+
+```yaml
+- encrypt:
+    key: [backup@example.net]
+    insecure:
+      symmetric: [receiver-a]        # these passwords also decrypt the .gpg files
+      openssl:
+        key: receiver-a              # one password
+        files: ["*.plain.sql.zst"]   # globs on the file name as it enters the step
+```
+
+A file that matches `openssl.files` is written only as `<name>.enc`, in the
+format of `openssl enc -aes-256-cbc -pbkdf2`, and gets no `.gpg`; the
+format has no integrity check. To publish a file both ways, let the `run`
+step before it put the file into the set under two names.
 
 ### `storage.<name>`
 
