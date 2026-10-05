@@ -44,14 +44,19 @@ def _interfaces(host):
     return out
 
 
-def _vpn_domain(playbook_dir, name):
+def _vpn_domains(playbook_dir, name):
     path = os.path.join(playbook_dir, 'vpn', 'nebula', str(name), 'config.yaml')
     try:
         with open(path) as f:
             config = yaml.safe_load(f) or {}
     except OSError as e:
         raise AnsibleFilterError("setup.vpn %s: %s" % (name, e))
-    return config.get('domain') or 'vpn'
+    alias = config.get('alias') or []
+    if isinstance(alias, str):
+        alias = [alias]
+    if not isinstance(alias, list):
+        raise AnsibleFilterError("setup.vpn %s: alias must be a list of domains" % name)
+    return [config.get('domain') or 'vpn'] + [str(a) for a in alias]
 
 
 def _vpn(host, playbook_dir):
@@ -62,7 +67,8 @@ def _vpn(host, playbook_dir):
         addresses = _marked(entry, True, 'setup.vpn')
         if addresses is None:
             continue
-        out.append('%s.%s' % (entry.get('hostname') or host['hostname'], _vpn_domain(playbook_dir, entry['name'])))
+        for domain in _vpn_domains(playbook_dir, entry['name']):
+            out.append('%s.%s' % (entry.get('hostname') or host['hostname'], domain))
         out += addresses
     return out
 
@@ -73,7 +79,8 @@ def ssh_host_principals(host, playbook_dir):
     setup.ssh.host.principal lists names, addresses and the keywords
     hostname, vpn and address; without the key it is [hostname]. vpn is,
     for every entry of setup.vpn, the name of the host in the VPN
-    (<hostname>.<domain>, as wyga/nebula-vpn names it) and its addresses;
+    (<hostname>.<domain>, as wyga/nebula-vpn names it, and the same under
+    every domain of alias in the config of the VPN) and its addresses;
     certificate: false on the entry leaves it out, a list limits the
     addresses. address is the addresses of the network interfaces marked
     certificate: true or with a list."""
