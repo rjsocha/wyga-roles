@@ -2,7 +2,8 @@
 
 Filesystems and swap of a host as `setup.filesystem` declares them, on
 block devices `wyga/storage` made or any other. `wyga/host-policy` runs it
-right after `wyga/storage`.
+right after `wyga/storage`, after the packages of the policy and before
+the services. `btrfs-progs` is installed by the role when `btrfs` is used.
 
 - Activates on `setup.filesystem`.
 - Nothing is reformatted: a device that holds another filesystem fails

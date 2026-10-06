@@ -7,6 +7,13 @@
     fail_msg: "setup.storage: a map with the sections lvm and loop"
     quiet: true
 
+- name: "Storage / Tools ..."
+  include_role:
+    name: wyga/install-packages
+  vars:
+    packages: [lvm2]
+  when: host.setup.storage.lvm is defined
+
 - name: "Storage / Block devices ..."
   wyga_storage:
     lvm: "{{ host.setup.storage.lvm | default({}) }}"

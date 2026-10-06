@@ -7,6 +7,13 @@
     fail_msg: "setup.filesystem: a map with the sections btrfs and swap"
     quiet: true
 
+- name: "Filesystem / Tools ..."
+  include_role:
+    name: wyga/install-packages
+  vars:
+    packages: [btrfs-progs]
+  when: host.setup.filesystem.btrfs is defined
+
 - name: "Filesystem / Filesystems ..."
   wyga_filesystem:
     btrfs: "{{ host.setup.filesystem.btrfs | default({}) }}"

@@ -3,7 +3,10 @@
 Block devices of a host as `setup.storage` declares them: LVM volume
 groups and logical volumes, sparse files for loop devices. Filesystems on
 them are the work of `wyga/filesystem`, which `wyga/host-policy` runs
-right after this role.
+right after this role, both after the packages of the policy and before
+the services (so a service directory is a mount before its package
+creates anything there). `lvm2` is installed by the role when `lvm` is
+used.
 
 - Activates on `setup.storage`.
 - Everything is grow-only: nothing is shrunk, removed or reformatted. A
