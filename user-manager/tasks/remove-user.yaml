@@ -1,0 +1,17 @@
+---
+- name: "User Manager / Linger off {{ rm_user }} ..."
+  command: loginctl disable-linger {{ rm_user }}
+  args:
+    removes: "/var/lib/systemd/linger/{{ rm_user }}"
+
+- name: "User Manager / Remove user {{ rm_user }} ..."
+  user:
+    name: "{{ rm_user }}"
+    state: absent
+    force: true
+    remove: true
+
+- name: "User Manager / Remove marker of {{ rm_user }} ..."
+  file:
+    path: "{{ wum_user_managed }}/{{ rm_user }}"
+    state: absent

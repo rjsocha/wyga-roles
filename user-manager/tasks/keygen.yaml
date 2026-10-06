@@ -1,0 +1,46 @@
+---
+# Keys generated on the host for users (keygen); the public keys that
+# keygen.append names go to the pools of other users as inline keys.
+- name: "User Manager / Home directories ..."
+  getent:
+    database: passwd
+
+- name: "User Manager / .ssh of users with keys ..."
+  file:
+    path: "{{ ansible_facts.getent_passwd[user][4] }}/.ssh"
+    state: directory
+    owner: "{{ user }}"
+    group: "{{ user }}"
+    mode: "0700"
+  loop: "{{ wum.users.values() | selectattr('keygen', 'defined') | map(attribute='name') | list }}"
+  loop_control:
+    loop_var: user
+
+- name: "User Manager / Generate keys ..."
+  user:
+    name: "{{ key.user }}"
+    generate_ssh_key: true
+    ssh_key_type: "{{ key.type }}"
+    ssh_key_bits: "{{ key.bits }}"
+    ssh_key_passphrase: "{{ key.passphrase }}"
+    ssh_key_comment: "{{ key.comment }}"
+    ssh_key_file: "{{ ansible_facts.getent_passwd[key.user][4] }}/.ssh/{{ key.file }}"
+  loop: "{{ wum_keygen }}"
+  loop_control:
+    loop_var: key
+    label: "{{ key.user }}/{{ key.file }}"
+  vars:
+    wum_keygen: "{{ wum.users.values() | selectattr('keygen', 'defined') | map('wyga_keygen_of') | flatten }}"
+
+- name: "User Manager / Read generated public keys ..."
+  slurp:
+    src: "{{ ansible_facts.getent_passwd[key.user][4] }}/.ssh/{{ key.file }}.pub"
+  loop: "{{ wum.users.values() | selectattr('keygen', 'defined') | map('wyga_keygen_of') | flatten | selectattr('append', 'defined') | list }}"
+  loop_control:
+    loop_var: key
+    label: "{{ key.user }}/{{ key.file }}"
+  register: wum_generated_keys
+
+- name: "User Manager / Generated keys ..."
+  set_fact:
+    wum_generated: "{{ wum_generated_keys.results | wyga_generated }}"

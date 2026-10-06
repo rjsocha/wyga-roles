@@ -1,14 +1,232 @@
-- name: "Check if host is defined ..."
-  assert:
-    that:
-      - host is defined
+---
+# The catalogue (groups, users, the content of the key pools) is built on
+# the controller by the filters of this role; the tasks below only apply
+# it. Each task loops over the catalogue, so the number of tasks does not
+# grow with the number of users.
+- name: "User Manager / Catalogue ..."
+  set_fact:
+    wum: "{{ host | wyga_users(onboard_password) }}"
+  no_log: true
 
-- name: "User Manager / Verify host.user ..."
+- name: "User Manager / Verify user CA ..."
   assert:
     that:
-      - host.user is mapping
+      - lookup('fileglob', playbook_dir ~ '/' ~ user_ca_key ~ '.pub') | length > 0
+    fail_msg: "No such file {{ user_ca_key }}"
     quiet: true
-    fail_msg: "Unsupported host.user format ..."
-  when: host.user is defined
+  when: host.setup.ssh.user.certificate | default(false)
 
-- include_tasks: "subtask/execute.yaml"
+- name: "User Manager / Groups ..."
+  group:
+    name: "{{ group.key }}"
+    gid: "{{ group.value.gid | default(omit) }}"
+    non_unique: "{{ not group.value.unique }}"
+    system: "{{ group.value.system }}"
+    state: present
+  loop: "{{ wum.groups | dict2items }}"
+  loop_control:
+    loop_var: group
+    label: "{{ group.key }}"
+
+- name: "User Manager / State directories ..."
+  file:
+    path: "{{ dir }}"
+    state: directory
+  loop:
+    - "{{ wum_group_managed }}"
+    - "{{ wum_user_managed }}"
+    - "{{ ssh_pool_dir }}"
+  loop_control:
+    loop_var: dir
+
+- name: "User Manager / Group markers ..."
+  copy:
+    dest: "{{ wum_group_managed }}/{{ group }}"
+    content: "{{ group }}"
+    owner: root
+    group: root
+    mode: "0400"
+  loop: "{{ wum.groups.keys() | list }}"
+  loop_control:
+    loop_var: group
+
+- name: "User Manager / Removed groups ..."
+  find:
+    path: "{{ wum_group_managed }}"
+    file_type: file
+    excludes: "{{ wum.groups.keys() | list }}"
+  register: wum_removed_groups
+
+- name: "User Manager / Remove groups ..."
+  group:
+    name: "{{ group }}"
+    state: absent
+  loop: "{{ wum_removed_groups.files | map(attribute='path') | map('basename') | list }}"
+  loop_control:
+    loop_var: group
+
+- name: "User Manager / Remove group markers ..."
+  file:
+    path: "{{ marker }}"
+    state: absent
+  loop: "{{ wum_removed_groups.files | map(attribute='path') | list }}"
+  loop_control:
+    loop_var: marker
+    label: "{{ marker | basename }}"
+
+- name: "User Manager / Primary groups with a gid ..."
+  group:
+    name: "{{ user.key }}"
+    gid: "{{ user.value.gid }}"
+    state: present
+  loop: "{{ wum.users | dict2items | selectattr('value.gid', 'defined') | selectattr('value.gid', 'gt', 0) | list }}"
+  loop_control:
+    loop_var: user
+    label: "{{ user.key }}"
+
+- name: "User Manager / Managed markers (before) ..."
+  stat:
+    path: "{{ wum_user_managed }}/{{ user }}"
+  loop: "{{ wum.users.keys() | list }}"
+  loop_control:
+    loop_var: user
+  register: wum_managed_before
+
+- name: "User Manager / Users ..."
+  user:
+    name: "{{ user.key }}"
+    comment: "{{ user.value.gecos | default(omit) }}"
+    groups: "{{ user.value.groups | list }}"
+    shell: "{{ user.value.shell }}"
+    create_home: true
+    home: "{{ user.value.home | default(omit) }}"
+    uid: "{{ user.value.uid | default(omit) }}"
+    password: "{{ user.value.password | default('!') }}"
+    update_password: "{{ user.value.update_password | default('on_create') }}"
+    state: present
+  loop: "{{ wum.users | dict2items }}"
+  loop_control:
+    loop_var: user
+    label: "{{ user.key }}"
+
+- name: "User Manager / Primary groups ..."
+  user:
+    name: "{{ user.key }}"
+    group: "{{ user.value.group | default(user.key) }}"
+  loop: "{{ wum.users | dict2items }}"
+  loop_control:
+    loop_var: user
+    label: "{{ user.key }}"
+
+- name: "User Manager / Linger off ..."
+  command: loginctl disable-linger {{ user.key }}
+  args:
+    removes: "/var/lib/systemd/linger/{{ user.key }}"
+  loop: "{{ wum.users | dict2items | rejectattr('value.linger', 'defined') | list + wum.users | dict2items | selectattr('value.linger', 'defined') | rejectattr('value.linger') | list }}"
+  loop_control:
+    loop_var: user
+    label: "{{ user.key }}"
+
+- name: "User Manager / Linger on ..."
+  command: loginctl enable-linger {{ user.key }}
+  args:
+    creates: "/var/lib/systemd/linger/{{ user.key }}"
+  loop: "{{ wum.users | dict2items | selectattr('value.linger', 'defined') | selectattr('value.linger') | list }}"
+  loop_control:
+    loop_var: user
+    label: "{{ user.key }}"
+
+- name: "User Manager / SSH keys of users ..."
+  include_tasks: keygen.yaml
+  when: wum.users.values() | selectattr('keygen', 'defined') | list | length > 0
+
+- name: "User Manager / Force password change ..."
+  command: passwd -e {{ user.user }}
+  loop: "{{ wum_managed_before.results }}"
+  loop_control:
+    loop_var: user
+    label: "{{ user.user }}"
+  when: not user.stat.exists and wum.users[user.user].password is defined and wum.users[user.user].forceChange
+
+- name: "User Manager / Managed markers ..."
+  copy:
+    content: "{{ user }}"
+    dest: "{{ wum_user_managed }}/{{ user }}"
+    mode: "0400"
+    owner: root
+    group: root
+  loop: "{{ wum.users | dict2items | rejectattr('key', 'eq', 'root') | rejectattr('value.unmanaged', 'defined') | map(attribute='key') | list + wum.users | dict2items | rejectattr('key', 'eq', 'root') | selectattr('value.unmanaged', 'defined') | rejectattr('value.unmanaged') | map(attribute='key') | list }}"
+  loop_control:
+    loop_var: user
+
+- name: "User Manager / Unmanaged markers ..."
+  file:
+    path: "{{ wum_user_managed }}/{{ user }}"
+    state: absent
+  loop: "{{ wum.users | dict2items | rejectattr('key', 'eq', 'root') | selectattr('value.unmanaged', 'defined') | selectattr('value.unmanaged') | map(attribute='key') | list }}"
+  loop_control:
+    loop_var: user
+
+- name: "User Manager / Removed users ..."
+  find:
+    path: "{{ wum_user_managed }}"
+    file_type: file
+    excludes: "{{ wum.users.keys() | list }}"
+  register: wum_removed_users
+
+- name: "User Manager / Remove users ..."
+  include_tasks: remove-user.yaml
+  loop: "{{ wum_removed_users.files | map(attribute='path') | map('basename') | reject('eq', 'root') | list }}"
+  loop_control:
+    loop_var: rm_user
+
+- name: "User Manager / Key pools ..."
+  set_fact:
+    wum_pools: "{{ wum.users | wyga_pools(playbook_dir, user_ssh_keys, wum_generated | default({})) }}"
+  no_log: true
+
+- name: "User Manager / Update pools ..."
+  copy:
+    content: "{{ pool.value }}"
+    dest: "{{ ssh_pool_dir }}/{{ pool.key }}"
+    owner: root
+    group: root
+    mode: "0644"
+  loop: "{{ wum_pools | dict2items | selectattr('value') | list }}"
+  loop_control:
+    loop_var: pool
+    label: "{{ pool.key }}"
+
+- name: "User Manager / Removed pools ..."
+  find:
+    path: "{{ ssh_pool_dir }}"
+    file_type: file
+    excludes: "{{ wum_pools | dict2items | selectattr('value') | map(attribute='key') | list }}"
+  register: wum_removed_pools
+
+- name: "User Manager / Remove pools ..."
+  file:
+    path: "{{ pool }}"
+    state: absent
+  loop: "{{ wum_removed_pools.files | map(attribute='path') | list }}"
+  loop_control:
+    loop_var: pool
+    label: "{{ pool | basename }}"
+
+- name: "User Manager / sshd authorized keys ..."
+  block:
+    - name: "User Manager / Configure /etc/ssh/sshd_config.d/authorized.conf ..."
+      template:
+        src: ssh/authorized
+        dest: /etc/ssh/sshd_config.d/authorized.conf
+        owner: root
+        group: root
+        mode: "0644"
+      vars:
+        ssh_user_cert: "{{ host.setup.ssh.user.certificate | default(false) }}"
+      notify: restart-ssh
+
+    - name: "User Manager / Registered configurations ..."
+      set_fact:
+        wyga_ssh_registred_config: "{{ wyga_ssh_registred_config | default([]) + ['authorized.conf'] }}"
+  when: wum.users | length > 0
