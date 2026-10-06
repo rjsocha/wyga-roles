@@ -68,3 +68,8 @@
     host: "{{ host_default.policy | default({}) | combine(host_policy.policy | default({}), recursive=true) }}"
     host_default:
     host_policy:
+
+- name: "Validate the policy ..."
+  include_role:
+    name: wyga/policy-validate
+    tasks_from: policy

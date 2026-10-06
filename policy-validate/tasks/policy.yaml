@@ -1,0 +1,23 @@
+---
+# Checks of the host policy format, run by wyga/load-policy once the policy
+# of the host is merged. Nothing here touches the host: every task is an
+# assertion that names the old form and the new one. A change of a policy
+# format adds its case here.
+- name: "policy / setup.ssh.host.certificate names the CA ..."
+  assert:
+    that:
+      - _ssh_host.certificate | default(false) is not true
+      - _ssh_host.group is not defined
+    fail_msg: "setup.ssh.host: certificate: true with group: <ca> is now certificate: <ca> (certificate: false turns the host certificate off)"
+    quiet: true
+  vars:
+    _ssh_host: "{{ ((host.setup | default({})).ssh | default({})).host | default({}) }}"
+  when: _ssh_host | length > 0
+
+- name: "policy / user is a map ..."
+  assert:
+    that:
+      - host.user is mapping
+    fail_msg: "user: a map keyed by the user name (<name>: {...}), no longer a list of one-key maps (- <name>: {...})"
+    quiet: true
+  when: host.user is defined

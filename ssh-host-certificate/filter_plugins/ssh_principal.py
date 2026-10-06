@@ -136,10 +136,24 @@ def ssh_fingerprint_hex(line):
     return hashlib.sha256(blob).hexdigest()
 
 
+def ssh_fingerprint(line):
+    """The SHA256 fingerprint of a public key line as ssh-keygen -l prints
+    it: SHA256: and base64 without padding."""
+    fields = str(line).split()
+    if len(fields) < 2:
+        raise AnsibleFilterError("ssh_fingerprint: not a public key line")
+    try:
+        blob = base64.b64decode(fields[1], validate=True)
+    except (binascii.Error, ValueError):
+        raise AnsibleFilterError("ssh_fingerprint: not a public key line")
+    return 'SHA256:' + base64.b64encode(hashlib.sha256(blob).digest()).decode().rstrip('=')
+
+
 class FilterModule(object):
     def filters(self):
         return {
             'ssh_host_principals': ssh_host_principals,
             'ssh_interval_seconds': ssh_interval_seconds,
             'ssh_fingerprint_hex': ssh_fingerprint_hex,
+            'ssh_fingerprint': ssh_fingerprint,
         }

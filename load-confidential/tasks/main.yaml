@@ -30,3 +30,8 @@
     confidential: "{{ global_confidential.confidential|default({}) | combine(host_confidential.confidential|default({}), recursive=true) }}"
     global_confidential:
     host_confidential:
+
+- name: "Validate the confidential ..."
+  include_role:
+    name: wyga/policy-validate
+    tasks_from: confidential

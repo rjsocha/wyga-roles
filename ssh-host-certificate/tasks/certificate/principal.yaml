@@ -6,7 +6,7 @@
 - name: "Certificate state ..."
   set_fact:
     wyga_ssh_certificate_file: /etc/site/ssh/ca/certificate.yaml
-    wyga_ssh_certificate_state: "{{ {'principal': wyga_ssh_principals} | to_nice_yaml(indent=2) }}"
+    wyga_ssh_certificate_state: "{{ {'ca': lookup('file', _ca_public_file) | ssh_fingerprint, 'principal': wyga_ssh_principals} | to_nice_yaml(indent=2) }}"
 
 - name: "Read {{ wyga_ssh_certificate_file }} ..."
   slurp:

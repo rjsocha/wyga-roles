@@ -1,0 +1,3 @@
+---
+# Checks of the confidential format, run by wyga/load-confidential once the
+# secrets of the host are merged. Same rules as policy.yaml. No case yet.

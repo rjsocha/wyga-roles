@@ -6,10 +6,18 @@
         - "config.ssh-host-ca.yaml"
       skip: true
 
+- name: "Verify the certificate authority ..."
+  assert:
+    that:
+      - host.setup.ssh.host.certificate is string
+      - host.setup.ssh.host.certificate | length > 0
+    fail_msg: "setup.ssh.host.certificate names the CA that signs the host certificate (certificate: <ca>), or is false"
+    quiet: true
+
 - name: "Setup task ..."
   set_fact:
-    ssh_ca_group: "{{ host.setup.ssh.host.group }}"
-    wyga_ssh_archive: "{{ playbook_dir }}/ssh/certificate/{{ host.setup.ssh.host.group }}/{{ host.hostname }}"
+    ssh_ca_group: "{{ host.setup.ssh.host.certificate }}"
+    wyga_ssh_archive: "{{ playbook_dir }}/ssh/certificate/{{ host.setup.ssh.host.certificate }}/{{ host.hostname }}"
 
 - name: "Host key types ..."
   set_fact:

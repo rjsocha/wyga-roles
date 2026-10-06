@@ -170,8 +170,30 @@ run:
 
 Without `user` the job runs as a systemd dynamic user, one per job and
 pipeline. The job reads its credentials from
-`$CREDENTIALS_DIRECTORY/<name>`. `LUK_WORK`, `LUK_JOB`, `LUK_PIPELINE`,
-`LUK_TMP` and `LUK_STATE` are set by lukd; `LUK_*` names are reserved.
+`$CREDENTIALS_DIRECTORY/<name>`. lukd sets the step environment (`LUK_WORK`,
+`LUK_IN`, `LUK_OUT`, `LUK_META`, `LUK_ROOT`, `LUK_ID`, `LUK_PIPELINE`,
+`LUK_STEP`, `LUK_SENDER`, `LUK_ENDPOINT`, `LUK_TAGS`, `LUK_NAME`, `LUK_FILE`,
+`LUK_HOSTNAME`, `LUK_ORIGIN`) plus `LUK_JOB`, `LUK_TMP` and `LUK_STATE`;
+`LUK_*` names are reserved in `env`.
+
+Which pipelines may run a job comes from the lukd configuration, not from
+the job: a pipeline with a `relay: <job>` step, or a pipeline whose `run`
+step lists the job in `jobs:` (the jobs its program starts with
+`luk-job run --job`):
+
+```yaml
+setup:
+  lukd:
+    config:
+      pipeline:
+        backup:
+          steps:
+            - run: /opt/luk/backup-flow
+              jobs: [dump-db, rustic]
+            - relay: s3-upload
+```
+
+A job no pipeline names never runs (`lukd check` warns about it).
 
 ### `path`
 
@@ -396,7 +418,7 @@ Steps:
 | Step | Meaning |
 | --- | --- |
 | `store: <storage>` or a list | store the current files |
-| `run: /path` | run a program as `luk` on the files; `env:` adds variables; `tee: true` keeps the input for the next step |
+| `run: /path` | run a program as `luk` on the files; `env:` adds variables; `tee: true` keeps the input for the next step; `jobs: [<job>, ...]` lists the jobs of `run` (role key) the program may start with `luk-job run --job`, none without it |
 | `relay: <job>` | run a job of `run` (role key) on the files as its user; the next step gets the same files |
 | `encrypt:` | OpenPGP-encrypt for `wkd:` and `key:` recipients; `strict: true` fails on any unusable recipient; `insecure:` adds passwords (below) |
 
