@@ -84,46 +84,57 @@
       debug:
         msg: "{{ wyga_generate_certs }}"
 
-    - name: "Make sure CA key is present in the ssh-agent..."
-      include_tasks: "certificate/prepare-ssh-agent.yaml"
+    - name: "Check mode: certificates to sign ..."
+      debug:
+        msg: "would sign the host certificates {{ wyga_generate_certs | join(', ') }}"
+      changed_when: true
+      when: ansible_check_mode and wyga_generate_certs | length > 0
 
-    - name: "Prepare temporary directories..."
-      include_tasks: "certificate/prepare-temp-dirs.yaml"
+    # Signing makes keys and certificates on the host and in the local
+    # archive; nothing of it has a check mode, so it waits for a real run.
+    - name: "Sign the host keys ..."
+      block:
+        - name: "Make sure CA key is present in the ssh-agent..."
+          include_tasks: "certificate/prepare-ssh-agent.yaml"
 
-    - name: "Set serial number ..."
-      set_fact:
-        _date_serial: "{{ '%y%m%d%H%M%S' | strftime }}"
+        - name: "Prepare temporary directories..."
+          include_tasks: "certificate/prepare-temp-dirs.yaml"
 
-    - name: "Generate new host keys"
-      include_tasks: "certificate/generate-new-host-key.yaml"
-      with_items: "{{ wyga_generate_certs }}"
+        - name: "Set serial number ..."
+          set_fact:
+            _date_serial: "{{ '%y%m%d%H%M%S' | strftime }}"
 
-    - name: "Fetch host public keys..."
-      include_tasks: "certificate/fetch-host-key.yaml"
-      with_items: "{{ wyga_generate_certs }}"
+        - name: "Generate new host keys"
+          include_tasks: "certificate/generate-new-host-key.yaml"
+          with_items: "{{ wyga_generate_certs }}"
 
-    - name: "Localy sign host keys..."
-      include_tasks: "certificate/sign-host-key.yaml"
-      with_items: "{{ wyga_generate_certs }}"
+        - name: "Fetch host public keys..."
+          include_tasks: "certificate/fetch-host-key.yaml"
+          with_items: "{{ wyga_generate_certs }}"
 
-    - name: "Archive certificates..."
-      include_tasks: "certificate/archive.yaml"
-      with_items: "{{ wyga_generate_certs }}"
+        - name: "Localy sign host keys..."
+          include_tasks: "certificate/sign-host-key.yaml"
+          with_items: "{{ wyga_generate_certs }}"
 
-    - name: "Transfer certificates to remote host..."
-      include_tasks: "certificate/transfer-host-certificate.yaml"
-      with_items: "{{ wyga_generate_certs }}"
+        - name: "Archive certificates..."
+          include_tasks: "certificate/archive.yaml"
+          with_items: "{{ wyga_generate_certs }}"
 
-    - name: "Copy keys to /etc/ssh"
-      include_tasks: "certificate/copy-host-key.yaml"
-      with_items: "{{ wyga_generate_certs }}"
+        - name: "Transfer certificates to remote host..."
+          include_tasks: "certificate/transfer-host-certificate.yaml"
+          with_items: "{{ wyga_generate_certs }}"
 
-    - name: "Prune the certificate archive..."
-      include_tasks: "certificate/archive-prune.yaml"
-      when: wyga_generate_certs | length > 0
+        - name: "Copy keys to /etc/ssh"
+          include_tasks: "certificate/copy-host-key.yaml"
+          with_items: "{{ wyga_generate_certs }}"
 
-    - name: "Record certificate state..."
-      include_tasks: "certificate/record-state.yaml"
+        - name: "Prune the certificate archive..."
+          include_tasks: "certificate/archive-prune.yaml"
+          when: wyga_generate_certs | length > 0
+
+        - name: "Record certificate state..."
+          include_tasks: "certificate/record-state.yaml"
+      when: not ansible_check_mode
 
     - name: "Prepare generation list for /etc/ssh/sshd_config"
       block:

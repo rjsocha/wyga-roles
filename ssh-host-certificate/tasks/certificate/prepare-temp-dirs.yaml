@@ -1,5 +1,6 @@
 ---
 - name: "Create temporary remote working directory..."
+  check_mode: false
   ansible.builtin.tempfile:
     state: directory
     suffix: "-sign-ca-host-keys"
@@ -7,6 +8,7 @@
   register: _tmp
 
 - name: "Create temporary local working directory..."
+  check_mode: false
   ansible.builtin.tempfile:
     state: directory
     suffix: "-sign-ca-host-keys"

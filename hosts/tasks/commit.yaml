@@ -1,4 +1,5 @@
 ---
-- debug: msg="Notify hosts handler ..."
-  changed_when: true
-  notify: hosts-commit
+# Every entry is appended by then (wyga/hostname adds them all), so the
+# file is rendered here and reports a change only when it differs.
+- name: "HOSTS / Generate /etc/hosts ..."
+  include_tasks: handler/hosts-handler.yaml

@@ -134,6 +134,7 @@
     firewall_restart: "{{ firewall_master.changed }}"
 
 - name: "Firewall / Check if master template is loaded ..."
+  check_mode: false
   command: iptables -C INPUT -m comment --comment MANAGED-FIREWALL
   no_log: true
   register: firewall_check

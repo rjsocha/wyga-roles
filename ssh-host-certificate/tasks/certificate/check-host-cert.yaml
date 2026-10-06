@@ -11,6 +11,7 @@
 - name: "Verify is certificate have valid Key ID ..."
   block:
     - name: "Fetch Key ID from certificate ..."
+      check_mode: false
       shell: "ssh-keygen -L -f '/etc/ssh/ssh_host_{{item}}_key-cert.pub' | grep -oP '(?<=Key ID: \")([^\"]+)'"
       register: cert_keyid
       changed_when: false
@@ -30,6 +31,7 @@
 - name: "Verify the validity of the certificate ..."
   block:
     - name: "Fetch the time left of the certificate ..."
+      check_mode: false
       shell: |
         valid=$(ssh-keygen -L -f '/etc/ssh/ssh_host_{{item}}_key-cert.pub' | sed -n 's/^ *Valid: //p')
         case "$valid" in

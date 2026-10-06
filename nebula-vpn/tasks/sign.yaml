@@ -6,6 +6,7 @@
 - name: "Sign via ssh-agent ..."
   block:
     - name: "Check if Nebula CA key is present for {{ vpn_instance.name }} ..."
+      check_mode: false
       command:  nebula-tool sign ssh -ca-crt "{{ vpn_instance.ca.crt }}" -test
       register: nebula_ca_key_present
       ignore_errors: yes

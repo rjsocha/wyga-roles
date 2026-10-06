@@ -1,0 +1,26 @@
+---
+- name: "Filesystem / Verify configuration ..."
+  assert:
+    that:
+      - host.setup.filesystem is mapping
+      - host.setup.filesystem | dict2items | map(attribute='key') | difference(['btrfs', 'swap']) | length == 0
+    fail_msg: "setup.filesystem: a map with the sections btrfs and swap"
+    quiet: true
+
+- name: "Filesystem / Filesystems ..."
+  wyga_filesystem:
+    btrfs: "{{ host.setup.filesystem.btrfs | default({}) }}"
+    swap: "{{ host.setup.filesystem.swap | default({}) }}"
+  register: wyga_filesystem
+
+- name: "Filesystem / Mounts ..."
+  ansible.posix.mount:
+    path: "{{ mount.path }}"
+    src: "{{ mount.src }}"
+    fstype: "{{ mount.fstype }}"
+    opts: "{{ mount.opts }}"
+    state: "{{ 'present' if mount.fstype == 'swap' else 'mounted' }}"
+  loop: "{{ wyga_filesystem.mounts }}"
+  loop_control:
+    loop_var: mount
+    label: "{{ mount.path if mount.fstype != 'swap' else mount.src }}"

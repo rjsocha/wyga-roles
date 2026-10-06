@@ -34,7 +34,6 @@
   include_role:
     name: wyga/hosts
   vars:
-    HostsCommit: yes
     HostsEntry:
       ip: 127.0.1.1
       name:
@@ -56,3 +55,9 @@
         label: "{{ entry.ip }}"
       when: host.hosts is defined
   when: host.hosts is defined
+
+- name: "Generate /etc/hosts ..."
+  include_role:
+    name: wyga/hosts
+  vars:
+    HostsCommit: yes

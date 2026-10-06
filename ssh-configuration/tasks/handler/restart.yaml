@@ -36,6 +36,7 @@
     mode: '0755'
 
 - name: "SSHD/Checking configuration ..."
+  check_mode: false
   command: sshd -t
   changed_when: false
   register: ssh_check

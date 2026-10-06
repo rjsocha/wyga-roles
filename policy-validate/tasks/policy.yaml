@@ -21,3 +21,10 @@
     fail_msg: "user: a map keyed by the user name (<name>: {...}), no longer a list of one-key maps (- <name>: {...})"
     quiet: true
   when: host.user is defined
+
+- name: "policy / setup.swap is setup.storage and setup.filesystem ..."
+  assert:
+    that:
+      - (host.setup | default({})).swap is not defined
+    fail_msg: "setup.swap: now storage.lvm.lv.<name>: {vg: <vg>, size: <size>} with filesystem.swap.<label>: {device: /dev/<vg>/<name>} (a file: filesystem.swap.<label>: {device: <path>, size: <size>})"
+    quiet: true

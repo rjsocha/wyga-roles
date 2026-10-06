@@ -141,6 +141,7 @@
     path: "/etc/site/vpn/{{ vpn_instance.name }}"
 
 - name: "Prepare VPN instance ..."
+  check_mode: false
   command: nebula-vpn setup {{ vpn_instance.name }}
   changed_when: false
   environment:

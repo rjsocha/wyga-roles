@@ -78,12 +78,14 @@
     - name: "Cleanup ..."
       block:
         - name: "Check systemd-networkd.service state ..."
+          check_mode: false
           command: systemctl is-active systemd-networkd.service
           register: net_networkd_state
           changed_when: false
           failed_when: false
 
         - name: "Check networking.service state ..."
+          check_mode: false
           command: systemctl is-active networking.service
           register: net_ifupdown_state
           changed_when: false

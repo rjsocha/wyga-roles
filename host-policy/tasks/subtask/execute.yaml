@@ -29,10 +29,15 @@
 - name: "Trigger any pending reboots ..."
   meta: flush_handlers
 
-- name: "Swap ..."
+- name: "Storage ..."
   include_role:
-    name: wyga/swap
-  when: host.setup.swap is defined
+    name: wyga/storage
+  when: host.setup.storage is defined
+
+- name: "Filesystem ..."
+  include_role:
+    name: wyga/filesystem
+  when: host.setup.filesystem is defined
 
 - name: "Locale configuration ..."
   include_role:

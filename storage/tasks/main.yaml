@@ -1,0 +1,14 @@
+---
+- name: "Storage / Verify configuration ..."
+  assert:
+    that:
+      - host.setup.storage is mapping
+      - host.setup.storage | dict2items | map(attribute='key') | difference(['lvm', 'loop']) | length == 0
+    fail_msg: "setup.storage: a map with the sections lvm and loop"
+    quiet: true
+
+- name: "Storage / Block devices ..."
+  wyga_storage:
+    lvm: "{{ host.setup.storage.lvm | default({}) }}"
+    loop: "{{ host.setup.storage.loop | default({}) }}"
+  register: wyga_storage

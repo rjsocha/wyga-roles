@@ -4,12 +4,12 @@
     path: "{{_tmp.path }}"
     state: absent
   changed_when: false
-  when: keep_tmp is not defined
+  when: keep_tmp is not defined and _tmp is defined
 
 - name: "Cleanup local temporary directory..."
   ansible.builtin.file:
     path: "{{_ltmp.path }}"
     state: absent
   changed_when: false
-  when: keep_tmp is not defined
+  when: keep_tmp is not defined and _ltmp is defined
   delegate_to: localhost
