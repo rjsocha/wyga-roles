@@ -109,7 +109,7 @@
 - name: "SSH Host Certificate ..."
   include_role:
     name: wyga/ssh-host-certificate
-  when: skip_ssh_certificate is not defined and host.setup.ssh is defined and not host.setup.ssh.skip | default(false) and (host.setup.ssh.host | default({})).certificate | default(false)
+  when: skip_ssh_certificate is not defined and host.setup.ssh is defined and not host.setup.ssh.skip | default(false) and (host.setup.ssh.host | default({})).certificate | default(false) is string
 
 - name: "Monitoring ..."
   include_role:
