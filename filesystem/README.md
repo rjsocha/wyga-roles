@@ -21,14 +21,22 @@ setup:
         device: /dev/system/luk
         options: [discard=async, noatime]  # of every mount of this filesystem
         volume:
-          "@luk":     {mount: /var/lib/luk, owner: root, group: luk, mode: "0750"}
-          "@archive": {mount: /storage/archive, options: [noexec]}
+          "@luk":
+            mount: /var/lib/luk
+            owner: root
+            group: luk
+            mode: "0750"
+          "@archive":
+            mount: /storage/archive
+            options: [noexec]
       scratch:
         device: /var/lib/storage/scratch.img   # a regular file: mounted through loop
         volume:
-          "@scratch": {mount: /scratch}
+          "@scratch":
+            mount: /scratch
     swap:
-      SWAP: {device: /dev/system/swap}
+      SWAP:
+        device: /dev/system/swap
 ```
 
 ## btrfs

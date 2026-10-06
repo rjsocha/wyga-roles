@@ -18,14 +18,20 @@ used.
 setup:
   storage:
     lvm:
-      vg:
-        system: {}                 # must exist, otherwise the policy fails
-        data:
-          device:                  # made of these devices when it does not exist
-            - /dev/disk/by-id/virtio-data
       lv:
-        swap: {vg: system, size: 4GiB}
-        luk:  {vg: system, size: 100G}
+        swap:   # the group must exist, otherwise the policy fails
+          vg: system
+          size: 4GiB
+        luk:
+          vg: system
+          size: 100G
+        big:
+          vg: data
+          size: 50G
+      vg:
+        data:                            # only for a group to make
+          device:
+            - /dev/disk/by-id/virtio-data
     loop:
       scratch:
         file: /var/lib/storage/scratch.img
@@ -34,17 +40,19 @@ setup:
 
 ## lvm.vg
 
-Every group named must exist on the host, or have `device`. A group
-with `device` is created from them: each device gets a GPT with one
-partition of type LVM, `pvcreate`, then `vgcreate`; a device added to
-the list later extends the group (`vgextend`). A device that holds a
+Only for a group the policy makes: a group that exists needs no entry,
+naming it in `lvm.lv.<name>.vg` is enough. A group with `device` is
+created from them: each device gets a GPT with one partition of type
+LVM, `pvcreate`, then `vgcreate`; a device added to the list later
+extends the group (`vgextend`). A device that holds a
 filesystem, a partition table or belongs to another group fails the
 policy. Names stable across reboots (`/dev/disk/by-id/...`) are
 expected; `/dev/vdb` works but is not stable.
 
 ## lvm.lv
 
-`vg` must name a group of `lvm.vg`; `size` as `lvcreate -L` reads it
+`vg` names the group, which must exist on the host or be made by
+`lvm.vg`, otherwise the policy fails; `size` as `lvcreate -L` reads it
 (`4GiB`, `100G`, `1024MiB`). The volume is created at `size` and grown
 with `lvextend` when `size` is larger than the volume; a smaller `size`
 changes nothing. The device is `/dev/<vg>/<name>`.

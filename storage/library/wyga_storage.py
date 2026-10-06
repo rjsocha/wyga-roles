@@ -6,13 +6,13 @@ DOCUMENTATION = """
 module: wyga_storage
 short_description: Block devices of a host as the policy declares them.
 description:
-  - lvm.vg - every volume group named must exist. One with 'device'
-    is made from those devices when it does not exist (GPT with one
-    partition of type LVM, pvcreate, vgcreate); a device not yet in the
-    group extends it. A device with any signature or partition table is
-    never touched.
-  - lvm.lv - a logical volume is created in its group with 'size' and
-    grown when 'size' is larger; it is never shrunk or removed.
+  - lvm.vg - a volume group to make from 'device' when it does not
+    exist (GPT with one partition of type LVM, pvcreate, vgcreate); a
+    device not yet in the group extends it. A device with any signature
+    or partition table is never touched.
+  - lvm.lv - a logical volume is created in 'vg', which must exist, with
+    'size' and grown when 'size' is larger; it is never shrunk or
+    removed.
   - loop - a sparse file of 'size' is created and grown; never shrunk.
   - Check mode reports the plan without running it.
 options:
@@ -163,8 +163,10 @@ def apply_vg(host, name, spec, pvs, vgs):
 
 def apply_lv(host, name, spec, vgs, lvs):
     vg = spec.get('vg')
-    if not isinstance(vg, str) or vg not in vgs:
-        host.module.fail_json(msg="lvm.lv.%s: vg must name a volume group declared in lvm.vg" % name)
+    if not isinstance(vg, str) or not vg:
+        host.module.fail_json(msg="lvm.lv.%s: vg is required" % name)
+    if vg not in vgs:
+        host.module.fail_json(msg="lvm.lv.%s: volume group %s does not exist on this host" % (name, vg))
     if 'size' not in spec:
         host.module.fail_json(msg="lvm.lv.%s: size is required" % name)
     try:
