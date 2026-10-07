@@ -8,19 +8,30 @@
       - "{{ job_unit }}*.service"
   register: job_found_units
 
+- name: "Job / Unmanaged / Looking for directories ..."
+  stat:
+    path: "{{ path }}"
+  loop:
+    - "{{ job_opt }}"
+    - "{{ job_etc }}"
+  loop_control:
+    loop_var: path
+  register: job_found_directories
+
 - name: "Job / Unmanaged / Looking for files ..."
   find:
-    paths:
-      - "{{ job_opt }}"
-      - "{{ job_etc }}"
+    paths: "{{ job_directories }}"
     file_type: any
     hidden: true
   register: job_found_files
+  when: job_directories | length > 0
+  vars:
+    job_directories: "{{ job_found_directories.results | selectattr('stat.exists') | map(attribute='stat.path') | list }}"
 
 - name: "Job / Unmanaged / Select ..."
   set_fact:
     job_stale_units: "{{ job_found_units.files | map(attribute='path') | reject('in', job_keep_units) | sort | list }}"
-    job_stale_files: "{{ job_found_files.files | map(attribute='path') | reject('in', job_keep_files) | sort | list }}"
+    job_stale_files: "{{ job_found_files.files | default([]) | map(attribute='path') | reject('in', job_keep_files) | sort | list }}"
   vars:
     job_names: "{{ job_policy.keys() | list }}"
     job_keep_units: "{{ job_names | product(['.timer', '.service']) | map('join') | map('regex_replace', '^', job_units ~ '/' ~ job_unit) | list }}"

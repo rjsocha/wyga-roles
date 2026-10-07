@@ -142,18 +142,24 @@
   loop_control:
     loop_var: name
 
+- name: "Job / {{ job.name }} / Unmanaged configuration / Directory ..."
+  stat:
+    path: "{{ job_dir }}"
+  register: job_dir_stat
+
 - name: "Job / {{ job.name }} / Unmanaged configuration / Looking ..."
   find:
     paths: "{{ job_dir }}"
     file_type: any
     hidden: true
   register: job_unmanaged
+  when: job_dir_stat.stat.exists
 
 - name: "Job / {{ job.name }} / Unmanaged configuration / Cleanup ..."
   file:
     path: "{{ unmanaged.path }}"
     state: absent
-  loop: "{{ job_unmanaged.files }}"
+  loop: "{{ job_unmanaged.files | default([]) }}"
   loop_control:
     loop_var: unmanaged
     label: "{{ unmanaged.path | basename }}"
