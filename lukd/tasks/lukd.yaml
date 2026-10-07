@@ -285,9 +285,3 @@
     done
   register: lukd_roles
   changed_when: lukd_roles.stdout | length > 0
-
-- name: "lukd / Job socket ..."
-  systemd:
-    name: lukd-run.socket
-    enabled: "{{ lukd_run | length > 0 }}"
-    state: "{{ 'started' if lukd_run | length > 0 else 'stopped' }}"

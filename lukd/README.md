@@ -68,7 +68,7 @@ policy:
 | `gpg` | `/etc/site/lukd/gpg.d/<file>` |
 | `script` | `/opt/luk/<name>`, root:root 0755 |
 | `package` | extra deb packages, installed with `lukd` |
-| `run` | `/etc/site/lukd/run.d/<job>.yaml`, root:root 0644; `lukd-run.socket` |
+| `run` | `/etc/site/lukd/run.d/<job>.yaml`, root:root 0644 |
 | `path` | the directory, luk:luk 0750; `ReadWritePaths=` drop-ins of both roles |
 | `docker` | `SupplementaryGroups=docker` drop-in of the process role |
 | `confidential.lukd.credential` | `/etc/site/lukd/credentials.d/<name>`, root:root 0600 |
@@ -76,9 +76,10 @@ policy:
 | `confidential.lukd.auth.basic` | user sets; an expose names one with `auth.basic: <set>` and gets its users in `config.yaml` |
 | `confidential.lukd.config` | merged over `config` |
 
-Units: `lukd.service` (enabled, groups `lukd-receive.service` and
-`lukd-process.service`) and `lukd-run.socket` (enabled when `run` has jobs,
-else disabled). The package needs systemd 257 or newer.
+Units: `lukd.service` (enabled; it groups `lukd-receive.service` and
+`lukd-process.service` and pulls in `lukd-run.socket`, which every `run`
+and `relay` step needs). The role touches no other unit. The package
+needs systemd 257 or newer.
 
 The unit of the process role hides the TLS, ACME and nonce directories at
 their default places below `/var/lib/luk` and `/run/luk`. A configuration
