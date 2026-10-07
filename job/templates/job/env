@@ -1,0 +1,5 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+# managed by host-policy
+{% for line in job.env | default({}, true) | job_env %}
+{{ line }}
+{% endfor %}

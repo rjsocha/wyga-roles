@@ -1,0 +1,17 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+# managed by host-policy
+[Unit]
+Description=Job ({{ job.name }})
+
+[Service]
+Type=oneshot
+{% if job.user is defined %}
+User={{ job.user }}
+{% endif %}
+Environment=JOB_NAME={{ job.name }}
+Environment=JOB_CONFIG={{ job_etc }}/{{ job.name }}
+EnvironmentFile={{ job_etc }}/{{ job.name }}/env
+ExecStart={{ job_opt }}/{{ job.name }}
+{% if job.timeout is defined %}
+TimeoutStartSec={{ job.timeout }}
+{% endif %}

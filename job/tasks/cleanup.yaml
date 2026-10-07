@@ -1,0 +1,50 @@
+---
+- name: "Job / Unmanaged / Looking for units ..."
+  find:
+    paths: "{{ job_units }}"
+    file_type: file
+    patterns:
+      - "{{ job_unit }}*.timer"
+      - "{{ job_unit }}*.service"
+  register: job_found_units
+
+- name: "Job / Unmanaged / Looking for files ..."
+  find:
+    paths:
+      - "{{ job_opt }}"
+      - "{{ job_etc }}"
+    file_type: any
+    hidden: true
+  register: job_found_files
+
+- name: "Job / Unmanaged / Select ..."
+  set_fact:
+    job_stale_units: "{{ job_found_units.files | map(attribute='path') | reject('in', job_keep_units) | sort | list }}"
+    job_stale_files: "{{ job_found_files.files | map(attribute='path') | reject('in', job_keep_files) | sort | list }}"
+  vars:
+    job_names: "{{ job_policy.keys() | list }}"
+    job_keep_units: "{{ job_names | product(['.timer', '.service']) | map('join') | map('regex_replace', '^', job_units ~ '/' ~ job_unit) | list }}"
+    job_keep_files: "{{ job_names | map('regex_replace', '^', job_opt ~ '/') | list + job_names | map('regex_replace', '^', job_etc ~ '/') | list }}"
+
+- name: "Job / Unmanaged / Disable timers ..."
+  systemd:
+    name: "{{ unit | basename }}"
+    enabled: false
+    state: stopped
+  loop: "{{ job_stale_units | select('search', '\\.timer$') | list }}"
+  loop_control:
+    loop_var: unit
+    label: "{{ unit | basename }}"
+
+- name: "Job / Unmanaged / Remove ..."
+  file:
+    path: "{{ path }}"
+    state: absent
+  loop: "{{ job_stale_units + job_stale_files }}"
+  loop_control:
+    loop_var: path
+
+- name: "Job / Unmanaged / Reload systemd ..."
+  systemd:
+    daemon_reload: true
+  when: job_stale_units | length > 0 and not ansible_check_mode

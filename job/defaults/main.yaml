@@ -1,0 +1,15 @@
+job_opt: /opt/host-policy/job
+job_etc: /etc/site/job
+job_site: "{{ playbook_dir }}/site/job"
+job_unit: host-policy-job-
+job_units: /etc/systemd/system
+
+job_script_files:
+  - "{{ job_site }}/{{ host.hostname | default(inventory_hostname) }}/file/{{ job.name }}/{{ job.script }}"
+  - "{{ job_site }}/common/file/{{ job.name }}/{{ job.script }}"
+  - "{{ job_site }}/common/file/{{ job.script }}"
+
+job_template_files:
+  - "{{ job_site }}/{{ host.hostname | default(inventory_hostname) }}/template/{{ job.name }}/{{ name }}"
+  - "{{ job_site }}/common/template/{{ job.name }}/{{ name }}"
+  - "{{ job_site }}/common/template/{{ name }}"

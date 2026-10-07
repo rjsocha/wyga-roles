@@ -1,0 +1,182 @@
+---
+- name: "Job / {{ job.name }} / Prepare configuration ..."
+  set_fact:
+    job_user: "{{ job.user | default('root') }}"
+    job_config: "{{ job.config | default([], true) }}"
+    job_packages: "{{ job.packages | default([], true) }}"
+    job_dir: "{{ job_etc }}/{{ job.name }}"
+    job_template: {}
+
+- name: "Job / {{ job.name }} / Verify configuration ..."
+  assert:
+    that:
+      - job.name is regex('^[A-Za-z0-9][A-Za-z0-9_.-]*$')
+      - job.script is defined and job.script is string
+      - job.script is regex('^[A-Za-z0-9_][A-Za-z0-9_.-]*$')
+      - job.timer is defined and job.timer is mapping
+      - job.timer.calendar is defined and job.timer.calendar is string
+      - job_user is string
+      - job.env | default({}, true) is mapping
+      - job_config is sequence and job_config is not string
+      - job_config | reject('regex', '^[A-Za-z0-9_][A-Za-z0-9_.-]*$') | list | length == 0
+      - "'env' not in job_config"
+      - job_packages is sequence and job_packages is not string
+    fail_msg:
+      - "job.{{ job.name }} ..."
+      - "script: a file name (required)"
+      - "timer.calendar: a calendar expression of systemd (required)"
+      - "user: a user name"
+      - "env: a map"
+      - "config: a list of file names; env is taken"
+      - "packages: a list"
+    quiet: true
+
+- name: "Job / {{ job.name }} / Verify calendar ..."
+  command:
+    argv: [systemd-analyze, calendar, "{{ job.timer.calendar }}"]
+  check_mode: false
+  changed_when: false
+
+- name: "Job / {{ job.name }} / Verify time spans ..."
+  command:
+    argv: [systemd-analyze, timespan, "{{ timespan }}"]
+  check_mode: false
+  changed_when: false
+  loop: "{{ [job.timeout | default(none), job.timer.delay | default(none)] | reject('none') | list }}"
+  loop_control:
+    loop_var: timespan
+
+- name: "Job / {{ job.name }} / Looking for the script ..."
+  set_fact:
+    job_script: "{{ query('first_found', params) | first | default('') }}"
+  vars:
+    params:
+      skip: true
+      files: "{{ job_script_files }}"
+
+- name: "Job / {{ job.name }} / Verify script ..."
+  assert:
+    that:
+      - job_script | length > 0
+    fail_msg: "{{ ['job.' ~ job.name ~ ': script ' ~ job.script ~ ' is none of ...'] + job_script_files }}"
+    success_msg: "{{ job_script | default(playbook_dir, true) | relpath(playbook_dir) }}"
+
+- name: "Job / {{ job.name }} / Looking for templates ..."
+  set_fact:
+    job_template: "{{ job_template | combine({name: query('first_found', params) | first | default('')}) }}"
+  loop: "{{ job_config }}"
+  loop_control:
+    loop_var: name
+  vars:
+    params:
+      skip: true
+      files: "{{ job_template_files }}"
+
+- name: "Job / {{ job.name }} / Verify templates ..."
+  assert:
+    that:
+      - job_template[name] | length > 0
+    fail_msg: "{{ ['job.' ~ job.name ~ ': config ' ~ name ~ ' is none of ...'] + job_template_files }}"
+    success_msg: "{{ job_template[name] | default(playbook_dir, true) | relpath(playbook_dir) }}"
+  loop: "{{ job_config }}"
+  loop_control:
+    loop_var: name
+
+- name: "Job / {{ job.name }} / User ..."
+  getent:
+    database: passwd
+    key: "{{ job_user }}"
+
+- name: "Job / {{ job.name }} / Packages ..."
+  include_role:
+    name: wyga/install-packages
+  vars:
+    packages: "{{ job_packages }}"
+  when: job_packages | length > 0
+
+- name: "Job / {{ job.name }} / Directories ..."
+  file:
+    state: directory
+    path: "{{ directory.path }}"
+    owner: root
+    group: "{{ directory.group | default('root') }}"
+    mode: "{{ directory.mode | default('0755') }}"
+  loop:
+    - path: "{{ job_opt | dirname }}"
+    - path: "{{ job_opt }}"
+    - path: "{{ job_etc | dirname }}"
+    - path: "{{ job_etc }}"
+    - path: "{{ job_dir }}"
+      group: "{{ ansible_facts.getent_passwd[job_user][2] }}"
+      mode: "0750"
+  loop_control:
+    loop_var: directory
+    label: "{{ directory.path }}"
+
+- name: "Job / {{ job.name }} / Script ..."
+  copy:
+    src: "{{ job_script }}"
+    dest: "{{ job_opt }}/{{ job.name }}"
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: "Job / {{ job.name }} / Environment ..."
+  template:
+    src: job/env
+    dest: "{{ job_dir }}/env"
+    owner: root
+    group: root
+    mode: "0600"
+  diff: false
+
+- name: "Job / {{ job.name }} / Configuration ..."
+  template:
+    src: "{{ job_template[name] }}"
+    dest: "{{ job_dir }}/{{ name }}"
+    owner: "{{ job_user }}"
+    group: "{{ ansible_facts.getent_passwd[job_user][2] }}"
+    mode: "0600"
+  diff: false
+  loop: "{{ job_config }}"
+  loop_control:
+    loop_var: name
+
+- name: "Job / {{ job.name }} / Unmanaged configuration / Looking ..."
+  find:
+    paths: "{{ job_dir }}"
+    file_type: any
+    hidden: true
+  register: job_unmanaged
+
+- name: "Job / {{ job.name }} / Unmanaged configuration / Cleanup ..."
+  file:
+    path: "{{ unmanaged.path }}"
+    state: absent
+  loop: "{{ job_unmanaged.files }}"
+  loop_control:
+    loop_var: unmanaged
+    label: "{{ unmanaged.path | basename }}"
+  when: unmanaged.path | basename not in ['env'] + job_config
+
+- name: "Job / {{ job.name }} / Units ..."
+  template:
+    src: "job/{{ unit }}"
+    dest: "{{ job_units }}/{{ job_unit }}{{ job.name }}.{{ unit }}"
+    owner: root
+    group: root
+    mode: "0644"
+  loop:
+    - service
+    - timer
+  loop_control:
+    loop_var: unit
+  register: job_unit_files
+
+- name: "Job / {{ job.name }} / Timer ..."
+  systemd:
+    name: "{{ job_unit }}{{ job.name }}.timer"
+    enabled: true
+    daemon_reload: "{{ job_unit_files.changed }}"
+    state: "{{ 'restarted' if job_unit_files.changed else 'started' }}"
+  when: not (ansible_check_mode and job_unit_files.changed)

@@ -1,0 +1,23 @@
+---
+- name: "Job / Configuration ..."
+  set_fact:
+    job_policy: "{{ host.job | default({}, true) }}"
+
+- name: "Job / Verify configuration ..."
+  assert:
+    that:
+      - job_policy is mapping
+    fail_msg: "job: must be a map of jobs"
+    quiet: true
+
+- name: "Job / Apply ..."
+  include_tasks: apply.yaml
+  loop: "{{ job_policy | dict2items }}"
+  loop_control:
+    loop_var: job_entry
+    label: "{{ job_entry.key }}"
+  vars:
+    job: "{{ job_entry.value | default({}, true) | combine({'name': job_entry.key}) }}"
+
+- name: "Job / Cleanup ..."
+  include_tasks: cleanup.yaml

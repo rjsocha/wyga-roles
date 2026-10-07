@@ -1,0 +1,16 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+# managed by host-policy
+[Unit]
+Description=Job ({{ job.name }}) timer
+
+[Timer]
+OnCalendar={{ job.timer.calendar }}
+{% if job.timer.persistent is defined %}
+Persistent={{ job.timer.persistent | bool | lower }}
+{% endif %}
+{% if job.timer.delay is defined %}
+RandomizedDelaySec={{ job.timer.delay }}
+{% endif %}
+
+[Install]
+WantedBy=timers.target

@@ -218,3 +218,7 @@
   include_role:
     name: wyga/locale
   when: host.setup.locale is defined
+
+- name: "Jobs ..."
+  include_role:
+    name: wyga/job
