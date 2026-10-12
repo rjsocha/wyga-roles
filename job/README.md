@@ -37,8 +37,9 @@ policy:
         - config
 ```
 
-With the files `site/job/db1.example.net/db-dump/db-dump` and
-`site/job/db1.example.net/db-dump/config` in the playbook directory.
+With the files `db1.example.net/db-dump/db-dump` and
+`db1.example.net/db-dump/config` in `site/<host_policy_site>/job/` of
+the playbook directory. `host_policy_site` is a variable of the playbook.
 
 ## Policy: `job.<name>`
 
@@ -60,7 +61,8 @@ policy; the role only checks that it exists.
 
 ### `script`
 
-A path below `site/job/<hostname>/` or `site/job/common/`, of any depth.
+A path below `<hostname>/` or `common/` of `site/<host_policy_site>/job/`,
+of any depth.
 It names the program and the directory the templates of `config` are
 taken from:
 
@@ -79,12 +81,13 @@ may share a program.
 ### Where the files come from
 
 The program and every file of `config` are looked up one by one; the
-first that exists is used, none is an error that lists both:
+first that exists is used, none is an error that lists both. Below
+`site/<host_policy_site>/job/`:
 
 | | the program | a name of `config` |
 | --- | --- | --- |
-| 1 | `site/job/<hostname>/<directory>/<program>` | `site/job/<hostname>/<directory>/<name>` |
-| 2 | `site/job/common/<directory>/<program>` | `site/job/common/<directory>/<name>` |
+| 1 | `<hostname>/<directory>/<program>` | `<hostname>/<directory>/<name>` |
+| 2 | `common/<directory>/<program>` | `common/<directory>/<name>` |
 
 A file of the host replaces the file of `common` at the same path.
 

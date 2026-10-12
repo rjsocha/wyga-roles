@@ -140,8 +140,8 @@ gpg:
 
 ### `script`
 
-List of file names in `site/luk/` of the policy repository, copied to
-`/opt/luk/`. For programs of `run` steps and jobs that belong to one site.
+List of file names in `site/<host_policy_site>/luk/` of the policy
+repository, copied to `/opt/luk/`. For programs of `run` steps and jobs that belong to one site.
 Programs shared between sites belong in a package (`package`).
 
 ### `package`

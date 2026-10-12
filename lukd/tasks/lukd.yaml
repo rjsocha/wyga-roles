@@ -124,7 +124,7 @@
 
 - name: "lukd / Scripts ..."
   copy:
-    src: "{{ playbook_dir }}/site/luk/{{ name }}"
+    src: "{{ playbook_dir }}/site/{{ host_policy_site }}/luk/{{ name }}"
     dest: "{{ lukd_opt }}/{{ name }}"
     owner: root
     group: root

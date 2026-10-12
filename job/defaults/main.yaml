@@ -1,6 +1,6 @@
 job_opt: /opt/host-policy/job
 job_etc: /etc/site/job
-job_site: "{{ playbook_dir }}/site/job"
+job_site: "{{ playbook_dir }}/site/{{ host_policy_site }}/job"
 job_unit: host-policy-job-
 job_units: /etc/systemd/system
 
