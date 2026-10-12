@@ -21,7 +21,7 @@ policy:
 - hostname: db1.example.net
   job:
     db-dump:
-      script: dump
+      script: db-dump/
       packages:
         - zstd
       timer:
@@ -37,15 +37,14 @@ policy:
         - config
 ```
 
-With the files `site/job/db1.example.net/file/db-dump/dump` and
-`site/job/db1.example.net/template/db-dump/config` in the playbook
-directory.
+With the files `site/job/db1.example.net/db-dump/db-dump` and
+`site/job/db1.example.net/db-dump/config` in the playbook directory.
 
 ## Policy: `job.<name>`
 
 | Key | Meaning |
 | --- | --- |
-| `script` | file name of the program (required) |
+| `script` | the program: `<directory>/` or `<directory>/<file>` (required) |
 | `timer.calendar` | `OnCalendar=` of the timer (required); checked with `systemd-analyze calendar` |
 | `timer.persistent` | `Persistent=`: run once after boot when a run was missed |
 | `timer.delay` | `RandomizedDelaySec=` |
@@ -55,19 +54,39 @@ directory.
 | `env` | map of environment variables of the program |
 | `config` | list of file names: templates rendered for the program |
 
-A job name matches `[A-Za-z0-9][A-Za-z0-9_.-]*`; `script` and the names
-of `config` are plain file names. The user of a job is declared under
-`user:` of the policy; the role only checks that it exists.
+A job name matches `[A-Za-z0-9][A-Za-z0-9_.-]*`; the names of `config`
+are plain file names. The user of a job is declared under `user:` of the
+policy; the role only checks that it exists.
+
+### `script`
+
+A path below `site/job/<hostname>/` or `site/job/common/`, of any depth.
+It names the program and the directory the templates of `config` are
+taken from:
+
+| `script` | Program | Directory of the templates |
+| --- | --- | --- |
+| `db-dump/` | `db-dump/db-dump` | `db-dump/` |
+| `db-dump/full` | `db-dump/full` | `db-dump/` |
+| `library/backup/pg-backup/` | `library/backup/pg-backup/pg-backup` | `library/backup/pg-backup/` |
+| `library/backup/pg-backup` | `library/backup/pg-backup` | `library/backup/` |
+
+With a slash at the end the path is a directory and the program is the
+file named like it. Without one the last part is the program. A name with
+no slash is refused. The name of the job is no part of the path, so jobs
+may share a program.
 
 ### Where the files come from
 
-The first that exists is used; none is an error that lists the three:
+The program and every file of `config` are looked up one by one; the
+first that exists is used, none is an error that lists both:
 
-| | `script` | a name of `config` |
+| | the program | a name of `config` |
 | --- | --- | --- |
-| 1 | `site/job/<hostname>/file/<job>/<script>` | `site/job/<hostname>/template/<job>/<name>` |
-| 2 | `site/job/common/file/<job>/<script>` | `site/job/common/template/<job>/<name>` |
-| 3 | `site/job/common/file/<script>` | `site/job/common/template/<name>` |
+| 1 | `site/job/<hostname>/<directory>/<program>` | `site/job/<hostname>/<directory>/<name>` |
+| 2 | `site/job/common/<directory>/<program>` | `site/job/common/<directory>/<name>` |
+
+A file of the host replaces the file of `common` at the same path.
 
 The run prints the path it took. A template is rendered like a template
 of a kit: it sees the whole policy (`host`), the secrets (`confidential`)

@@ -12,7 +12,7 @@
     that:
       - job.name is regex('^[A-Za-z0-9][A-Za-z0-9_.-]*$')
       - job.script is defined and job.script is string
-      - job.script is regex('^[A-Za-z0-9_][A-Za-z0-9_.-]*$')
+      - job.script is regex('^([A-Za-z0-9_][A-Za-z0-9_.-]*/)+([A-Za-z0-9_][A-Za-z0-9_.-]*)?$')
       - job.timer is defined and job.timer is mapping
       - job.timer.calendar is defined and job.timer.calendar is string
       - job_user is string
@@ -23,7 +23,7 @@
       - job_packages is sequence and job_packages is not string
     fail_msg:
       - "job.{{ job.name }} ..."
-      - "script: a file name (required)"
+      - "script: <directory>/ or <directory>/<file> (required)"
       - "timer.calendar: a calendar expression of systemd (required)"
       - "user: a user name"
       - "env: a map"
@@ -58,6 +58,7 @@
   assert:
     that:
       - job_script | length > 0
+      - job_script is file
     fail_msg: "{{ ['job.' ~ job.name ~ ': script ' ~ job.script ~ ' is none of ...'] + job_script_files }}"
     success_msg: "{{ job_script | default(playbook_dir, true) | relpath(playbook_dir) }}"
 

@@ -4,12 +4,14 @@ job_site: "{{ playbook_dir }}/site/job"
 job_unit: host-policy-job-
 job_units: /etc/systemd/system
 
+job_script_path: "{{ job.script | regex_replace('/$', '') }}"
+job_script_dir: "{{ job_script_path if job.script is regex('/$') else job_script_path | dirname }}"
+job_script_name: "{{ job_script_path | basename }}"
+
 job_script_files:
-  - "{{ job_site }}/{{ host.hostname | default(inventory_hostname) }}/file/{{ job.name }}/{{ job.script }}"
-  - "{{ job_site }}/common/file/{{ job.name }}/{{ job.script }}"
-  - "{{ job_site }}/common/file/{{ job.script }}"
+  - "{{ job_site }}/{{ host.hostname | default(inventory_hostname) }}/{{ job_script_dir }}/{{ job_script_name }}"
+  - "{{ job_site }}/common/{{ job_script_dir }}/{{ job_script_name }}"
 
 job_template_files:
-  - "{{ job_site }}/{{ host.hostname | default(inventory_hostname) }}/template/{{ job.name }}/{{ name }}"
-  - "{{ job_site }}/common/template/{{ job.name }}/{{ name }}"
-  - "{{ job_site }}/common/template/{{ name }}"
+  - "{{ job_site }}/{{ host.hostname | default(inventory_hostname) }}/{{ job_script_dir }}/{{ name }}"
+  - "{{ job_site }}/common/{{ job_script_dir }}/{{ name }}"
