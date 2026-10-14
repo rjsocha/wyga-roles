@@ -67,5 +67,7 @@ regular file.
 ## Migration from setup.swap
 
 `setup.swap` is refused by `wyga/policy-validate`. Its replacement is
-`lvm.lv.swap` here plus `filesystem.swap` in `wyga/filesystem`; on a
-host the old role set up both report no change.
+`lvm.lv.swap` here plus `filesystem.swap` in `wyga/filesystem`. On a
+host the old role set up, storage reports no change; filesystem
+replaces the fstab entry `/dev/<vg>/swap` of the old role with
+`LABEL=<label>`.

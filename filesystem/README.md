@@ -62,3 +62,6 @@ made with `size` (`fallocate`, nocow on btrfs) when it does not exist.
 Without a signature it gets `mkswap -L <label>`, with another label
 `swaplabel`; it is activated when not in `/proc/swaps` and goes into
 the fstab as `LABEL=<label> none swap sw`.
+A swap entry naming the same area another way (`/dev/<vg>/<lv>`,
+`/dev/mapper/...`, `UUID=`) is removed from the fstab, so the area is
+listed once.

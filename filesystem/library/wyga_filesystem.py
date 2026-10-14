@@ -14,7 +14,9 @@ description:
     owner, group and mode of its root when given.
   - swap - a swap area labelled with the key on 'device' (a block
     device, or a regular file made with 'size' when missing), activated.
-  - Returns the mounts for the fstab; the role applies them.
+  - Returns the mounts for the fstab; the role applies them. A swap
+    entry of the fstab naming a managed swap area another way (a path,
+    /dev/mapper, LABEL= or UUID=) is removed, so the area is listed once.
   - Check mode reports the plan without running it.
 options:
   btrfs:
@@ -62,6 +64,7 @@ class Host(object):
         self.check = module.check_mode
         self.plan = []
         self.mounts = []
+        self.swaps = {}
 
     def run(self, args, ok=(0,), **kw):
         rc, out, err = self.module.run_command(args, **kw)
@@ -321,6 +324,45 @@ def apply_swap(host, label, spec):
     if real not in active:
         host.act("swapon %s" % real, ['swapon', real])
     host.mounts.append({'path': 'none', 'src': fstab_source(kind, real, label), 'fstype': 'swap', 'opts': 'sw'})
+    host.swaps[real] = fstab_source(kind, real, label)
+
+
+def fstab_device(src):
+    """Real path of the device an fstab source names, None when unknown."""
+    for tag, base in (('LABEL=', '/dev/disk/by-label/'), ('UUID=', '/dev/disk/by-uuid/')):
+        if src.startswith(tag):
+            src = base + src[len(tag):].strip('"')
+            break
+    if not src.startswith('/'):
+        return None
+    real = os.path.realpath(src)
+    return real if os.path.exists(real) else None
+
+
+def remove_stale_swaps(host, fstab='/etc/fstab'):
+    """Drops swap entries naming a managed swap area by another source."""
+    if not host.swaps or not os.path.exists(fstab):
+        return
+    with open(fstab) as f:
+        lines = f.readlines()
+    keep = []
+    for line in lines:
+        fields = line.split()
+        if len(fields) >= 3 and not fields[0].startswith('#') and fields[2] == 'swap':
+            real = fstab_device(fields[0])
+            if real in host.swaps and fields[0] != host.swaps[real]:
+                host.plan.append("fstab: drop %s (%s is %s)" % (fields[0], real, host.swaps[real]))
+                continue
+        keep.append(line)
+    if len(keep) == len(lines) or host.check:
+        return
+    st = os.stat(fstab)
+    fd, tmp = tempfile.mkstemp(prefix='.fstab.', dir=os.path.dirname(fstab))
+    with os.fdopen(fd, 'w') as f:
+        f.writelines(keep)
+    os.chmod(tmp, stat.S_IMODE(st.st_mode))
+    os.chown(tmp, st.st_uid, st.st_gid)
+    os.rename(tmp, fstab)
 
 
 def main():
@@ -348,6 +390,7 @@ def main():
         apply_btrfs(host, str(label), btrfs[label])
     for label in sorted(swap):
         apply_swap(host, str(label), swap[label])
+    remove_stale_swaps(host)
     module.exit_json(changed=bool(host.plan), plan=host.plan, mounts=host.mounts,
                      diff={'prepared': '\n'.join(host.plan) + '\n' if host.plan else ''})
 
