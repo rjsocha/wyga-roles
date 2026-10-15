@@ -6,6 +6,12 @@
     lukd_setup: "{{ host.setup.lukd }}"
     lukd_secret: "{{ (confidential | default({})).lukd | default({}) }}"
 
+- name: "lukd / Configuration file ..."
+  set_fact:
+    lukd_config: "{{ lookup('file', playbook_dir ~ '/site/' ~ host_policy_site ~ '/lukd/' ~ lukd_setup.config) | from_yaml
+                     if lukd_setup.config is string else lukd_setup.config }}"
+  when: lukd_setup.config is defined
+
 - name: "lukd / Inputs ..."
   set_fact:
     lukd_identity: "{{ lukd_setup.identity | default([]) }}"
@@ -23,11 +29,11 @@
 - name: "lukd / Verify configuration ..."
   assert:
     that:
-      - lukd_setup.config is defined
-      - lukd_setup.config is mapping
+      - lukd_config is defined
+      - lukd_config is mapping
       - lukd_run is mapping
       - lukd_path | select('match', '^/') | list | length == lukd_path | length
-    fail_msg: "setup.lukd: config must be a map (the lukd configuration), run a map of jobs, path a list of absolute paths"
+    fail_msg: "setup.lukd: config must be a map (the lukd configuration) or the name of a file of site/<site>/lukd holding one, run a map of jobs, path a list of absolute paths"
     quiet: true
 
 - name: "lukd / Verify jobs ..."
@@ -242,12 +248,12 @@
 
 - name: "lukd / Basic authentication ..."
   set_fact:
-    lukd_basic: "{{ (lukd_secret.auth | default({})).basic | default({}) | lukd_basic(host.hostname, lukd_setup.bcrypt | default(10), lukd_setup.config) }}"
+    lukd_basic: "{{ (lukd_secret.auth | default({})).basic | default({}) | lukd_basic(host.hostname, lukd_setup.bcrypt | default(10), lukd_config) }}"
   no_log: true
 
 - name: "lukd / config.yaml ..."
   copy:
-    content: "{{ lukd_setup.config
+    content: "{{ lukd_config
                  | combine(lukd_secret.config | default({}), recursive=true)
                  | combine(lukd_basic, recursive=true)
                  | to_nice_yaml(indent=2, sort_keys=false, width=4096) }}"
@@ -263,7 +269,7 @@
   command: runuser -u luk -- lukd tls generate
   register: lukd_tls
   changed_when: lukd_tls.stdout_lines | reject('search', '\\(exists\\)$') | list | length > 0
-  when: lukd_setup.config.listen | default({}) | dict2items | selectattr('value.tls', 'defined') | selectattr('value.tls.mode', 'eq', 'self') | list | length > 0
+  when: lukd_config.listen | default({}) | dict2items | selectattr('value.tls', 'defined') | selectattr('value.tls.mode', 'eq', 'self') | list | length > 0
   notify: lukd-reload
 
 - name: "lukd / Enable ..."

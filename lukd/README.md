@@ -62,7 +62,7 @@ policy:
 
 | Policy key | Result on the host |
 | --- | --- |
-| `config` | `/etc/site/lukd/config.yaml`, root:luk 0640 |
+| `config` | `/etc/site/lukd/config.yaml`, root:luk 0640 (from the policy or from `site/<site>/lukd/<file>`) |
 | `identity` | `/etc/site/lukd/ssh.d/<name>.pub`, root:luk 0640 |
 | `ca.host`, `ca.user` | `/etc/site/lukd/ssh.d/ca/{host,user}/<name>.pub` |
 | `gpg` | `/etc/site/lukd/gpg.d/<file>` |
@@ -90,11 +90,23 @@ own for `lukd-process.service`; the role does not write one.
 
 ### `config` (required)
 
-The lukd configuration tree, written to `config.yaml` as it stands in the
-policy. See "lukd configuration" below.
+The lukd configuration tree, written to `config.yaml`: a map in the
+policy, or the name of a file of `site/<site>/lukd/` in the policy
+repository that holds the map. See "lukd configuration" below.
 
-lukd path templates use `{{ }}` as Ansible does. Mark every such value
-`!unsafe`, or Ansible tries to render it:
+```yaml
+config: host.backup.example.net.yaml    # site/<site>/lukd/host.backup.example.net.yaml
+```
+
+The file is read as plain YAML and never rendered by Ansible, so lukd path
+templates stay as written there:
+
+```yaml
+path: "{{ .Sender }}/{{ .File }}"
+```
+
+In a map in the policy, lukd path templates use `{{ }}` as Ansible does.
+Mark every such value `!unsafe`, or Ansible tries to render it:
 
 ```yaml
 path: !unsafe "{{ .Sender }}/{{ .File }}"
