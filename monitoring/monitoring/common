@@ -2,8 +2,10 @@ monitoring:
   checks:
     - apt
     - kernel-check
+    - needrestart
     - os-release
     - sysstat
+    - unattended-upgrades
     - unmanaged
   plugins:
     - ssh-policy
