@@ -121,6 +121,16 @@
     name: wyga/monitoring
   when: host.setup.monitoring is defined
 
+- name: "Needrestart ..."
+  include_role:
+    name: wyga/needrestart
+  when: host.security.restart is defined
+
+- name: "Updates ..."
+  include_role:
+    name: wyga/updates
+  when: host.security.updates is defined
+
 - name: "Datadog ..."
   include_role:
     name: wyga/datadog

@@ -1,0 +1,13 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+// managed by host-policy
+Unattended-Upgrade::Origins-Pattern {
+{% for pattern in patterns %}
+        "{{ pattern }}";
+{% endfor %}
+};
+Unattended-Upgrade::Package-Blacklist {
+{% for package in blacklist %}
+        "{{ package }}";
+{% endfor %}
+};
+Unattended-Upgrade::Automatic-Reboot "false";

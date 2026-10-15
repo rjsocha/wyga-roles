@@ -1,0 +1,7 @@
+origins:
+  security:
+    - origin=Debian,codename=${distro_codename}-security,label=Debian-Security
+    - origin=Debian,codename=${distro_codename},label=Debian-Security
+  updates:
+    - origin=Debian,codename=${distro_codename},label=Debian
+    - origin=Debian,codename=${distro_codename}-updates,label=Debian

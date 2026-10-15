@@ -1,0 +1,7 @@
+needrestart_conf: /etc/needrestart/conf.d/50-host-policy.conf
+
+needrestart_modes:
+  list: l
+  interactive: i
+  automatic: a
+needrestart_flag: /var/opt/host-policy/needrestart

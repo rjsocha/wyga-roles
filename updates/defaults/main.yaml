@@ -1,0 +1,5 @@
+updates_site: "{{ playbook_dir }}/site/{{ host_policy_site }}/updates"
+updates_periodic: /etc/apt/apt.conf.d/20auto-upgrades
+updates_conf: /etc/apt/apt.conf.d/50unattended-upgrades
+updates_leftover: /etc/apt/apt.conf.d/zzzz-temp-installer-unattended-upgrade
+updates_flag: /var/opt/host-policy/updates

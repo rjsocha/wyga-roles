@@ -1,0 +1,54 @@
+- name: "Needrestart / Prepare configuration ..."
+  set_fact:
+    needrestart_config: "{{ host.security.restart | default({}, true) }}"
+
+- name: "Needrestart / Check configuration ..."
+  assert:
+    that:
+      - needrestart_config is mapping
+      - needrestart_config.mode | default('list') in needrestart_modes
+      - needrestart_config.kernel | default(true) is boolean
+    fail_msg: "security.restart: mode: {{ needrestart_modes | list | join('|') }}, kernel: true|false"
+    quiet: true
+
+- name: "Needrestart / Configuration directory ..."
+  file:
+    path: "{{ needrestart_conf | dirname }}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+
+- name: "Needrestart / Configuration ..."
+  template:
+    src: "needrestart/host-policy.conf"
+    dest: "{{ needrestart_conf }}"
+    owner: root
+    group: root
+    mode: 0644
+  vars:
+    restart: "{{ needrestart_modes[needrestart_config.mode | default('list')] }}"
+    kernel: "{{ needrestart_config.kernel | default(true) }}"
+
+- name: "Needrestart / Install needrestart ..."
+  apt:
+    name: needrestart
+    state: present
+    install_recommends: false
+    update_cache: true
+
+- name: "Needrestart / Monitoring flag directory ..."
+  file:
+    path: "{{ needrestart_flag | dirname }}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+
+- name: "Needrestart / Monitoring flag ..."
+  copy:
+    dest: "{{ needrestart_flag }}"
+    content: "# managed by host-policy\n"
+    owner: root
+    group: root
+    mode: 0644

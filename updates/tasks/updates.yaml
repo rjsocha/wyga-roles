@@ -1,0 +1,150 @@
+- name: "Updates / Check configuration ..."
+  assert:
+    that:
+      - host.security.updates is mapping
+      - host.security.updates.mode | default('use') in ['use', 'merge']
+      - host.security.updates.origins | default([]) is sequence
+      - host.security.updates.blacklist | default([]) is sequence
+    fail_msg: "security.updates: from: <template>, mode: use|merge, origins: <list>, blacklist: <list>"
+    quiet: true
+
+- name: "Updates / Template selection ..."
+  set_fact:
+    updates_use_template: "{{ host.security.updates.from is defined }}"
+
+- name: "Updates / Load template ..."
+  include_vars:
+    file: "{{ updates_template_file }}"
+    name: updates_template
+  loop: "{{ query('first_found', params) }}"
+  loop_control:
+    loop_var: updates_template_file
+  vars:
+    params:
+      files:
+        - "{{ updates_site }}/{{ host.security.updates.from }}"
+        - "{{ role_path }}/updates/{{ host.security.updates.from }}"
+  when: updates_use_template
+
+- name: "Updates / Prepare configuration (merge) ..."
+  set_fact:
+    updates_config: "{{ updates_template.updates | combine(host.security.updates, recursive=true, list_merge='prepend_rp') }}"
+  when: updates_use_template and host.security.updates.mode | default('use') == 'merge'
+
+- name: "Updates / Prepare configuration (use) ..."
+  set_fact:
+    updates_config: "{{ updates_template.updates | combine(host.security.updates) }}"
+  when: updates_use_template and host.security.updates.mode | default('use') == 'use'
+
+- name: "Updates / Prepare configuration ..."
+  set_fact:
+    updates_config: "{{ host.security.updates }}"
+  when: not updates_use_template
+
+- name: "Updates / Check platform ..."
+  assert:
+    that:
+      - updates_os_file is file
+    fail_msg: "Unsupported platform: {{ platform.distribution }}"
+    quiet: true
+  vars:
+    updates_os_file: "{{ role_path }}/updates/origins/{{ platform.distribution }}"
+
+- name: "Updates / Load origins of {{ platform.distribution }} ..."
+  include_vars:
+    file: "{{ role_path }}/updates/origins/{{ platform.distribution }}"
+    name: updates_os
+
+- name: "Updates / Check origins ..."
+  assert:
+    that:
+      - updates_config.origins | default([]) | length > 0
+      - updates_unknown | length == 0
+    fail_msg: "security.updates.origins: a pattern (key=value,...) or one of: {{ updates_os.origins | list | join(', ') }}; unknown: {{ updates_unknown | join(', ') }}"
+    quiet: true
+  vars:
+    updates_unknown: "{{ updates_config.origins | default([]) | reject('search', '=') | difference(updates_os.origins | list) }}"
+
+- name: "Updates / Patterns ..."
+  set_fact:
+    updates_patterns: >-
+      {%- set patterns = [] -%}
+      {%- for origin in updates_config.origins -%}
+      {%- set _ = patterns.extend(updates_os.origins[origin] if origin in updates_os.origins else [origin]) -%}
+      {%- endfor -%}
+      {{ patterns | unique }}
+
+- name: "Updates / Install unattended-upgrades ..."
+  apt:
+    name: unattended-upgrades
+    state: present
+    install_recommends: false
+    update_cache: true
+
+- name: "Updates / Periodic ..."
+  template:
+    src: "updates/20auto-upgrades"
+    dest: "{{ updates_periodic }}"
+    owner: root
+    group: root
+    mode: 0644
+
+- name: "Updates / Configuration ..."
+  template:
+    src: "updates/50unattended-upgrades"
+    dest: "{{ updates_conf }}"
+    owner: root
+    group: root
+    mode: 0644
+  vars:
+    patterns: "{{ updates_patterns }}"
+    blacklist: "{{ updates_config.blacklist | default([]) }}"
+
+- name: "Updates / Remove installer leftover ..."
+  file:
+    path: "{{ updates_leftover }}"
+    state: absent
+
+- name: "Updates / Read effective configuration ..."
+  command: apt-config dump Unattended-Upgrade
+  register: updates_dump
+  changed_when: false
+  check_mode: false
+
+- name: "Updates / Check effective configuration ..."
+  assert:
+    that:
+      - updates_effective_patterns == updates_patterns
+      - updates_effective_allowed | length == 0
+    fail_msg: "apt reads other origins than the policy ({{ updates_effective_allowed + updates_effective_patterns }}), see: grep -r Unattended-Upgrade /etc/apt/apt.conf.d"
+    quiet: true
+  vars:
+    updates_effective_patterns: "{{ updates_dump.stdout_lines | select('match', 'Unattended-Upgrade::Origins-Pattern:: ') | map('regex_replace', '^[^\"]*\"(.*)\";$', '\\1') | list }}"
+    updates_effective_allowed: "{{ updates_dump.stdout_lines | select('match', 'Unattended-Upgrade::Allowed-Origins:: ') | map('regex_replace', '^[^\"]*\"(.*)\";$', '\\1') | list }}"
+
+- name: "Updates / Timers ..."
+  systemd:
+    name: "{{ updates_timer }}"
+    enabled: true
+    state: started
+  loop:
+    - apt-daily.timer
+    - apt-daily-upgrade.timer
+  loop_control:
+    loop_var: updates_timer
+
+- name: "Updates / Monitoring flag directory ..."
+  file:
+    path: "{{ updates_flag | dirname }}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+
+- name: "Updates / Monitoring flag ..."
+  copy:
+    dest: "{{ updates_flag }}"
+    content: "# managed by host-policy\n"
+    owner: root
+    group: root
+    mode: 0644
