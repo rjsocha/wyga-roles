@@ -1,0 +1,3 @@
+- name: "Audit configuration ..."
+  include_tasks: audit.yaml
+  when: host.setup.audit is defined

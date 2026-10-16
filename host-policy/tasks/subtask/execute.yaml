@@ -121,6 +121,11 @@
     name: wyga/monitoring
   when: host.setup.monitoring is defined
 
+- name: "Audit ..."
+  include_role:
+    name: wyga/audit
+  when: host.setup.audit is defined
+
 - name: "Needrestart ..."
   include_role:
     name: wyga/needrestart

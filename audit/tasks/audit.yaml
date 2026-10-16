@@ -1,0 +1,155 @@
+- name: "Audit / Check configuration ..."
+  assert:
+    that:
+      - host.setup.audit is mapping
+      - host.setup.audit.mode | default('use') in ['use', 'merge']
+      - host.setup.audit.rules | default([]) is sequence
+      - host.setup.audit.config | default({}) is mapping
+      - host.setup.audit.kernel | default({}) is mapping
+    fail_msg: "setup.audit: from: <template>, mode: use|merge, config: <map>, kernel: <map>, rules: <list>"
+    quiet: true
+
+- name: "Audit / Template selection ..."
+  set_fact:
+    audit_use_template: "{{ host.setup.audit.from is defined }}"
+
+- name: "Audit / Load template ..."
+  include_vars:
+    file: "{{ audit_template_file }}"
+    name: audit_template
+  loop: "{{ query('first_found', params) }}"
+  loop_control:
+    loop_var: audit_template_file
+  vars:
+    params:
+      files:
+        - "{{ audit_site }}/{{ host.setup.audit.from }}"
+        - "{{ role_path }}/audit/{{ host.setup.audit.from }}"
+  when: audit_use_template
+
+- name: "Audit / Prepare configuration (merge) ..."
+  set_fact:
+    audit_config: "{{ audit_template.audit | combine(host.setup.audit, recursive=true, list_merge='prepend_rp') }}"
+  when: audit_use_template and host.setup.audit.mode | default('use') == 'merge'
+
+- name: "Audit / Prepare configuration (use) ..."
+  set_fact:
+    audit_config: "{{ audit_template.audit | combine(host.setup.audit) }}"
+  when: audit_use_template and host.setup.audit.mode | default('use') == 'use'
+
+- name: "Audit / Prepare configuration ..."
+  set_fact:
+    audit_config: "{{ host.setup.audit }}"
+  when: not audit_use_template
+
+- name: "Audit / Check platform ..."
+  assert:
+    that:
+      - audit_os_file is file
+    fail_msg: "Unsupported platform: {{ platform.distribution }} {{ platform.version }}"
+    quiet: true
+  vars:
+    audit_os_file: "{{ role_path }}/audit/conf/{{ platform.distribution }}/{{ platform.version }}"
+
+- name: "Audit / Load defaults of {{ platform.distribution }} {{ platform.version }} ..."
+  include_vars:
+    file: "{{ role_path }}/audit/conf/{{ platform.distribution }}/{{ platform.version }}"
+    name: audit_os
+
+- name: "Audit / Check config keys ..."
+  assert:
+    that:
+      - audit_unknown | length == 0
+    fail_msg: "setup.audit.config: unknown to auditd on {{ platform.distribution }} {{ platform.version }}: {{ audit_unknown | join(', ') }}"
+    quiet: true
+  vars:
+    audit_unknown: "{{ audit_config.config | default({}) | list | difference(audit_os.conf | list) }}"
+
+- name: "Audit / Install auditd ..."
+  apt:
+    name: auditd
+    state: present
+    install_recommends: false
+
+- name: "Audit / Configuration ..."
+  template:
+    src: "audit/auditd.conf"
+    dest: "{{ audit_conf }}"
+    owner: root
+    group: root
+    mode: 0640
+  vars:
+    conf: "{{ audit_os.conf | combine(audit_config.config | default({})) }}"
+  register: audit_conf_updated
+
+- name: "Audit / Rules (base) ..."
+  template:
+    src: "audit/base.rules"
+    dest: "{{ audit_rules_dir }}/{{ audit_rules_base }}"
+    owner: root
+    group: root
+    mode: 0640
+  vars:
+    kernel: "{{ audit_kernel | combine(audit_config.kernel | default({})) }}"
+  register: audit_base_updated
+
+- name: "Audit / Rules (policy) ..."
+  template:
+    src: "audit/policy.rules"
+    dest: "{{ audit_rules_dir }}/{{ audit_rules_policy }}"
+    owner: root
+    group: root
+    mode: 0640
+  vars:
+    rules: "{{ audit_config.rules | default([]) }}"
+  register: audit_policy_updated
+
+- name: "Audit / Find foreign rules ..."
+  find:
+    paths: "{{ audit_rules_dir }}"
+    file_type: any
+    hidden: true
+    excludes:
+      - "{{ audit_rules_base }}"
+      - "{{ audit_rules_policy }}"
+  register: audit_foreign
+
+- name: "Audit / Remove foreign rules ..."
+  file:
+    path: "{{ audit_foreign_file.path }}"
+    state: absent
+  loop: "{{ audit_foreign.files }}"
+  loop_control:
+    loop_var: audit_foreign_file
+    label: "{{ audit_foreign_file.path }}"
+  register: audit_foreign_removed
+
+- name: "Audit / Enable auditd ..."
+  systemd:
+    name: auditd
+    enabled: true
+
+- name: "Audit / Restart auditd ..."
+  command: service auditd restart
+  when: audit_conf_updated.changed
+
+- name: "Audit / Check auditd ..."
+  command: systemctl is-active auditd
+  register: audit_active
+  changed_when: false
+  failed_when: false
+  check_mode: false
+  retries: 5
+  delay: 2
+  until: audit_active.stdout == 'active'
+
+- name: "Audit / Verify auditd ..."
+  assert:
+    that:
+      - audit_active.stdout == 'active'
+    fail_msg: "auditd is {{ audit_active.stdout }}, see: journalctl -u auditd"
+    quiet: true
+
+- name: "Audit / Load rules ..."
+  command: augenrules --load
+  when: audit_conf_updated.changed or audit_base_updated.changed or audit_policy_updated.changed or audit_foreign_removed.changed

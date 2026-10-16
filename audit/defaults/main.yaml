@@ -1,0 +1,10 @@
+audit_site: "{{ playbook_dir }}/site/{{ host_policy_site }}/audit"
+audit_conf: /etc/audit/auditd.conf
+audit_rules_dir: /etc/audit/rules.d
+audit_rules_base: 10-host-policy-base.rules
+audit_rules_policy: 50-host-policy.rules
+
+audit_kernel:
+  buffer: 8192
+  backlog_wait_time: 60000
+  failure: 1

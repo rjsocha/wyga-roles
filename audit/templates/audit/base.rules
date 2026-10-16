@@ -1,0 +1,6 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+# managed by host-policy
+-D
+-b {{ kernel.buffer }}
+--backlog_wait_time {{ kernel.backlog_wait_time }}
+-f {{ kernel.failure }}
