@@ -133,18 +133,8 @@
   loop_control:
     loop_var: updates_timer
 
-- name: "Updates / Monitoring flag directory ..."
-  file:
-    path: "{{ updates_flag | dirname }}"
-    state: directory
-    owner: root
-    group: root
-    mode: 0755
-
-- name: "Updates / Monitoring flag ..."
-  copy:
-    dest: "{{ updates_flag }}"
-    content: "# managed by host-policy\n"
-    owner: root
-    group: root
-    mode: 0644
+- name: "Updates / Monitoring marker ..."
+  include_role:
+    name: wyga/marker
+  vars:
+    marker: updates

@@ -1,18 +1,13 @@
 ---
 - name: "Create {{ host_policy_dir }}/policy ..."
   block:
-    - name: "Create {{ host_policy_dir }} directory ..."
-      file:
-        path: "{{ host_policy_dir }}"
-        state: directory
     - name: "Create policy marker ..."
-      copy:
-        content: "{{ host.hostname }}"
-        dest: "{{ host_policy_dir }}/policy"
-        mode: "0600"
-        owner: "root"
-        group: "root"
-      register: first_run
+      include_role:
+        name: wyga/marker
+      vars:
+        marker: policy
+        marker_content: "{{ host.hostname }}"
+        marker_mode: "0600"
 
     - name: "Trigger any pending handlers ..."
       meta: flush_handlers
@@ -23,4 +18,4 @@
       changed_when: true
       notify:
         - reboot-host
-      when: first_run.changed
+      when: marker_written.changed

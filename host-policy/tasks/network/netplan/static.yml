@@ -70,17 +70,13 @@
 
 - name: "Create {{ host_policy_dir }}/static-ip ..."
   block:
-    - name: "Create {{ host_policy_dir }} directory ..."
-      file:
-        path: "{{ host_policy_dir }}"
-        state: directory
     - name: "Create static-ip marker ..."
-      copy:
-        content: "{{ ansible_default_ipv4.address }}"
-        dest: "{{ host_policy_dir }}/static-ip"
-        mode: "0600"
-        owner: "root"
-        group: "root"
+      include_role:
+        name: wyga/marker
+      vars:
+        marker: static-ip
+        marker_content: "{{ ansible_default_ipv4.address }}"
+        marker_mode: "0600"
 
 - name: "Set ansible_port if not defined..."
   set_fact:

@@ -1,12 +1,4 @@
 ---
-- name: "Packages Baseline / Create {{ host_policy_dir }} directory ..."
-  file:
-    path: "{{ host_policy_dir }}"
-    state: directory
-    owner: "root"
-    group: "root"
-    mode: "0700"
-
 - name: "Packages Baseline / Check if {{ host_policy_dir }}/firstboot is present ..."
   stat:
     path: "{{ host_policy_dir }}/firstboot"
@@ -16,17 +8,19 @@
 - name: "Packages Baseline / firstboot migration ..."
   block:
     - name: "Packages Baseline / Create baseline marker ..."
-      copy:
-        content: '#FIRSTBOOT'
-        dest: "{{ host_policy_dir }}/baseline"
-        mode: "0600"
-        owner: "root"
-        group: "root"
+      include_role:
+        name: wyga/marker
+      vars:
+        marker: baseline
+        marker_content: '#FIRSTBOOT'
+        marker_mode: "0600"
 
     - name: "Packages Baseline / Remove firstboot marker ..."
-      file:
-        path: "{{ host_policy_dir }}/firstboot"
-        state: absent
+      include_role:
+        name: wyga/marker
+      vars:
+        marker: firstboot
+        marker_state: absent
   when: firstboot_marker.stat.exists
 
 - name: "Packages Baseline / Check if {{ host_policy_dir }}/baseline is present ..."

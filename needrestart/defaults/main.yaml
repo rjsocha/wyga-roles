@@ -4,4 +4,3 @@ needrestart_modes:
   list: l
   interactive: i
   automatic: a
-needrestart_flag: /var/opt/host-policy/needrestart

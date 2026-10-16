@@ -140,13 +140,9 @@
   set_fact:
     baseline_final_installed_packages: "{{ ansible_facts.packages.keys() }}"
 
-- name: "Packages Baseline / Create marker ..."
-  template:
-    src: baseline/marker
-    dest: "{{ host_policy_dir }}/baseline"
-    owner: root
-    group: root
-    mode: 0400
+- name: "Packages Baseline / Render marker ..."
+  set_fact:
+    baseline_marker_content: "{{ lookup('template', 'baseline/marker') }}"
   vars:
     installed_packages: "{{ baseline_installed_packages }}"
     final_packages: "{{ baseline_final_installed_packages }}"
@@ -154,6 +150,14 @@
     pinned_packages: "{{ baseline_pin }}"
     leftovers: "{{ baseline_final_installed_packages | reject('match', baseline_packages_rx) }}"
     baseline: "{{ baseline_packages }}"
+
+- name: "Packages Baseline / Create marker ..."
+  include_role:
+    name: wyga/marker
+  vars:
+    marker: baseline
+    marker_content: "{{ baseline_marker_content }}"
+    marker_mode: "0400"
 
 - name: "Packages Baseline / Halt request ..."
   fail: msg="halt as requested"

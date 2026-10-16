@@ -37,18 +37,8 @@
     install_recommends: false
     update_cache: true
 
-- name: "Needrestart / Monitoring flag directory ..."
-  file:
-    path: "{{ needrestart_flag | dirname }}"
-    state: directory
-    owner: root
-    group: root
-    mode: 0755
-
-- name: "Needrestart / Monitoring flag ..."
-  copy:
-    dest: "{{ needrestart_flag }}"
-    content: "# managed by host-policy\n"
-    owner: root
-    group: root
-    mode: 0644
+- name: "Needrestart / Monitoring marker ..."
+  include_role:
+    name: wyga/marker
+  vars:
+    marker: needrestart

@@ -154,18 +154,8 @@
   command: augenrules --load
   when: audit_conf_updated.changed or audit_base_updated.changed or audit_policy_updated.changed or audit_foreign_removed.changed
 
-- name: "Audit / Monitoring flag directory ..."
-  file:
-    path: "{{ audit_flag | dirname }}"
-    state: directory
-    owner: root
-    group: root
-    mode: 0755
-
-- name: "Audit / Monitoring flag ..."
-  copy:
-    dest: "{{ audit_flag }}"
-    content: "# managed by host-policy\n"
-    owner: root
-    group: root
-    mode: 0644
+- name: "Audit / Monitoring marker ..."
+  include_role:
+    name: wyga/marker
+  vars:
+    marker: audit

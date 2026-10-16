@@ -1,0 +1,34 @@
+- name: "Marker / Check ..."
+  assert:
+    that:
+      - marker is defined
+      - marker is string
+      - marker | length > 0
+      - "'/' not in marker"
+      - marker_state in ['present', 'absent']
+    fail_msg: "wyga/marker: marker: <name>, marker_state: present|absent"
+    quiet: true
+
+- name: "Marker / Directory ..."
+  file:
+    path: "{{ marker_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0700
+
+- name: "Marker / {{ marker }} ..."
+  copy:
+    dest: "{{ marker_dir }}/{{ marker }}"
+    content: "{{ marker_content }}"
+    owner: root
+    group: root
+    mode: "{{ marker_mode }}"
+  register: marker_written
+  when: marker_state == 'present'
+
+- name: "Marker / Remove {{ marker }} ..."
+  file:
+    path: "{{ marker_dir }}/{{ marker }}"
+    state: absent
+  when: marker_state == 'absent'

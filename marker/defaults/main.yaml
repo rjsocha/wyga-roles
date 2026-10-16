@@ -1,0 +1,4 @@
+marker_dir: /var/opt/host-policy
+marker_state: present
+marker_content: "# managed by host-policy\n"
+marker_mode: "0644"
