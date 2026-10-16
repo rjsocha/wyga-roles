@@ -310,17 +310,20 @@ def apply_swap(host, label, spec):
         host.plan.append("mkswap %s on %s once wyga/storage made it" % (label, device))
         host.mounts.append({'path': 'none', 'src': fstab_source('block', real, label), 'fstype': 'swap', 'opts': 'sw'})
         return
+    active = set()
+    with open('/proc/swaps') as f:
+        for line in f.readlines()[1:]:
+            active.add(line.split()[0])
     sig = blkid(host, real)
     if not sig.get('TYPE'):
         host.act("mkswap %s on %s" % (label, real), ['mkswap', '-q', '-L', label, real])
     elif sig['TYPE'] != 'swap':
         host.module.fail_json(msg="%s: %s holds %s, refusing to touch it" % (what, device, sig['TYPE']))
     elif sig.get('LABEL') != label:
+        if real in active:
+            host.act("swapoff %s" % real, ['swapoff', real])
+            active.discard(real)
         host.act("label %s as %s" % (real, label), ['swaplabel', '-L', label, real])
-    active = set()
-    with open('/proc/swaps') as f:
-        for line in f.readlines()[1:]:
-            active.add(line.split()[0])
     if real not in active:
         host.act("swapon %s" % real, ['swapon', real])
     host.mounts.append({'path': 'none', 'src': fstab_source(kind, real, label), 'fstype': 'swap', 'opts': 'sw'})
