@@ -12,7 +12,8 @@ description:
     or partition table is never touched.
   - lvm.lv - a logical volume is created in 'vg', which must exist, with
     'size' and grown when 'size' is larger; it is never shrunk or
-    removed.
+    removed. An ext2/3/4 or xfs filesystem on it grows with it
+    (lvextend --resizefs); any other is left to wyga/filesystem.
   - loop - a sparse file of 'size' is created and grown; never shrunk.
   - Check mode reports the plan without running it.
 options:
@@ -38,6 +39,7 @@ import time
 
 from ansible.module_utils.basic import AnsibleModule
 
+RESIZEFS = ('ext2', 'ext3', 'ext4', 'xfs')
 LVM_PART_TYPE = 'E6D6D379-F507-44C2-A23C-238F2A3DF928'
 _UNITS = {'': 1, 'B': 1, 'K': 1 << 10, 'M': 1 << 20, 'G': 1 << 30, 'T': 1 << 40, 'P': 1 << 50}
 _NAME = re.compile(r'^[a-zA-Z0-9][a-zA-Z0-9_.+-]*$')
@@ -161,6 +163,12 @@ def apply_vg(host, name, spec, pvs, vgs):
         host.act("vgextend %s %s" % (name, ' '.join(wanted)), ['vgextend', '--quiet', '--yes', name] + wanted)
 
 
+def fs_type(host, path):
+    """The filesystem type blkid finds on the device, or None."""
+    rc, out, err = host.module.run_command(['blkid', '-p', '-o', 'value', '-s', 'TYPE', path])
+    return out.strip() or None if rc == 0 else None
+
+
 def apply_lv(host, name, spec, vgs, lvs):
     vg = spec.get('vg')
     if not isinstance(vg, str) or not vg:
@@ -179,8 +187,14 @@ def apply_lv(host, name, spec, vgs, lvs):
                  ['lvcreate', '--quiet', '--yes', '--wipesignatures', 'y', '--zero', 'y',
                   '-n', name, '-L', '%dB' % size, vg])
     elif size > current:
-        host.act("lvextend %s/%s to %s" % (vg, name, spec['size']),
-                 ['lvextend', '--quiet', '-L', '%dB' % size, '/dev/%s/%s' % (vg, name)])
+        path = '/dev/%s/%s' % (vg, name)
+        fs = fs_type(host, path)
+        if fs in RESIZEFS:
+            host.act("lvextend %s/%s to %s with its %s" % (vg, name, spec['size'], fs),
+                     ['lvextend', '--quiet', '--yes', '--resizefs', '-L', '%dB' % size, path])
+        else:
+            host.act("lvextend %s/%s to %s" % (vg, name, spec['size']),
+                     ['lvextend', '--quiet', '-L', '%dB' % size, path])
 
 
 def apply_loop(host, name, spec):

@@ -57,6 +57,22 @@ expected; `/dev/vdb` works but is not stable.
 with `lvextend` when `size` is larger than the volume; a smaller `size`
 changes nothing. The device is `/dev/<vg>/<name>`.
 
+A filesystem on the volume follows its size: ext2/3/4 and xfs grow in
+the same `lvextend` (`--resizefs`), mounted or not, so `/` on
+`system/root` grows by raising its `size` alone. Any other filesystem
+grows in `wyga/filesystem` when the policy declares it there (btrfs:
+`btrfs filesystem resize max`); a swap area keeps its size.
+
+```yaml
+setup:
+  storage:
+    lvm:
+      lv:
+        root:
+          vg: system
+          size: 40G
+```
+
 ## loop
 
 A sparse file of `size` at `file` (0600, root), grown with `truncate`
