@@ -3,6 +3,7 @@ audit_conf: /etc/audit/auditd.conf
 audit_rules_dir: /etc/audit/rules.d
 audit_rules_base: 10-host-policy-base.rules
 audit_rules_policy: 50-host-policy.rules
+audit_flag: /var/opt/host-policy/audit
 
 audit_kernel:
   buffer: 8192

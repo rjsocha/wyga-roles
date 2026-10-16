@@ -1,6 +1,7 @@
 monitoring:
   checks:
     - apt
+    - audit
     - kernel-check
     - needrestart
     - os-release

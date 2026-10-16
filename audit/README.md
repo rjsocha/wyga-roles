@@ -71,6 +71,9 @@ Another platform stops the role. A new one is a new file below
 | configuration | `/etc/audit/auditd.conf`, whole file |
 | base rules (`-D`, `-b`, `--backlog_wait_time`, `-f`) | `/etc/audit/rules.d/10-host-policy-base.rules` |
 | rules of the policy | `/etc/audit/rules.d/50-host-policy.rules` |
+| monitoring flag | `/var/opt/host-policy/audit` |
+
+The flag turns on the probe `audit` of `check-mk-agent-push` (service "Local Audit"); without it the probe prints nothing.
 
 ## Behaviour
 
