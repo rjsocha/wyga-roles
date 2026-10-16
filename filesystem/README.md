@@ -12,6 +12,8 @@ the services. `btrfs-progs` is installed by the role when `btrfs` is used.
   `findmnt`, `btrfs`) and acts on the difference; the fstab entries it
   returns are applied with `ansible.posix.mount`. `--check` prints the
   plan, including what waits for a device `wyga/storage` has yet to make.
+- A changed fstab is followed by `systemctl daemon-reload`, so the mount
+  and swap units of systemd match it without a reboot.
 
 ```yaml
 setup:

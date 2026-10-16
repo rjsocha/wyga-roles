@@ -31,3 +31,11 @@
   loop_control:
     loop_var: mount
     label: "{{ mount.path if mount.fstype != 'swap' else mount.src }}"
+  register: wyga_filesystem_mounts
+
+- name: "Filesystem / Reload systemd units from the fstab ..."
+  systemd:
+    daemon_reload: true
+  when: >-
+    wyga_filesystem_mounts is changed
+    or wyga_filesystem.plan | select('match', 'fstab: drop ') | list | length > 0
