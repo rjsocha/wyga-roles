@@ -95,7 +95,7 @@
     name: wyga/install-packages
   vars:
     packages:
-      - check-mk-agent-push
+      - "{{ monitoring_config.package | default('check-mk-agent-push') }}"
 
 - name: "Generate configuration ..."
   template:
