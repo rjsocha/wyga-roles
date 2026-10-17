@@ -13,7 +13,7 @@
 {% set _ = terminal_output.append('gfxterm') %}
 {% endif %}
 {% if terminal == 'serial' %}
-{% set _ = console.append('console=ttyS0,115200n8') %}
+{% set _ = console.append('console=' ~ grub_serial ~ ',115200n8') %}
 {% set _ = terminal_input.append('serial') %}
 {% set _ = terminal_output.append('serial') %}
 {% endif %}
@@ -30,7 +30,7 @@ GRUB_TERMINAL=""
 GRUB_TERMINAL_OUTPUT="{{ terminal_output | join(" ") }}"
 GRUB_TERMINAL_INPUT="{{ terminal_input | join(" ") }}"
 {% if 'serial' in grub_terminal %}
-GRUB_SERIAL_COMMAND="serial --speed=115200"
+GRUB_SERIAL_COMMAND="serial --unit={{ grub_serial | regex_replace('^ttyS', '') }} --speed=115200"
 {% endif %}
 {% if 'gfxterm' in grub_terminal %}
 GRUB_GFXMODE="{{ grub_display }}"

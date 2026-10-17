@@ -16,6 +16,8 @@
 #       terminal:
 #         - gfxterm
 #         - serial
+#       # Serial port of the serial terminal: ttyS<n>, or none to drop it
+#       serial: ttyS0
 #       # Used only when gfxterm is enabled
 #       display: 640x480
 #
@@ -25,6 +27,21 @@
       - platform.distribution in ['ubuntu','debian']
     fail_msg: "Unsupported distribution: {{ platform.distribution }} {{ platform.version }}"
     quiet: true
+
+- name: "GRUB / Serial port ..."
+  set_fact:
+    grub_serial: "{{ host.setup.grub.serial | default('ttyS0') }}"
+
+- name: "GRUB / Check serial port ..."
+  assert:
+    that:
+      - grub_serial is match('^(ttyS[0-9]+|none)$')
+    fail_msg: "setup.grub.serial: ttyS<n> or none, got {{ grub_serial }}"
+    quiet: true
+
+- name: "GRUB / Terminals ..."
+  set_fact:
+    grub_terminals: "{{ host.setup.grub.terminal | default(['gfxterm','serial']) | reject('equalto', 'serial' if grub_serial == 'none' else '') | list }}"
 
 - name: "GRUB / Site directory ..."
   file:
@@ -68,7 +85,7 @@
     grub_recovery: "{{ 'false' if host.setup.grub.recovery|default(false) else 'true' }}"
     grub_submenu: "{{ 'false' if host.setup.grub.submenu|default(false) else 'true' }}"
     grub_os_prober: "{{ 'false' if host.setup.grub.osprober|default(false) else 'true' }}"
-    grub_terminal: "{{ host.setup.grub.terminal | default(['gfxterm','serial']) }}"
+    grub_terminal: "{{ grub_terminals }}"
     grub_display: "{{ host.setup.grub.display | default('640x480') }}"
     grub_cmdline: "{{ host.setup.grub.cmdline | default(['quiet']) }}"
   notify:
@@ -103,7 +120,7 @@
     owner: root
     mode: 0644
   vars:
-    grub_terminal: "{{ host.setup.grub.terminal | default(['gfxterm','serial']) }}"
+    grub_terminal: "{{ grub_terminals }}"
   when: grub_theme is in [ 'blue', 'green', 'black' ]
 
 - name: "GRUB / Configuration (custom theme) / absent ..."
