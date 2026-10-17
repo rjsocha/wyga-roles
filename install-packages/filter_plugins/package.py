@@ -77,22 +77,26 @@ def _parse_entry(entry):
     }
 
 
-def _distro_paths(name, platform, playbook_dir, role_path):
-    distro = platform['distribution']
-    version = platform['version']
-    return [
-        Path(playbook_dir) / 'local' / 'packages' / distro / version / name,
-        Path(role_path) / 'packages' / distro / version / name,
-        Path(playbook_dir) / 'site' / 'packages' / distro / version / name,
-    ]
+def _distro_paths(name, platform, base):
+    return [Path(base) / 'packages' / platform['distribution'] / platform['version'] / name]
 
 
-def _common_paths(name, playbook_dir, role_path):
-    return [
-        Path(playbook_dir) / 'local' / 'packages' / 'common' / name,
-        Path(role_path) / 'packages' / 'common' / name,
-        Path(playbook_dir) / 'site' / 'packages' / 'common' / name,
-    ]
+def _common_paths(name, base):
+    return [Path(base) / 'packages' / 'common' / name]
+
+
+def _find_manifest(name, platform, playbook_dir, role_path, site):
+    bases = []
+    if site:
+        bases.append(Path(playbook_dir) / 'site' / site)
+    bases.append(Path(role_path))
+    for base in bases:
+        manifest = _load_manifest(_distro_paths(name, platform, base), platform)
+        if manifest is None:
+            manifest = _load_manifest(_common_paths(name, base), platform)
+        if manifest is not None:
+            return manifest
+    return None
 
 
 def _merge_into(dst, src):
@@ -182,7 +186,7 @@ def _append_unique(lst, items):
             lst.append(it)
 
 
-def package_resolve(entries, platform, playbook_dir, role_path):
+def package_resolve(entries, platform, playbook_dir, role_path, site=None):
     if not isinstance(entries, list):
         raise AnsibleFilterError(f"entries must be a list, got {type(entries).__name__}")
     if not isinstance(platform, dict):
@@ -226,15 +230,7 @@ def package_resolve(entries, platform, playbook_dir, role_path):
             continue
 
         if parsed['kind'] == 'meta':
-            manifest = _load_manifest(
-                _distro_paths(parsed['name'], platform, playbook_dir, role_path),
-                platform,
-            )
-            if manifest is None:
-                manifest = _load_manifest(
-                    _common_paths(parsed['name'], playbook_dir, role_path),
-                    platform,
-                )
+            manifest = _find_manifest(parsed['name'], platform, playbook_dir, role_path, site)
             if manifest is None:
                 _display.warning(
                     f"meta {parsed['name']!r}: no manifest found "
@@ -254,15 +250,7 @@ def package_resolve(entries, platform, playbook_dir, role_path):
         else:
             if apt not in install:
                 install.append(apt)
-            manifest = _load_manifest(
-                _distro_paths(parsed['name'], platform, playbook_dir, role_path),
-                platform,
-            )
-            if manifest is None:
-                manifest = _load_manifest(
-                    _common_paths(parsed['name'], playbook_dir, role_path),
-                    platform,
-                )
+            manifest = _find_manifest(parsed['name'], platform, playbook_dir, role_path, site)
             if manifest is not None:
                 _merge_manifest(manifest)
 

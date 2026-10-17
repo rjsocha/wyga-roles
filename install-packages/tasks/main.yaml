@@ -29,7 +29,7 @@
 
 - name: "Resolve package list ..."
   set_fact:
-    package_manifest: "{{ install_packages | package_resolve(platform=platform, playbook_dir=playbook_dir, role_path=role_path) }}"
+    package_manifest: "{{ install_packages | package_resolve(platform=platform, playbook_dir=playbook_dir, role_path=role_path, site=host_policy_site | default('')) }}"
 
 - name: "Information ..."
   debug:

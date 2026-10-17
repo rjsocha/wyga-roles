@@ -17,7 +17,7 @@
     arch: "{{ platform.arch.package }}"
     params:
       - files:
+          - "{{ playbook_dir }}/site/{{ host_policy_site | default('-') }}/repository/{{ repository_name }}/{{ platform.distribution }}/{{ platform.version }}/main.yaml"
+          - "{{ playbook_dir }}/site/{{ host_policy_site | default('-') }}/repository/{{ repository_name }}/common/main.yaml"
           - "repository/{{ repository_name }}/{{ platform.distribution }}/{{ platform.version }}/main.yaml"
           - "repository/{{ repository_name }}/common/main.yaml"
-          - "local/tasks/repository/{{ platform.distribution }}/{{ platform.version }}/{{ repository_name }}.yml"
-          - "local/tasks/repository/generic/{{ repository_name }}.yml"
