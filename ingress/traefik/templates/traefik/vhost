@@ -14,9 +14,21 @@ http:
           {% endif %}
         {% endfor %}
       {% endif %}
+      {% if vhost.auth is defined %}
+          - auth-{{ vhost.id }}@file
+      {% endif %}
       {%if not vhost.redirect %}
           - cleanup-headers@file
       {% endif %}
+{% if vhost.auth is defined %}
+    auth-{{ vhost.id }}:
+      basicAuth:
+        realm: "[PROTECTED]"
+        users:
+  {% for user in confidential.ingress.auth.basic[vhost.auth.basic] %}
+          - '{{ user }}'
+  {% endfor %}
+{% endif %}
 
   routers:
 {% if vhost.scheme.http | default(false) %}

@@ -141,6 +141,18 @@
     label: "{{ redirect.value.file }}"
   when: IngressConfig.redirect is defined
 
+- name: "Traefik Ingress / Vhost / Check basic auth user sets ..."
+  assert:
+    that:
+      - confidential.ingress.auth.basic[vhost.auth.basic] is defined
+      - confidential.ingress.auth.basic[vhost.auth.basic] | length > 0
+    fail_msg: "{{ vhost.url[0] }}: user set '{{ vhost.auth.basic }}' missing or empty in confidential.ingress.auth.basic"
+  loop: "{{ IngressConfig.config | selectattr('auth', 'defined') | list }}"
+  loop_control:
+    loop_var: vhost
+    label: "{{ vhost.url[0] }}"
+  when: IngressConfig.config is defined
+
 - name: "Traefik Ingress / Vhost / Generate configuration ..."
   template:
     src: "traefik/vhost"

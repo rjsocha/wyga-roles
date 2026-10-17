@@ -189,6 +189,30 @@ vhost:
 | `tls`      | Cert resolver name (an ACME provider name, or `http`, or `none`). Defaults to `http` if the http resolver exists, else `none`. |
 | `via`      | Entrypoint(s) this vhost is served on (string or list). Overrides the default `http`/`https` selection (see below). |
 | `redirect` | Additional hostnames that 301 to this vhost's canonical host. |
+| `auth`     | `basic: <user set>`: HTTP basic auth in front of the backend. Users come from `confidential.ingress.auth.basic.<user set>`. Not on redirect-only vhosts. |
+
+### auth (basic auth)
+
+```yaml
+vhost:
+  - url: https://agent.example.com
+    config:
+      upstream: http://10.0.0.5:8611
+      auth:
+        basic: agents
+```
+
+```yaml
+confidential:
+  ingress:
+    auth:
+      basic:
+        agents:
+          - "agent:$2y$05$..."     # htpasswd lines (bcrypt, apr1 or sha1)
+```
+
+The run fails when the user set is missing or empty. Several vhosts may share
+one set.
 
 ### via (entrypoint selection)
 

@@ -459,6 +459,14 @@ def process_ingress_config(ingress):
 
     runtime_files.append(runtime["file"])
 
+    if 'auth' in cfg:
+      auth = cfg["auth"]
+      if redirect:
+        raise AnsibleFilterError("auth is not supported on a redirect-only vhost (%s) ..." % entry_count)
+      if not isinstance(auth, dict) or list(auth.keys()) != ["basic"] or not isinstance(auth["basic"], string_types) or not auth["basic"]:
+        raise AnsibleFilterError("auth must be a mapping with one key, basic: <user set> (%s) ..." % entry_count)
+      runtime["auth"] = { "basic": auth["basic"] }
+
     tls = cfg.get("tls")
     if tls:
       if tls not in providers:
