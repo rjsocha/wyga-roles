@@ -129,6 +129,25 @@
     state: absent
   when: grub_theme is not in [ 'blue', 'green', 'black' ]
 
+- name: "GRUB / Ubuntu 26.04 / Stale grub-common init links ..."
+  when: platform.distribution == 'ubuntu' and platform.version == '26.04'
+  block:
+    - name: "GRUB / Stale grub-common init links ..."
+      find:
+        paths: ["/etc/rc2.d", "/etc/rc3.d", "/etc/rc4.d", "/etc/rc5.d"]
+        patterns: "S??grub-common"
+        file_type: link
+      register: grub_stale_links
+
+    - name: "GRUB / Init script ..."
+      stat:
+        path: /etc/init.d/grub-common
+      register: grub_init_script
+
+    - name: "GRUB / Remove stale grub-common init links ..."
+      shell: update-rc.d grub-common remove && systemctl daemon-reload && systemctl reset-failed grub2-common.service
+      when: grub_stale_links.matched > 0 and not grub_init_script.stat.exists
+
 # Final cleanup ...
 - name: "GRUB / Normalize registred grub configs ..."
   set_fact:
