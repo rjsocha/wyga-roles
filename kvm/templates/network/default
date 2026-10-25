@@ -12,7 +12,7 @@
 {% set vm_gw = host.setup.kvm.network.gateway if host.setup.kvm.network.gateway is defined else vm_subnet | ansible.utils.ipaddr('1') | ansible.utils.ipaddr('address') %}
 {% set vm_dhcp_start = host.setup.kvm.network.dhcp.range | first if host.setup.kvm.network.dhcp.range is defined else vm_subnet | ansible.utils.ipaddr('256') | ansible.utils.ipaddr('address') %}
 {% set vm_dhcp_end = host.setup.kvm.network.dhcp.range | last if host.setup.kvm.network.dhcp.range is defined else vm_subnet | ansible.utils.ipaddr('last_usable') | ansible.utils.ipaddr('address') %}
-<network xmlns:dnsmasq='http://libvirt.org/schemas/network/dnsmasq/1.0'>>
+<network xmlns:dnsmasq='http://libvirt.org/schemas/network/dnsmasq/1.0'>
   <name>default</name>
   <forward mode='open'/>
   <bridge name='{{ vm_if }}' stp='off' delay='0'/>
@@ -27,12 +27,13 @@
 {% endif %}
     </dhcp>
   </ip>
-{% if host.setup.kvm.network.dhcp.rapid | default(true) %}
   <dnsmasq:options>
+    <dnsmasq:option value="no-hosts"/>
+{% if host.setup.kvm.network.dhcp.rapid | default(true) %}
     <dnsmasq:option value="dhcp-rapid-commit"/>
     <dnsmasq:option value="no-ping"/>
-  </dnsmasq:options>
 {% endif %}
+  </dnsmasq:options>
 {% if host.setup.kvm.network.dns is defined %}
   <dns>
 {% for vm_dns in host.setup.kvm.network.dns %}
