@@ -1,0 +1,20 @@
+wyga_ssh_known_files:
+  - sshd_config.d
+  - sshd_match.d
+  - ssh_config.d
+  - moduli
+  - ssh_config.d/20-systemd-ssh-proxy.conf
+  - ssh_config.d/10-revoked.conf
+
+# SSH Host Certificates
+use_ssh_agent: True
+wyga_ssh_host_keys_known:
+  - "ed25519"
+  - "rsa"
+  - "ecdsa"
+wyga_ssh_host_keys: "{{ wyga_ssh_host_keys_known }}"
+wyga_generate_certs: []
+
+ca_ssh_ca_dir:      "/etc/site/ssh/ca"
+ca_ssh_role_dir:    "/etc/site/ssh/role"
+ssh_pool_dir:       "/etc/ssh-pool"

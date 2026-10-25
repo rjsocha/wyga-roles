@@ -116,7 +116,7 @@ Each role has its own `README.md`. The main areas:
 | `package` | `apt`, `install-repository`, `install-packages`, `baseline` |
 | `firewall` | `firewall` |
 | `setup.storage`, `setup.filesystem` | `storage`, `filesystem` |
-| `setup.ssh` | `ssh-configuration`, `ssh-host-certificate` |
+| `setup.ssh` | `ssh` |
 | `setup.monitoring` | `monitoring` |
 | `setup.audit` | `audit` |
 | `setup.vpn` | `nebula-vpn` |

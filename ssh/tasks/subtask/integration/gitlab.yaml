@@ -1,0 +1,25 @@
+---
+- name: "Verify GitLab integration ..."
+  assert:
+    that:
+      - ssh_gitlab.mode | default('file') in ['file', 'dynamic']
+    fail_msg: "setup.ssh.integration.gitlab.mode must be file or dynamic"
+  vars:
+    ssh_gitlab: "{{ host.setup.ssh.integration.gitlab or {} }}"
+
+- name: "Configure /etc/ssh/sshd_match.d/50-gitlab.conf ..."
+  template:
+    src: "sshd/gitlab"
+    dest: "/etc/ssh/sshd_match.d/50-gitlab.conf"
+    group: root
+    owner: root
+    mode: 0644
+  notify: restart-ssh
+  vars:
+    ssh_gitlab: "{{ host.setup.ssh.integration.gitlab or {} }}"
+    ssh_gitlab_user: "{{ ssh_gitlab.user | default('git') }}"
+    ssh_gitlab_mode: "{{ ssh_gitlab.mode | default('file') }}"
+
+- name: "Mark GitLab integration as managed ..."
+  set_fact:
+    wyga_ssh_files: "{{ wyga_ssh_files + [ 'sshd_match.d/50-gitlab.conf' ] }}"

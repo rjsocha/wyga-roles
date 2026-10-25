@@ -1,0 +1,23 @@
+- name: "SSH/ systemd reload ..."
+  systemd:
+    daemon_reload: true
+
+- name: "SSHD/Ensure /run/sshd exists ..."
+  file:
+    path: "/run/sshd"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: "SSHD/Checking configuration ..."
+  check_mode: false
+  command: sshd -t
+  changed_when: false
+  register: ssh_check
+
+- name: "SSHD/Restarting with new configuration ..."
+  systemd:
+    name: ssh
+    state: restarted
+  when: ssh_check.rc == 0

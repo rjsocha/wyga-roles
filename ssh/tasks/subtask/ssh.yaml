@@ -1,0 +1,96 @@
+---
+# Provider tweaks
+- name: "Cleanup Linode modifications ...."
+  file:
+    path: /etc/systemd/system/ssh.service.d/linode.conf
+    state: absent
+  notify: restart-ssh
+
+- name: "List of /etc/ssh files ..."
+  set_fact:
+    wyga_ssh_files: "{{ wyga_ssh_known_files }}"
+
+- name: "Create /etc/ssh directories ..."
+  file:
+    path: "{{ ssh_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  loop:
+    - /etc/ssh
+    - /etc/ssh/sshd_config.d
+    - /etc/ssh/sshd_match.d
+    - /etc/ssh/ssh_config.d
+  loop_control:
+    loop_var: ssh_dir
+
+- name: "Install /etc/ssh/sshd_config ..."
+  copy:
+    dest: "/etc/ssh/sshd_config"
+    src: "sshd/common/sshd_config"
+    mode: "0644"
+    owner: "root"
+    group: "root"
+  notify: restart-ssh
+
+- name: "Mark /etc/ssh/sshd_config as managed ..."
+  set_fact:
+    wyga_ssh_files: "{{ wyga_ssh_files + [ 'sshd_config' ] }}"
+
+- name: "Install /etc/ssh/ssh_config ..."
+  copy:
+    dest: "/etc/ssh/ssh_config"
+    src: "ssh/common/ssh_config"
+    mode: "0644"
+    owner: "root"
+    group: "root"
+
+- name: "Mark /etc/ssh/ssh_config as managed ..."
+  set_fact:
+    wyga_ssh_files: "{{ wyga_ssh_files + [ 'ssh_config' ] }}"
+
+- name: "GitLab integration ..."
+  include_tasks: "subtask/integration/gitlab.yaml"
+  when: host.setup.ssh.integration.gitlab is defined
+
+- name: "Install /etc/ssh/ssh_known_hosts"
+  copy:
+    dest: "/etc/ssh/ssh_known_hosts"
+    src: "key/known_hosts/{{ host_policy_site }}/ssh_known_hosts"
+    mode: "0644"
+    owner: "root"
+    group: "root"
+
+- name: "Mark /etc/ssh/ssh_known_hosts as managed ..."
+  set_fact:
+    wyga_ssh_files: "{{ wyga_ssh_files + [ 'ssh_known_hosts' ] }}"
+
+- name: "Configure /etc/ssh/sshd_config.d/10-host-policy.conf ..."
+  template:
+    src: "sshd/host-policy"
+    dest: "/etc/ssh/sshd_config.d/10-host-policy.conf"
+    group: root
+    owner: root
+    mode: 0644
+  notify: restart-ssh
+  vars:
+    ssh_port: "{{ host.setup.ssh.configuration.port | default('22') }}"
+    ssh_listen: "{{ host.setup.ssh.configuration.listen | default([]) }}"
+    ssh_addressfamily: "{{ host.setup.ssh.configuration.addressfamily | default('inet') }}"
+    ssh_forcei18n: "{{ host.setup.ssh.configuration.forcei18n | default('none') }}"
+    ssh_allowtcpforwarding: "{{ 'yes' if host.setup.ssh.configuration.allowtcpforwarding|default(true) else 'no' }}"
+    ssh_allowagentforwarding: "{{ 'yes' if host.setup.ssh.configuration.allowagentforwarding|default(true) else 'no' }}"
+    ssh_x11forwarding: "{{ 'yes' if host.setup.ssh.configuration.x11forwarding|default(false) else 'no' }}"
+    ssh_permitrootlogin: "{{ host.setup.ssh.configuration.permitrootlogin|default('prohibit-password') }}"
+    ssh_passwordauthentication: "{{ 'yes' if host.setup.ssh.configuration.passwordauthentication|default(false) else 'no' }}"
+    ssh_kbdinteractiveauthentication: "{{ 'yes' if host.setup.ssh.configuration.kbdinteractiveauthentication|default(false) else 'no' }}"
+    ssh_usepam: "{{ 'yes' if host.setup.ssh.configuration.usepam|default(true) else 'no' }}"
+    ssh_printmotd: "{{ 'yes' if host.setup.ssh.configuration.printmotd|default(false) else 'no' }}"
+    ssh_acceptenv: "{{ host.setup.ssh.configuration.acceptenv|default([]) }}"
+    ssh_subsystem: "{{ host.setup.ssh.configuration.subsystem|default(['sftp /usr/lib/openssh/sftp-server']) }}"
+    ssh_gatewayports: "{{ host.setup.ssh.configuration.gatewayports|default('no') }}"
+
+- name: "Mark /etc/ssh/sshd_config.d/10-host-policy.conf as managed ..."
+  set_fact:
+    wyga_ssh_files: "{{ wyga_ssh_files + [ 'sshd_config.d/10-host-policy.conf' ] }}"

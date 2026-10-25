@@ -60,10 +60,10 @@
     mv -f /etc/site/ssh/ca/.revoked.krl /etc/site/ssh/ca/revoked.krl
   when: ssh_revoked_spec is changed or not ssh_revoked_krl.stat.exists
 
-- name: "ssh-revoked / Configure /etc/ssh/ssh_config.d/revoked.conf ..."
+- name: "ssh-revoked / Configure /etc/ssh/ssh_config.d/10-revoked.conf ..."
   copy:
     content: "RevokedHostKeys /etc/site/ssh/ca/revoked.krl\n"
-    dest: /etc/ssh/ssh_config.d/revoked.conf
+    dest: /etc/ssh/ssh_config.d/10-revoked.conf
     owner: root
     group: root
     mode: "0644"

@@ -1,0 +1,15 @@
+---
+- name: "Configure /etc/ssh/sshd_config.d/30-authorized.conf ..."
+  template:
+    src: sshd/authorized
+    dest: /etc/ssh/sshd_config.d/30-authorized.conf
+    owner: root
+    group: root
+    mode: "0644"
+  vars:
+    ssh_user_cert: "{{ host.setup.ssh.user.certificate | default(false) }}"
+  notify: restart-ssh
+
+- name: "Mark /etc/ssh/sshd_config.d/30-authorized.conf as managed ..."
+  set_fact:
+    wyga_ssh_files: "{{ wyga_ssh_files + [ 'sshd_config.d/30-authorized.conf' ] }}"

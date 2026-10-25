@@ -1,3 +1,0 @@
----
-- name: "SSHD configuration ..."
-  include_tasks: "subtask/ssh.yaml"

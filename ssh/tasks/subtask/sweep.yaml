@@ -1,0 +1,26 @@
+---
+- name: "Looking for unmanaged files in /etc/ssh ..."
+  find:
+    paths: /etc/ssh
+    recurse: true
+    hidden: true
+    file_type: any
+  register: ssh_sweep
+
+- name: "Unmanaged files in /etc/ssh ..."
+  set_fact:
+    ssh_sweep_files: "{{ ssh_sweep.files | map(attribute='path') | map('regex_replace', '^/etc/ssh/', '') | reject('in', wyga_ssh_files | default([])) | reject('match', '^ssh_host_[a-z0-9]+_key(\\.pub|-cert\\.pub)?$') | sort | list }}"
+
+- name: "Files to remove from /etc/ssh ..."
+  debug:
+    msg: "{{ ssh_sweep_files }}"
+  when: ssh_sweep_files | length > 0
+
+- name: "Delete unmanaged files from /etc/ssh ..."
+  file:
+    path: "/etc/ssh/{{ cleanup }}"
+    state: absent
+  notify: restart-ssh
+  loop: "{{ ssh_sweep_files }}"
+  loop_control:
+    loop_var: cleanup

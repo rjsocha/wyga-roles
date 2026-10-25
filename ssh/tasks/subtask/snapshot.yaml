@@ -1,0 +1,9 @@
+---
+- name: "Snapshot /etc/ssh to /run/host-policy/ssh ..."
+  shell: |
+    set -eu
+    install -d -m 0700 -o root -g root /run/host-policy
+    rm -rf /run/host-policy/ssh
+    cp -a /etc/ssh /run/host-policy/ssh
+  changed_when: false
+  when: not ansible_check_mode

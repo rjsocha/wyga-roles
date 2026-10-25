@@ -212,21 +212,3 @@
   loop_control:
     loop_var: pool
     label: "{{ pool | basename }}"
-
-- name: "User Manager / sshd authorized keys ..."
-  block:
-    - name: "User Manager / Configure /etc/ssh/sshd_config.d/authorized.conf ..."
-      template:
-        src: ssh/authorized
-        dest: /etc/ssh/sshd_config.d/authorized.conf
-        owner: root
-        group: root
-        mode: "0644"
-      vars:
-        ssh_user_cert: "{{ host.setup.ssh.user.certificate | default(false) }}"
-      notify: restart-ssh
-
-    - name: "User Manager / Registered configurations ..."
-      set_fact:
-        wyga_ssh_registred_config: "{{ wyga_ssh_registred_config | default([]) + ['authorized.conf'] }}"
-  when: wum.users | length > 0

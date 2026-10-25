@@ -1,0 +1,13 @@
+---
+- name: "Configure /etc/ssh/sshd_config.d/20-host-certificate.conf ..."
+  template:
+    src: "sshd/host-certificate"
+    dest: "/etc/ssh/sshd_config.d/20-host-certificate.conf"
+    group: root
+    owner: root
+    mode: 0644
+  notify: restart-ssh
+
+- name: "Mark /etc/ssh/sshd_config.d/20-host-certificate.conf as managed ..."
+  set_fact:
+    wyga_ssh_files: "{{ wyga_ssh_files + [ 'sshd_config.d/20-host-certificate.conf' ] }}"

@@ -1,0 +1,36 @@
+---
+- name: "Looking for /run/host-policy/ssh ..."
+  stat:
+    path: /run/host-policy/ssh
+  register: ssh_snapshot
+
+- name: "Checking /etc/ssh configuration ..."
+  command: sshd -t
+  check_mode: false
+  changed_when: false
+  failed_when: false
+  register: ssh_verify
+  when: ssh_snapshot.stat.exists
+
+- name: "Restore /etc/ssh from /run/host-policy/ssh ..."
+  shell: |
+    set -eu
+    rm -rf /etc/ssh.host-policy-restore
+    cp -a /run/host-policy/ssh /etc/ssh.host-policy-restore
+    rm -rf /etc/ssh
+    mv /etc/ssh.host-policy-restore /etc/ssh
+  when: ssh_snapshot.stat.exists and ssh_verify.rc != 0 and not ansible_check_mode
+
+- name: "Remove /run/host-policy/ssh ..."
+  file:
+    path: /run/host-policy/ssh
+    state: absent
+  changed_when: false
+  when: ssh_snapshot.stat.exists and not ansible_check_mode
+
+- name: "Stop on broken /etc/ssh configuration ..."
+  fail:
+    msg:
+      - "sshd -t failed, /etc/ssh restored from /run/host-policy/ssh"
+      - "{{ ssh_verify.stderr_lines }}"
+  when: ssh_snapshot.stat.exists and ssh_verify.rc != 0

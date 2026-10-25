@@ -1,0 +1,23 @@
+---
+- name: "SSHD configuration ..."
+  block:
+    - name: "Snapshot ..."
+      include_tasks: "subtask/snapshot.yaml"
+
+    - name: "Configuration ..."
+      include_tasks: "subtask/ssh.yaml"
+
+    - name: "Host certificate ..."
+      include_tasks: "subtask/certificate.yaml"
+      when: skip_ssh_certificate is not defined and (host.setup.ssh.host | default({})).certificate | default(false) is string
+
+    - name: "Authorized keys ..."
+      include_tasks: "subtask/authorized.yaml"
+      when: host.group is defined or host.user is defined or host.append.user is defined
+
+    - name: "Sweep ..."
+      include_tasks: "subtask/sweep.yaml"
+      when: skip_ssh_certificate is not defined or (host.setup.ssh.host | default({})).certificate | default(false) is not string
+  always:
+    - name: "SSH configuration check ..."
+      include_tasks: "subtask/verify.yaml"

@@ -1,8 +1,0 @@
-# SSH Host Certificates
-use_ssh_agent: True
-wyga_ssh_host_keys_known:
-  - "ed25519"
-  - "rsa"
-  - "ecdsa"
-wyga_ssh_host_keys: "{{ wyga_ssh_host_keys_known }}"
-wyga_generate_certs: []

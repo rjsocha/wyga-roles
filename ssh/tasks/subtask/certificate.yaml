@@ -1,0 +1,168 @@
+---
+- name: "Minimal facts ..."
+  include_role:
+    name: wyga/minimal-facts
+
+- name: "Ansible temporary directory ..."
+  include_role:
+    name: wyga/ansible-tmp-directory
+
+- name: "Include config.ssh-host-ca.yaml if exists ..."
+  include_vars: '{{ item }}'
+  with_first_found:
+    - files:
+        - "config.ssh-host-ca.yaml"
+      skip: true
+
+- name: "Verify the certificate authority ..."
+  assert:
+    that:
+      - host.setup.ssh.host.certificate is string
+      - host.setup.ssh.host.certificate | length > 0
+    fail_msg: "setup.ssh.host.certificate names the CA that signs the host certificate (certificate: <ca>), or is false"
+    quiet: true
+
+- name: "Setup task ..."
+  set_fact:
+    ssh_ca_group: "{{ host.setup.ssh.host.certificate }}"
+    wyga_ssh_archive: "{{ playbook_dir }}/ssh/certificate/{{ host.setup.ssh.host.certificate }}/{{ host.hostname }}"
+
+- name: "Host key types ..."
+  set_fact:
+    wyga_ssh_host_keys: "{{ wyga_ssh_host_keys_known if _keys == 'all' else ([_keys] if _keys is string else _keys) }}"
+  vars:
+    _keys: "{{ host.setup.ssh.host['keys'] }}"
+  when: "'keys' in host.setup.ssh.host"
+
+- name: "Verify host key types ..."
+  assert:
+    that:
+      - wyga_ssh_host_keys is sequence
+      - wyga_ssh_host_keys is not string
+      - wyga_ssh_host_keys is not mapping
+      - wyga_ssh_host_keys | length > 0
+      - wyga_ssh_host_keys | difference(wyga_ssh_host_keys_known) | length == 0
+      - wyga_ssh_host_keys | unique | list | length == wyga_ssh_host_keys | length
+    fail_msg: "setup.ssh.host.keys must be all, or one or a list of {{ wyga_ssh_host_keys_known | join(', ') }}, each once"
+    quiet: true
+
+- name: "Certificate rotation ..."
+  set_fact:
+    wyga_ssh_rotation: "{{ ((host.security | default({}, true)).rotation | default({}, true)).ssh | default({}, true) }}"
+
+- name: "Verify certificate rotation ..."
+  assert:
+    that:
+      - wyga_ssh_rotation is mapping
+      - wyga_ssh_rotation.valid is defined
+      - wyga_ssh_rotation.renew is defined
+      - wyga_ssh_rotation.valid | ssh_interval_seconds > wyga_ssh_rotation.renew | ssh_interval_seconds
+    fail_msg: "security.rotation.ssh needs valid and renew (intervals as 26w or 90d), renew shorter than valid"
+    quiet: true
+  when: wyga_ssh_rotation | length > 0
+
+- name: "Sign SSH host keys..."
+  block:
+    - name: "Check ssh_ca_group is present..."
+      include_tasks: "certificate/check-ssh-ca-group.yaml"
+
+    - name: "Check CA key..."
+      include_tasks: "certificate/check-ca-key.yaml"
+
+    - name: "Certificate principals..."
+      include_tasks: "certificate/principal.yaml"
+
+    - name: "Check host certificates..."
+      include_tasks: "certificate/check-host-cert.yaml"
+      with_items: "{{ wyga_ssh_host_keys }}"
+
+    - name: "Sign again after a change of the certificate state..."
+      set_fact:
+        wyga_generate_certs: "{{ wyga_ssh_host_keys }}"
+      when: wyga_ssh_certificate_changed
+
+    - name: "Parse 'generate' option..."
+      include_tasks: "certificate/parse-generate.yaml"
+
+    - name: "Cleanup generation list..."
+      set_fact:
+        wyga_generate_certs: "{{ wyga_generate_certs | sort | unique | list }}"
+
+    - name: "Dump configuration list..."
+      debug:
+        msg: "{{ wyga_generate_certs }}"
+
+    - name: "Check mode: certificates to sign ..."
+      debug:
+        msg: "would sign the host certificates {{ wyga_generate_certs | join(', ') }}"
+      changed_when: true
+      when: ansible_check_mode and wyga_generate_certs | length > 0
+
+    # Signing makes keys and certificates on the host and in the local
+    # archive; nothing of it has a check mode, so it waits for a real run.
+    - name: "Sign the host keys ..."
+      block:
+        - name: "Make sure CA key is present in the ssh-agent..."
+          include_tasks: "certificate/prepare-ssh-agent.yaml"
+
+        - name: "Prepare temporary directories..."
+          include_tasks: "certificate/prepare-temp-dirs.yaml"
+
+        - name: "Set serial number ..."
+          set_fact:
+            _date_serial: "{{ '%y%m%d%H%M%S' | strftime }}"
+
+        - name: "Generate new host keys"
+          include_tasks: "certificate/generate-new-host-key.yaml"
+          with_items: "{{ wyga_generate_certs }}"
+
+        - name: "Fetch host public keys..."
+          include_tasks: "certificate/fetch-host-key.yaml"
+          with_items: "{{ wyga_generate_certs }}"
+
+        - name: "Localy sign host keys..."
+          include_tasks: "certificate/sign-host-key.yaml"
+          with_items: "{{ wyga_generate_certs }}"
+
+        - name: "Archive certificates..."
+          include_tasks: "certificate/archive.yaml"
+          with_items: "{{ wyga_generate_certs }}"
+
+        - name: "Transfer certificates to remote host..."
+          include_tasks: "certificate/transfer-host-certificate.yaml"
+          with_items: "{{ wyga_generate_certs }}"
+
+        - name: "Copy keys to /etc/ssh"
+          include_tasks: "certificate/copy-host-key.yaml"
+          with_items: "{{ wyga_generate_certs }}"
+
+        - name: "Prune the certificate archive..."
+          include_tasks: "certificate/archive-prune.yaml"
+          when: wyga_generate_certs | length > 0
+
+        - name: "Record certificate state..."
+          include_tasks: "certificate/record-state.yaml"
+      when: not ansible_check_mode
+
+    - name: "Prepare generation list for /etc/ssh/sshd_config"
+      block:
+        - name: "Join generation list..."
+          set_fact:
+            wyga_generate_certs: "{{ wyga_ssh_host_keys + wyga_generate_certs }}"
+
+        - name: "Cleanup generation list..."
+          set_fact:
+            wyga_generate_certs: "{{ wyga_generate_certs | sort | unique | list }}"
+
+    - name: "Cleanup unwanted keys ..."
+      include_tasks: "certificate/ssh-remove-keys.yaml"
+
+    - name: "Revoke certificates of removed key types..."
+      include_tasks: "certificate/archive-types.yaml"
+
+    - name: "Configure /etc/sshd_config"
+      include_tasks: "certificate/ssh-configure.yaml"
+      with_items: "{{ wyga_generate_certs }}"
+
+    - name: "Cleanup..."
+      include_tasks: "certificate/cleanup-temp-dirs.yaml"

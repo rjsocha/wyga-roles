@@ -1,0 +1,9 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+Match User {{ ssh_gitlab_user }}
+{% if ssh_gitlab_mode == 'dynamic' %}
+  AuthorizedKeysFile none
+  AuthorizedKeysCommand /opt/gitlab/embedded/service/gitlab-shell/bin/gitlab-shell-authorized-keys-check {{ ssh_gitlab_user }} %u %k
+  AuthorizedKeysCommandUser {{ ssh_gitlab_user }}
+{% else %}
+  AuthorizedKeysFile /var/opt/gitlab/.ssh/authorized_keys
+{% endif %}

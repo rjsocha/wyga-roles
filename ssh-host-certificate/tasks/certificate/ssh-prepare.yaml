@@ -1,9 +1,0 @@
----
-- name: "Prepare /etc/ssh/sshd_config..."
-  lineinfile:
-    dest: /etc/ssh/sshd_config
-    regexp: '{{ item }}'
-    state: absent
-  loop:
-    - '(?i)^(HostKey|HostCertificate)'
-  notify: restart-ssh
