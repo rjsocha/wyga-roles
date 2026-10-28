@@ -38,12 +38,10 @@ policy:
               mode: self
               cert: tls/intake.crt
               key: tls/intake.key
-              host: backup.example.net
         endpoint:
           backup:
             listen: intake
             endpoint: /backup
-            path: queue/backup
             allow: ["hosts:*"]
             respond: accept
         pipeline:
@@ -53,8 +51,7 @@ policy:
               - store: archive
         storage:
           archive:
-            type: local
-            base: /storage/archive
+            directory: /storage/archive
             path: !unsafe "{{ .Origin }}/{{ .Year }}/{{ .Month }}/{{ .Day }}/{{ .File }}"
 ```
 
@@ -211,7 +208,7 @@ A job no pipeline names never runs (`lukd check` warns about it).
 ### `path`
 
 List of absolute directories outside `/var/lib/luk` that lukd writes to: a
-storage base on another volume, or a place a `run` program writes. The
+storage directory on another volume, or a place a `run` program writes. The
 role creates each one for `luk` and grants it to both lukd roles. A change
 restarts lukd.
 
@@ -246,7 +243,8 @@ confidential:
       listen:
         web:
           tls:
-            eab: { kid: "KEY_ID", key: "..." }
+            acme:
+              eab: { kid: "KEY_ID", key: "..." }
 ```
 
 - `auth.basic`: user sets. An expose of the policy names one with
@@ -322,23 +320,25 @@ RSA keys shorter than 2048 bits and DSA keys are refused, as are `ssh-rsa`
 | `log.level` | `debug`, `info`, `warn`, `error` |
 | `limits.conn.max`, `limits.conn.idle` | connections per address (1024), idle time (60s) |
 | `limits.header.timeout` | time to send the request headers (10s) |
-| `limits.queue.reserve` | free space kept on the queue volume (1G) |
-| `limits.failed.age` | lifetime of failed queue entries (3d) |
-| `auth.clock_skew` | allowed clock difference of a signed request (1m, at most 1h) |
+| `limits.uploads.max`, `limits.uploads.owner.max` | uploads open at once, in all and per owner (256, 8) |
+| `queue.reserve` | free space kept on the queue volume (1G) |
+| `failed.ttl` | lifetime of failure records, `lukd failed` (3d) |
+| `auth.skew` | allowed clock difference of a signed request (1m, at most 1h) |
 | `auth.nonces` | nonce cache directory (`/run/luk/nonces`) |
-| `gpg.keys` | directory of `key` recipients (`/etc/site/lukd/gpg.d`) |
+| `gpg.keys` | directory of the keys of `recipients.keys` (`/etc/site/lukd/gpg.d`) |
 | `gpg.wkd.cache` | lifetime of cached WKD keys (1d) |
 
 Keys and CAs normally come from `identity` and `ca` of the role. A CA
-revocation list still lives in the config:
+revocation list still lives in the config, by the fingerprint of the
+certified key (`ssh-keygen -l`): every certificate of that key is
+refused, a new key of the same host is not:
 
 ```yaml
 auth:
   ca:
-    - name: hosts          # no key: the key is in ssh.d/ca/host/hosts.pub
+    hosts:                 # no key: the key is in ssh.d/ca/host/hosts.pub
       revoked:
-        key_ids: [old.example.net]
-        serials: [42]
+        key: ["SHA256:3q2+7wMR..."]
 ```
 
 ### `listen.<name>`
@@ -348,12 +348,12 @@ auth:
 | `addr` | `ip:port`; several listeners may share an address |
 | `host` | list of names routed to this listener (Host header, SNI) |
 | `public` | base URL of answers; needed behind a reverse proxy |
-| `acme` | `true` on a plain listener: answers HTTP-01 and redirects to https |
-| `tls.mode` | `self`, `files` or `acme` |
+| `tls.mode` | `self` (a certificate for the names of `host`), `files` or `acme` |
 | `tls.cert`, `tls.key` | certificate and key (`self`, `files`) |
-| `tls.host` | name in the self-signed certificate |
 | `tls.algorithm` | `ed25519` (default) or `ecdsa-p256`, mode `self` |
-| `tls.email`, `tls.directory`, `tls.eab` | ACME account, directory URL, external account binding |
+| `tls.acme.entrypoint` | the plain listener that answers the HTTP-01 challenges of this listener and redirects to https |
+| `tls.acme.server` | directory URL of the ACME server (required) |
+| `tls.acme.email`, `tls.acme.eab` | ACME account contact, external account binding (`kid` and `key` or `file`) |
 
 Without `tls` the listener is plain HTTP, for use behind a proxy that
 terminates TLS. Clients of a `self` or `files` listener pin its
@@ -365,8 +365,7 @@ with a public certificate need no pin.
 | Key | Meaning |
 | --- | --- |
 | `listen` | listener name or list of names |
-| `endpoint` | URL path of the endpoint, unique per listener |
-| `path` | queue directory; endpoint paths must not nest |
+| `endpoint` | URL path of the endpoint, unique per listener; the queue is `<root>/data/queue/<name>` |
 | `allow` | who may upload |
 | `respond` | `accept` (answer once queued) or `url` (answer with the link) |
 | `storage` | the storage of the link, with `respond: url` |
@@ -384,10 +383,10 @@ Capabilities, each a list of identities granted on top of `allow`:
 | `private.owner` | `luk send --private` (the storage needs `protect`) |
 | `private.any` | `luk send --private --any` |
 | `secret.allow` | `luk send --secret`, kept in RAM; needs `secret.path` and `secret.storage` |
-| `backup.hostname.any` | may send any `--backup` hostname |
-| `backup.hostname.principal` | may send only a principal of its own certificate as the hostname |
+| `origin.any` | may send any `--backup` hostname (the origin) |
+| `origin.principal` | may send only a principal of its own certificate as the hostname |
 
-Without the `backup.hostname` block every admitted identity may send any
+Without the `origin` block every admitted identity may send any
 hostname. With it, an identity on neither list is refused `--backup` with
 403, before the body. On such an endpoint `.Origin` in a storage path can
 be trusted.
@@ -413,14 +412,14 @@ quota:
 
 A pipeline runs for an upload when the upload's endpoint is in `endpoint`
 and the upload carries every tag in `tags`. All matching pipelines run,
-unless one has `claim: true`: then it runs alone. A pipeline name matches
+unless one has `exclusive: true`: then it runs alone. A pipeline name matches
 `[A-Za-z0-9_][A-Za-z0-9_.-]*`.
 
 | Key | Meaning |
 | --- | --- |
 | `endpoint` | list of endpoint names (required) |
 | `tags` | tags the upload must carry; none matches every upload |
-| `claim` | the only pipeline of a matching upload; needs `tags` |
+| `exclusive` | the only pipeline of a matching upload; needs `tags` |
 | `timeout` | limit of one run |
 | `queue.group`, `queue.order` | pipelines of one upload in a group run in order |
 | `queue.concurrency` | runs of this pipeline at once (1) |
@@ -433,14 +432,15 @@ Steps:
 | `store: <storage>` or a list | store the current files |
 | `run: /path` | run a program as `luk` on the files; `env:` adds variables; `tee: true` keeps the input for the next step; `jobs: [<job>, ...]` lists the jobs of `run` (role key) the program may start with `luk-job run --job`, none without it |
 | `relay: <job>` | run a job of `run` (role key) on the files as its user; the next step gets the same files |
-| `encrypt:` | OpenPGP-encrypt for `wkd:` and `key:` recipients; `strict: true` fails on any unusable recipient; `insecure:` adds passwords (below) |
+| `encrypt:` | OpenPGP-encrypt for `recipients.keys` (keys from `gpg.keys`) and `recipients.wkd` (keys from the Web Key Directory); `strict: true` fails on any unusable recipient; `insecure:` adds passwords (below) |
 
 `encrypt.insecure` is for receivers without an OpenPGP key. The passwords
 come from `confidential.lukd.encrypt.password`:
 
 ```yaml
 - encrypt:
-    key: [backup@example.net]
+    recipients:
+      keys: [backup@example.net]
     insecure:
       symmetric: [receiver-a]        # these passwords also decrypt the .gpg files
       openssl:
@@ -457,17 +457,15 @@ step before it put the file into the set under two names.
 
 | Key | Meaning |
 | --- | --- |
-| `type` | `local` |
-| `base` | directory; relative to `root`, or absolute (then list it in `path` of the role) |
+| `directory` | directory; relative to `root`, or absolute (then list it in `path` of the role) |
 | `path` | name template of a stored file |
 | `expose` | expose that serves the public files |
 | `protect` | expose with `auth.ssh` that serves the private files |
-| `conflict` | `version` (default), `reject` or `replace` when the name exists |
-| `dedup` | with `version`: keep the newest instead of an identical copy (true) |
-| `hardlink` | one copy per content (true) |
-| `links.max` | most names with one content per identity (100) |
+| `conflict.mode` | `version` (default), `reject` or `replace` when the name exists |
+| `conflict.identical` | with `version`: `skip` (default) makes no new version of an identical upload, `store` does |
+| `hardlink` | one copy per content (on); `false` stores separate files |
+| `hardlink.owner.max` | most names with one content per owner (100) |
 | `shard` | 0 to 4 levels of hash directories; not with an `index` expose |
-| `catalog` | keep `<base>/.db/catalog.json` |
 | `ttl.user`, `ttl.min`, `ttl.max` | whether the client ttl counts, and its bounds; `max` alone is a fixed lifetime |
 | `cleanup.age` | remove files without an expiry after that age |
 | `retention` | rules that keep a number of files per series and prune the rest (below) |
@@ -504,7 +502,7 @@ retention:
 - A file name that carries the date (`db-20261004.sql.gz`) is a series of
   its own every day, so retention never prunes it. Send a constant name
   and put the date in `path`, or bound such files with `ttl`.
-- `retention` together with `conflict: replace` fails `lukd check`.
+- `retention` together with `conflict.mode: replace` fails `lukd check`.
 - `lukd storage retention --storage <name>` prints the plan (KEEP with the
   reason, or PRUNE) without removing anything.
 
@@ -539,6 +537,7 @@ watch:
 | `auth.basic` | name of a user set of `confidential.lukd.auth.basic` |
 | `auth.ssh.allow` | signed `luk get` only; who downloads `--private --any` files, or every file when it is the `expose` of a storage |
 | `plain` | no authentication on purpose; silences the warnings |
+| `catalog` | serve `catalog.json`, every public file of its storage with its meta |
 | `index` | HTML listing of directory URLs; not with `auth.ssh`; on a sharded storage it fails `lukd check` |
 
 An `auth.ssh` expose has two uses. As the `protect` of a storage it serves
@@ -564,10 +563,9 @@ Hosts send backups only under their own name, an operator under any:
 endpoint:
   backup:
     allow: [robert.socha, "hosts:*"]
-    backup:
-      hostname:
-        any: [robert.socha]
-        principal: ["hosts:*"]
+    origin:
+      any: [robert.socha]
+      principal: ["hosts:*"]
 ```
 
 A drop endpoint where only one identity manages its links:
@@ -597,8 +595,7 @@ expose:
         allow: ["hosts#restore.example.net"]
 storage:
   archive:
-    type: local
-    base: /storage/archive
+    directory: /storage/archive
     expose: archive
 ```
 
@@ -612,9 +609,8 @@ luk get luk://backup.example.net:8443/a/db1-prod/ -o restore/  # the directory; 
 ```sh
 lukd check                     # validate the configuration
 lukd status                    # last result per pipeline and sender
-lukd queue ls                  # failed entries
-lukd queue retry --id <id>     # run a failed entry again
-lukd queue rm --id <id>
+lukd failed ls                 # failure records
+lukd failed rm --id <id>
 lukd tls pin                   # pins of the self and files listeners
 lukd quota ls                  # buckets per endpoint and identity
 lukd storage ls                # stored files
