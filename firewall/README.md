@@ -37,9 +37,39 @@ This role implement this by using such logic:
 
 This chain is used to block traffic comming towards docker's containers (by default docker permits any traffic).
 
+# Profile generic (firewall.profile: generic)
+
+A plain host without Docker or KVM: the `docker` skeleton without the
+`DOCKER-*` chains - INPUT filtered (conntrack, `lo`, `FILTER-INPUT-RULES`,
+reject), FORWARD dropped unless a rule allows it, the usual `*-RULES` hooks.
+
+`firewall.chains` declares external chains: the role creates them and hooks
+them in, but never flushes or fills them - a service owns their content
+(e.g. a VPN updown script). Fixed hook points:
+
+ - `filter` - jumped to from FORWARD, after `FILTER-FORWARD-RULES`
+ - `nat` - jumped to from POSTROUTING, after `NAT-POSTROUTING-RULES`
+ - `mangle` - jumped to from FORWARD (the mangle table is written only when
+   this list is set)
+
+```yaml
+firewall:
+  profile: generic
+  chains:
+    filter: [ VPN-FWD ]
+    nat: [ VPN-NAT ]
+    mangle: [ VPN-MSS ]
+  restart:
+    - strongswan-starter.service
+```
+
+The chains are part of the master template: changing the list restarts the
+firewall, which empties them - list the owning service in `firewall.restart`
+so it refills them.
+
 # Site profiles (firewall.profile: <name>)
 
-Built-in profiles: `docker` (default) and `kvm`. A site can add its own
+Built-in profiles: `docker` (default), `kvm` and `generic`. A site can add its own
 profile without changing the role - `firewall.profile: <name>` first looks for
 
  - `site/<host_policy_site>/firewall/profile/<name>/rules`
@@ -48,7 +78,7 @@ in the playbook directory and falls back to the built-in templates. A site
 profile holds the same files as a built-in one: `rules` (master, also
 rendered into `/etc/iptables/rules.v4` with `firewall_rules: true`) and
 `rules-apply` (runtime update of the `*-RULES` chains). Both may include the
-built-in rule renderers, e.g. `{% include "firewall/kvm/rules-filter" %}`.
+built-in rule renderers, e.g. `{% include "firewall/generic/rules-filter" %}`.
 
 # SSH source lists (allow: ssh/<name>)
 

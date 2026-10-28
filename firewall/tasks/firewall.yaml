@@ -13,8 +13,8 @@
 - name: "Firewall / Veryfiy profile ..."
   assert:
     that:
-      - firewall_profile is in [ 'docker', 'kvm' ] or firewall_profile_src == firewall_profile_site
-    msg: "Unknown firewall profile {{ firewall_profile }} (built-in: docker, kvm; site: {{ firewall_profile_site }}/rules)"
+      - firewall_profile is in [ 'docker', 'kvm', 'generic' ] or firewall_profile_src == firewall_profile_site
+    msg: "Unknown firewall profile {{ firewall_profile }} (built-in: docker, kvm, generic; site: {{ firewall_profile_site }}/rules)"
 
 - name: "Firewall / Check kvm profile ..."
   assert:

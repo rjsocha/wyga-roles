@@ -1,0 +1,66 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+# {{ ansible_managed }}
+{% set chains = host.firewall.chains | default({}) %}
+*filter
+:INPUT ACCEPT [0:0]
+:FORWARD DROP [0:0]
+:OUTPUT ACCEPT [0:0]
+:FILTER-INPUT-RULES - [0:0]
+:FILTER-OUTPUT-RULES - [0:0]
+:FILTER-FORWARD-RULES - [0:0]
+{% for chain in chains.filter | default([]) %}
+:{{ chain }} - [0:0]
+{% endfor %}
+-A INPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+-A INPUT -m conntrack --ctstate INVALID -j DROP
+-A INPUT -i lo -j ACCEPT
+-A INPUT -j FILTER-INPUT-RULES
+-A INPUT -j REJECT --reject-with icmp-host-prohibited
+-A INPUT -m comment --comment MANAGED-FIREWALL
+-A FORWARD -j FILTER-FORWARD-RULES
+{% for chain in chains.filter | default([]) %}
+-A FORWARD -j {{ chain }}
+{% endfor %}
+-A OUTPUT -j FILTER-OUTPUT-RULES
+{% if firewall_rules | default(false) %}
+{% include "firewall/generic/rules-filter" %}
+{% endif %}
+COMMIT
+*nat
+:PREROUTING ACCEPT [0:0]
+:POSTROUTING ACCEPT [0:0]
+:INPUT ACCEPT [0:0]
+:OUTPUT ACCEPT [0:0]
+:NAT-INPUT-RULES ACCEPT [0:0]
+:NAT-OUTPUT-RULES ACCEPT [0:0]
+:NAT-PREROUTING-RULES ACCEPT [0:0]
+:NAT-POSTROUTING-RULES ACCEPT [0:0]
+{% for chain in chains.nat | default([]) %}
+:{{ chain }} - [0:0]
+{% endfor %}
+-A INPUT -j NAT-INPUT-RULES
+-A OUTPUT -j NAT-OUTPUT-RULES
+-A PREROUTING -j NAT-PREROUTING-RULES
+-A POSTROUTING -j NAT-POSTROUTING-RULES
+{% for chain in chains.nat | default([]) %}
+-A POSTROUTING -j {{ chain }}
+{% endfor %}
+{% if firewall_rules | default(false) %}
+{% include "firewall/generic/rules-nat" %}
+{% endif %}
+COMMIT
+{% if chains.mangle | default([]) %}
+*mangle
+:PREROUTING ACCEPT [0:0]
+:INPUT ACCEPT [0:0]
+:FORWARD ACCEPT [0:0]
+:OUTPUT ACCEPT [0:0]
+:POSTROUTING ACCEPT [0:0]
+{% for chain in chains.mangle %}
+:{{ chain }} - [0:0]
+{% endfor %}
+{% for chain in chains.mangle %}
+-A FORWARD -j {{ chain }}
+{% endfor %}
+COMMIT
+{% endif %}
