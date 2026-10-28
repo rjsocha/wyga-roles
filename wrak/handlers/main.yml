@@ -1,0 +1,11 @@
+---
+- name: wrak-restart
+  systemd:
+    name: wrak
+    state: restarted
+    daemon_reload: true
+
+- name: knot-restart
+  systemd:
+    name: knot
+    state: restarted

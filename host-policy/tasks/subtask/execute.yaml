@@ -195,6 +195,16 @@
     name: wyga/plotka
   when: host.setup.plotka is defined
 
+- name: "Configure wrak ..."
+  include_role:
+    name: wyga/wrak
+  when: host.setup.wrak is defined
+
+- name: "Configure majak ..."
+  include_role:
+    name: wyga/majak
+  when: host.setup.majak is defined
+
 - name: "Configure lukd Service ..."
   include_role:
     name: wyga/lukd

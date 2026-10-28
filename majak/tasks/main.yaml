@@ -1,0 +1,73 @@
+---
+- name: "majak / Configuration ..."
+  set_fact:
+    majak_etc: /etc/site/majak
+    majak_setup: "{{ host.setup.majak }}"
+    majak_secret: "{{ (confidential | default({})).majak | default({}) }}"
+
+- name: "majak / Verify configuration ..."
+  assert:
+    that:
+      - majak_setup.config is mapping
+      - majak_secret.ca.cert is defined
+      - majak_secret.ca.key is defined
+    fail_msg: "setup.majak.config must be a map (the majak configuration); confidential.majak.ca needs cert and key"
+    quiet: true
+
+- name: "majak / Final configuration ..."
+  set_fact:
+    majak_config: "{{ majak_setup.config | combine(majak_secret.config | default({}), {'vpn': {'ca': {'cert': majak_etc + '/ca.crt', 'key': majak_etc + '/ca.key'}}}, recursive=true) }}"
+  no_log: true
+
+- name: "majak / Install ..."
+  include_role:
+    name: wyga/install-packages
+  vars:
+    packages:
+      - wyga-majak
+
+- name: "majak / Directory ..."
+  file:
+    state: directory
+    path: "{{ majak_etc }}"
+    owner: root
+    group: majak
+    mode: "0750"
+
+- name: "majak / Overlay CA ..."
+  copy:
+    dest: "{{ majak_etc }}/{{ ca.file }}"
+    content: "{{ ca.content }}"
+    owner: root
+    group: majak
+    mode: "0640"
+  loop:
+    - {file: ca.crt, content: "{{ majak_secret.ca.cert }}"}
+    - {file: ca.key, content: "{{ majak_secret.ca.key }}"}
+  loop_control:
+    loop_var: ca
+    label: "{{ ca.file }}"
+  notify: majak-restart
+  no_log: true
+
+- name: "majak / {{ majak_etc }}/config.yaml ..."
+  copy:
+    dest: "{{ majak_etc }}/config.yaml"
+    content: "{{ majak_config | to_nice_yaml(indent=2, width=1000) }}"
+    owner: root
+    group: majak
+    mode: "0640"
+  notify: majak-restart
+  no_log: true
+
+- name: "majak / Services ..."
+  systemd:
+    name: "{{ unit }}"
+    enabled: true
+    state: started
+  loop:
+    - majak
+    - majak-vpn
+  loop_control:
+    loop_var: unit
+  when: not ansible_check_mode

@@ -1,0 +1,19 @@
+---
+- name: "wrak / Configuration ..."
+  set_fact:
+    wrak_etc: /etc/site/wrak
+    wrak_setup: "{{ host.setup.wrak }}"
+    wrak_secret: "{{ (confidential | default({})).wrak | default({}) }}"
+
+- name: "wrak / Inputs ..."
+  set_fact:
+    wrak_static: "{{ wrak_setup.static | default({}) }}"
+    wrak_tsig_secret: "{{ wrak_secret.tsig | default({}) }}"
+
+- name: "wrak / Daemon ..."
+  include_tasks: subtask/wrak.yaml
+  when: wrak_setup.config is defined
+
+- name: "wrak / Knot ..."
+  include_tasks: subtask/knot.yaml
+  when: wrak_setup.knot is defined

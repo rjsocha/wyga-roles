@@ -1,0 +1,54 @@
+---
+- name: "Knot / Configuration ..."
+  set_fact:
+    wrak_knot: "{{ wrak_setup.knot }}"
+
+- name: "Knot / Zones ..."
+  set_fact:
+    wrak_knot_zones: "{{ wrak_knot.zone if wrak_knot.zone is defined else ((wrak_config | default({})).domains | default([]) | map(attribute='domain') | list) + (wrak_static.keys() | list) }}"
+
+- name: "Knot / Verify configuration ..."
+  assert:
+    that:
+      - wrak_knot.listen is defined
+      - wrak_knot.listen is sequence and wrak_knot.listen is not string
+      - wrak_knot.primary is defined
+      - wrak_knot.primary is match('^[0-9a-fA-F.:]+@[0-9]+$')
+      - wrak_knot.tsig is defined
+      - wrak_knot.tsig in wrak_tsig_secret
+      - wrak_knot_zones | length > 0
+    fail_msg: "setup.wrak.knot: listen (list of addr@port), primary (addr@port of wrak), tsig (a key of confidential.wrak.tsig) and zone (a list, needed when this host runs no wrak) are required"
+    quiet: true
+
+- name: "Knot / Install ..."
+  include_role:
+    name: wyga/install-packages
+  vars:
+    packages:
+      - knot
+
+- name: "Knot / /etc/knot/knot.conf ..."
+  template:
+    src: knot.conf
+    dest: /etc/knot/knot.conf
+    owner: root
+    group: knot
+    mode: "0640"
+    validate: knotc -c %s conf-check
+  vars:
+    knot_listen: "{{ wrak_knot.listen }}"
+    knot_primary: "{{ wrak_knot.primary }}"
+    knot_primary_address: "{{ wrak_knot.primary | regex_replace('@[0-9]+$', '') }}"
+    knot_via: "{{ wrak_knot.via | default('') }}"
+    knot_tsig: "{{ wrak_knot.tsig }}"
+    knot_tsig_secret: "{{ wrak_tsig_secret[wrak_knot.tsig] }}"
+    knot_zones: "{{ wrak_knot_zones }}"
+  notify: knot-restart
+  no_log: true
+
+- name: "Knot / Service ..."
+  systemd:
+    name: knot
+    enabled: true
+    state: started
+  when: not ansible_check_mode

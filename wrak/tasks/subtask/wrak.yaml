@@ -1,0 +1,126 @@
+---
+- name: "wrak / Verify configuration ..."
+  assert:
+    that:
+      - wrak_setup.config is mapping
+      - wrak_static is mapping
+    fail_msg: "setup.wrak: config must be a map (the wrak configuration), static a map of zone name to zone"
+    quiet: true
+
+- name: "wrak / Verify static zones ..."
+  assert:
+    that:
+      - zone.key is match('^[a-z0-9][a-z0-9.-]*[a-z0-9]$')
+      - zone.value is mapping
+      - zone.value.domain is not defined
+      - zone.value.mode is not defined
+    fail_msg: "setup.wrak.static.{{ zone.key }}: the key is the zone name; a zone declares neither domain nor mode"
+    quiet: true
+  loop: "{{ wrak_static | dict2items }}"
+  loop_control:
+    loop_var: zone
+    label: "{{ zone.key }}"
+
+- name: "wrak / Merge confidential configuration ..."
+  set_fact:
+    wrak_config_base: "{{ wrak_setup.config | combine(wrak_secret.config | default({}), recursive=true) }}"
+    wrak_tsig: []
+
+- name: "wrak / TSIG keys ..."
+  set_fact:
+    wrak_tsig: "{{ wrak_tsig + [ tsig if (tsig.secret is defined or tsig.file is defined or tsig.env is defined or tsig.name not in wrak_tsig_secret) else tsig | combine({'secret': wrak_tsig_secret[tsig.name]}) ] }}"
+  loop: "{{ (wrak_config_base.security | default({})).tsig | default([]) }}"
+  loop_control:
+    loop_var: tsig
+    label: "{{ tsig.name }}"
+  no_log: true
+
+- name: "wrak / Verify TSIG secrets ..."
+  assert:
+    that:
+      - tsig.secret is defined or tsig.file is defined or tsig.env is defined
+    fail_msg: "security.tsig {{ tsig.name }}: no secret in the policy and none in confidential.wrak.tsig.{{ tsig.name }}"
+    quiet: true
+  loop: "{{ wrak_tsig }}"
+  loop_control:
+    loop_var: tsig
+    label: "{{ tsig.name }}"
+  no_log: true
+
+- name: "wrak / Final configuration ..."
+  set_fact:
+    wrak_config: "{{ wrak_config_base | combine({'security': (wrak_config_base.security | default({})) | combine({'tsig': wrak_tsig})}) }}"
+  no_log: true
+
+- name: "wrak / Install ..."
+  include_role:
+    name: wyga/install-packages
+  vars:
+    packages:
+      - wyga-wrak
+
+- name: "wrak / Directories ..."
+  file:
+    state: directory
+    path: "{{ dir }}"
+    owner: root
+    group: wrak
+    mode: "0750"
+  loop:
+    - "{{ wrak_etc }}"
+    - "{{ wrak_etc }}/dns.d"
+  loop_control:
+    loop_var: dir
+
+- name: "wrak / {{ wrak_etc }}/config.yaml ..."
+  copy:
+    dest: "{{ wrak_etc }}/config.yaml"
+    content: "{{ wrak_config | to_nice_yaml(indent=2, width=1000) }}"
+    owner: root
+    group: wrak
+    mode: "0640"
+  notify: wrak-restart
+  no_log: true
+
+- name: "wrak / Static zones ..."
+  copy:
+    dest: "{{ wrak_etc }}/dns.d/{{ zone.key }}.yaml"
+    content: "{{ {'domain': zone.key} | combine(zone.value) | to_nice_yaml(indent=2, width=1000) }}"
+    owner: root
+    group: wrak
+    mode: "0640"
+  loop: "{{ wrak_static | dict2items }}"
+  loop_control:
+    loop_var: zone
+    label: "{{ zone.key }}"
+  notify: wrak-restart
+
+- name: "wrak / Looking for unmanaged static zones ..."
+  find:
+    paths: "{{ wrak_etc }}/dns.d"
+    file_type: file
+    hidden: true
+    excludes: "{{ wrak_static.keys() | map('regex_replace', '$', '.yaml') | list }}"
+  register: wrak_static_cleanup
+
+- name: "wrak / Remove unmanaged static zones ..."
+  file:
+    path: "{{ cleanup.path }}"
+    state: absent
+  loop: "{{ wrak_static_cleanup.files }}"
+  loop_control:
+    loop_var: cleanup
+    label: "{{ cleanup.path }}"
+  notify: wrak-restart
+
+- name: "wrak / Check configuration ..."
+  command: wrak serve --config {{ wrak_etc }}/config.yaml --test
+  changed_when: false
+  when: not ansible_check_mode
+
+- name: "wrak / Service ..."
+  systemd:
+    name: wrak
+    enabled: true
+    state: started
+  when: not ansible_check_mode

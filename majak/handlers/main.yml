@@ -1,0 +1,11 @@
+---
+- name: majak-restart
+  systemd:
+    name: "{{ unit }}"
+    state: restarted
+    daemon_reload: true
+  loop:
+    - majak
+    - majak-vpn
+  loop_control:
+    loop_var: unit
