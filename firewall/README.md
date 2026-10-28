@@ -37,6 +37,19 @@ This role implement this by using such logic:
 
 This chain is used to block traffic comming towards docker's containers (by default docker permits any traffic).
 
+# Site profiles (firewall.profile: <name>)
+
+Built-in profiles: `docker` (default) and `kvm`. A site can add its own
+profile without changing the role - `firewall.profile: <name>` first looks for
+
+ - `site/<host_policy_site>/firewall/profile/<name>/rules`
+
+in the playbook directory and falls back to the built-in templates. A site
+profile holds the same files as a built-in one: `rules` (master, also
+rendered into `/etc/iptables/rules.v4` with `firewall_rules: true`) and
+`rules-apply` (runtime update of the `*-RULES` chains). Both may include the
+built-in rule renderers, e.g. `{% include "firewall/kvm/rules-filter" %}`.
+
 # SSH source lists (allow: ssh/<name>)
 
 `allow: ssh` permits SSH (tcp/22) from anywhere (0.0.0.0/0).

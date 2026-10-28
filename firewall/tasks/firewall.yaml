@@ -2,10 +2,19 @@
   set_fact:
     firewall_profile: "{{ host.firewall.profile | default('docker') }}"
 
+- name: "Firewall / Look for a site profile ..."
+  set_fact:
+    firewall_profile_site: "{{ playbook_dir }}/site/{{ host_policy_site | default('-') }}/firewall/profile/{{ firewall_profile }}"
+
+- name: "Firewall / Profile source ..."
+  set_fact:
+    firewall_profile_src: "{{ firewall_profile_site if (firewall_profile_site ~ '/rules') is file else 'firewall/' ~ firewall_profile }}"
+
 - name: "Firewall / Veryfiy profile ..."
   assert:
     that:
-      - firewall_profile is in [ 'docker', 'kvm' ]
+      - firewall_profile is in [ 'docker', 'kvm' ] or firewall_profile_src == firewall_profile_site
+    msg: "Unknown firewall profile {{ firewall_profile }} (built-in: docker, kvm; site: {{ firewall_profile_site }}/rules)"
 
 - name: "Firewall / Check kvm profile ..."
   assert:
@@ -120,7 +129,7 @@
 
 - name: "Firewall / Checking master configuration ..."
   template:
-    src: "firewall/{{ firewall_profile }}/rules"
+    src: "{{ firewall_profile_src }}/rules"
     dest: "/etc/site/firewall/master"
     group: root
     owner: root
@@ -148,7 +157,7 @@
 
 - name: "Firewall / Generate firewall configuration (persistent) ..."
   template:
-    src: "firewall/{{ firewall_profile }}/rules"
+    src: "{{ firewall_profile_src }}/rules"
     dest: "/etc/iptables/rules.v4"
     group: root
     owner: root
@@ -160,7 +169,7 @@
 
 - name: "Firewall / Render runtime firewall configuration ..."
   set_fact:
-     firewall_rendered_rules: "{{ lookup('template', 'firewall/' ~ firewall_profile ~ '/rules-apply') }}"
+     firewall_rendered_rules: "{{ lookup('template', firewall_profile_src ~ '/rules-apply') }}"
 
 - name: "Firewall / Apply firewall rules ..."
   command:
