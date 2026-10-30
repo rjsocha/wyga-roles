@@ -1,0 +1,17 @@
+- name: "Read generated locales ..."
+  command:
+    cmd: locale -a
+  check_mode: false
+  changed_when: false
+  register: locale_available
+
+- name: "Check that the configured locales exist ..."
+  assert:
+    that:
+      - locale_missing | length == 0
+    fail_msg: "locale not available on the host: {{ locale_missing | join(', ') }} (setup.locale.generate lists what gets generated)"
+    quiet: true
+  vars:
+    locale_required: "{{ (locale_config.generate | default([]) | locale_generate) + (locale_config.default | default({}) | locale_default_names) }}"
+    locale_missing: "{{ locale_required | locale_names | difference(locale_available.stdout_lines | locale_names) }}"
+  when: not ansible_check_mode

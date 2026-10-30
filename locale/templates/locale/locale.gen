@@ -1,6 +1,4 @@
 #jinja2: trim_blocks: True, lstrip_blocks: True
-{% if localeConfig.generate | type_debug == "list" %}
-{% for locale in localeConfig.generate if locale | upper is not in [ 'posix','C','C.UTF8','C.UTF-8', 'NONE' ] %}
+{% for locale in locale_generate %}
 {{ locale }}
 {% endfor %}
-{% endif %}

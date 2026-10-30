@@ -33,6 +33,10 @@
   ansible.builtin.include_tasks: include/generator.yaml
   when: locale_config.generate is defined
 
+- name: "Locale check ..."
+  ansible.builtin.include_tasks: include/verify.yaml
+  when: locale_config.generate is defined or locale_config.default is defined
+
 - name: "Locale configuration ..."
   ansible.builtin.include_tasks: include/locale-default.yaml
   when: locale_config.default is defined

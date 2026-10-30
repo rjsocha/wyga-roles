@@ -1,3 +1,25 @@
+- name: "Check if tzdata is available ..."
+  stat:
+    path: /usr/share/zoneinfo
+  register: timezone_database
+
+- name: "Install tzdata ..."
+  apt:
+    name: tzdata
+    state: present
+    update_cache: true
+  when: not timezone_database.stat.exists
+
+- name: "Check the timezone ..."
+  stat:
+    path: "/usr/share/zoneinfo/{{ locale_config.tz }}"
+  register: timezone_zone
+
+- name: "Unknown timezone ..."
+  fail:
+    msg: "setup.locale.tz: no timezone {{ locale_config.tz }} in /usr/share/zoneinfo"
+  when: not (timezone_zone.stat.exists and timezone_zone.stat.isreg | default(false) or timezone_zone.stat.islnk | default(false))
+
 - name: "Set timezone ..."
   file:
     force: true

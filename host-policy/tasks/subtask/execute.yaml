@@ -29,10 +29,20 @@
 - name: "Trigger any pending reboots ..."
   meta: flush_handlers
 
+- name: "Locale configuration / Check ..."
+  stat:
+    path: "{{ locale_path }}"
+  loop:
+    - /usr/sbin/locale-gen
+    - /usr/share/zoneinfo
+  loop_control:
+    loop_var: locale_path
+  register: locale_early
+
 - name: "Locale configuration ..."
   include_role:
     name: wyga/locale
-  when: host.setup.locale is defined
+  when: host.setup.locale is defined and locale_early.results | selectattr('stat.exists') | list | length == 2
 
 - name: "APT Configuration ..."
   include_role:

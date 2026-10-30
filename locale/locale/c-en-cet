@@ -1,5 +1,5 @@
 locale:
-  template: "C/EN/Warasaw"
+  template: "C/EN/Warsaw"
   generate:
     - "en_US.UTF-8 UTF-8"
   default:

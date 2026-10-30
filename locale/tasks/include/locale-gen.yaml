@@ -1,3 +1,21 @@
+- name: "Read /etc/locale.gen ..."
+  slurp:
+    src: /etc/locale.gen
+  register: locale_gen_file
+  failed_when: false
+
+- name: "Read generated locales ..."
+  command:
+    cmd: locale -a
+  check_mode: false
+  changed_when: false
+  register: locale_available
+
+- name: "Compare locales ..."
+  set_fact:
+    locale_generate: "{{ locale_config.generate | locale_generate }}"
+    locale_gen_selected: "{{ locale_gen_file.content | default('') | b64decode | locale_gen_active }}"
+
 - name: "Generate /etc/locale.gen ..."
   template:
     src: "locale/locale.gen"
@@ -5,11 +23,12 @@
     owner: root
     group: root
     mode: 0644
-  vars:
-    localeConfig: "{{ locale_config }}"
   register: locale_gen_changed
+  when: locale_gen_selected != locale_generate
 
 - name: "Regenerate locales ..."
   command:
-    cmd: "{{ bin_locale_gen }}"
-  when: locale_gen_changed is changed
+    cmd: /usr/sbin/locale-gen
+  when: >
+    locale_gen_changed is changed or
+    locale_generate | locale_names | difference(locale_available.stdout_lines | locale_names) | length > 0
