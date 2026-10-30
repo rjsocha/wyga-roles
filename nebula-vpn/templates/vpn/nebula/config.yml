@@ -40,13 +40,17 @@ lighthouse:
     {% endfor %}
     {% endif %}
 
+{% set offloads = instance.offloads | default(instance.config.offloads | default(false)) %}
+{% if vpn_instance.port > 0 or instance.lighthouse or offloads %}
+listen:
 {% if vpn_instance.port > 0 %}
-listen:
   port: {{ vpn_instance.port }}
-
 {% elif instance.lighthouse %}
-listen:
   port: 4242
+{% endif %}
+{% if offloads %}
+  udp_offloads: true
+{% endif %}
 
 {% endif %}
 punchy:
@@ -81,6 +85,9 @@ tun:
   dev: {{ instance.config.tun.dev | default('overlay0') }}
   drop_local_broadcast: true
   drop_multicast: true
+{% if offloads %}
+  use_offloads: true
+{% endif %}
 {% if instance.network.route | length > 0 %}
   unsafe_routes:
     {% for via in instance.network.route.keys() if via not in instance.ip | map('ansible.utils.ipaddr', 'address') %}
@@ -99,6 +106,10 @@ tun:
 logging:
   level: fatal
   format: text
+
+local_api:
+  control:
+    socket: /run/nebula/{{ instance.name }}.sock
 
 tunnels:
   drop_inactive: true
