@@ -281,6 +281,54 @@
           vars:
             nodes:  "{{ host.setup.workstation.wol }}"
       when: host.setup.workstation.wol is defined
+
+    - name: "Workstation / Konsole ..."
+      block:
+        - name: "Workstation / Konsole / Marker ..."
+          remote_user: "{{ host.setup.workstation.user }}"
+          stat:
+            path: ~/.config/.konsole-seeded
+          register: konsole_seeded
+
+        - name: "Workstation / Konsole / Seed ..."
+          block:
+            - name: "Workstation / Konsole / Seed / Directory ..."
+              remote_user: "{{ host.setup.workstation.user }}"
+              file:
+                path: "{{ directory }}"
+                state: directory
+              loop:
+                - ~/.local/share/konsole
+                - ~/.local/share/kxmlgui5/konsole
+                - ~/.local/state
+              loop_control:
+                loop_var: directory
+                label: "{{ directory }}"
+
+            - name: "Workstation / Konsole / Seed / Files ..."
+              remote_user: "{{ host.setup.workstation.user }}"
+              copy:
+                src: "app/konsole/{{ konsole.src }}"
+                dest: "{{ konsole.dest }}"
+                mode: 0600
+              loop:
+                - { src: konsolerc, dest: ~/.config/konsolerc }
+                - { src: SHELL.profile, dest: ~/.local/share/konsole/SHELL.profile }
+                - { src: WYGA.colorscheme, dest: ~/.local/share/konsole/WYGA.colorscheme }
+                - { src: konsoleui.rc, dest: ~/.local/share/kxmlgui5/konsole/konsoleui.rc }
+                - { src: sessionui.rc, dest: ~/.local/share/kxmlgui5/konsole/sessionui.rc }
+                - { src: konsolestaterc, dest: ~/.local/state/konsolestaterc }
+              loop_control:
+                loop_var: konsole
+                label: "{{ konsole.dest }}"
+
+            - name: "Workstation / Konsole / Seed / Marker ..."
+              remote_user: "{{ host.setup.workstation.user }}"
+              copy:
+                content: "#SEEDED"
+                dest: ~/.config/.konsole-seeded
+          when: not konsole_seeded.stat.exists
+      when: host.setup.workstation.konsole | default(false)
   when: host.setup.workstation.user is defined
 
 - name: "Workstation / Install ..."

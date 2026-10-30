@@ -1,0 +1,29 @@
+[Desktop Entry]
+DefaultProfile=SHELL.profile
+
+[General]
+ConfigVersion=1
+
+[KonsoleWindow]
+ShowWindowTitleOnTitleBar=true
+
+[MainWindow]
+MenuBar=Disabled
+ToolBarsMovable=Enabled
+
+[MainWindow][Toolbar mainToolBar]
+ToolButtonStyle=IconOnly
+
+[SplitView]
+SplitViewVisibility=AlwaysHideSplitHeader
+
+[TabBar]
+TabBarPosition=Bottom
+TabBarVisibility=AlwaysShowTabBar
+
+[ThumbnailsSettings]
+ThumbnailShift=true
+ThumbnailSize=480
+
+[UiSettings]
+ColorScheme=
