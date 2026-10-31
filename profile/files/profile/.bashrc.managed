@@ -1,5 +1,3 @@
-# This file is managed by ansible - use .bashrc.local for local changes
-
 mc() {
 local lwd="/dev/shm/.mc.${USER}.lwd.$$" rcd
   LANG=en_US.UTF-8 /usr/bin/mc -P "${lwd}" "$@"

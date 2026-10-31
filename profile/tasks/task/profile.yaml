@@ -40,6 +40,17 @@
         - .hushlogin
         - .tmux.conf
         - .vimrc
+
+    - name: Setup /root profile (.bashrc, .bashrc.managed)
+      copy:
+        content: |
+          # This file is managed by ansible - use .bashrc.local for local changes
+          {{ lookup('file', 'profile/' ~ item) }}
+        dest: "/root/{{ item }}"
+        group: root
+        owner: root
+        mode: 0644
+      with_items:
         - .bashrc
         - .bashrc.managed
 
