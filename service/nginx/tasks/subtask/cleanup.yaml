@@ -1,0 +1,19 @@
+---
+- name: "Nginx / Cleanup / {{ nginx_directory.path }} / Looking for files ..."
+  find:
+    paths: "{{ nginx_directory.path }}"
+    file_type: any
+    hidden: true
+    excludes: "{{ nginx_directory.keep }}"
+  register: nginx_unmanaged
+
+- name: "Nginx / Cleanup / {{ nginx_directory.path }} / Remove ..."
+  file:
+    path: "{{ cleanup.path }}"
+    state: absent
+  loop: "{{ nginx_unmanaged.files }}"
+  loop_control:
+    loop_var: cleanup
+    label: "{{ cleanup.path | basename }}"
+  notify:
+    - reload-nginx

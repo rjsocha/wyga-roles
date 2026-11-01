@@ -1,0 +1,27 @@
+---
+- name: "Nginx / Reload ..."
+  meta: flush_handlers
+
+- name: "Nginx / Verify running configuration ..."
+  shell:
+    cmd: |
+      set -eu
+      age=$(ps -o etimes= --ppid "$(systemctl show -p MainPID --value nginx)" | sort -n | head -n 1)
+      test -n "${age}"
+      newer=$(find -L /etc/nginx/nginx.conf /etc/nginx/mime.types /etc/nginx/fastcgi_params /etc/nginx/proxy_params /etc/nginx/conf.d {{ '/etc/nginx/sites-enabled /etc/nginx/modules-enabled' if nginx_layout.enabled != '' else '' }} -newermt "@$(( $(date +%s) - age ))")
+      test -z "${newer}"
+  args:
+    executable: /bin/bash
+  check_mode: false
+  changed_when: false
+  failed_when: false
+  register: nginx_running
+  retries: 3
+  delay: 1
+  until: nginx_running.rc == 0
+
+- name: "Nginx / Restart, the reload did not take ..."
+  systemd:
+    name: nginx
+    state: restarted
+  when: nginx_running.rc != 0

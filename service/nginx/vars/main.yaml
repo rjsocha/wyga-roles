@@ -1,0 +1,45 @@
+nginx_engines:
+  nginx:
+    package: nginx
+    layout: debian
+  nginx-light:
+    package: nginx-light
+    layout: debian
+  nginx.org:
+    package: nginx
+    layout: nginx.org
+    repository: nginx.org
+
+nginx_layouts:
+  debian:
+    user: www-data
+    available: /etc/nginx/sites-available
+    enabled: /etc/nginx/sites-enabled
+    suffix: ""
+    modules: /etc/nginx/modules-enabled
+    module_package: libnginx-mod-
+    known:
+      - sites-available
+      - sites-enabled
+      - modules-enabled
+  nginx.org:
+    user: nginx
+    available: /etc/nginx/conf.d
+    enabled: ""
+    suffix: .conf
+    module_package: nginx-module-
+    known:
+      - modules
+
+nginx_known_files:
+  - nginx.conf
+  - mime.types
+  - fastcgi_params
+  - proxy_params
+  - conf.d
+  - site.d
+
+nginx_site_d: "/etc/nginx/site.d/{{ nginx_site_name }}"
+
+nginx_log_formats_builtin:
+  extended: '$host $server_name $scheme $status $msec $realip_remote_addr $remote_addr "$http_x_forwarded_for" "$remote_user" [$time_local] "$request" $body_bytes_sent "$http_referer" "$http_user_agent" $request_time "$upstream_addr" "$upstream_connect_time" "$upstream_header_time" "$upstream_response_time" $bytes_sent'

@@ -1,0 +1,53 @@
+---
+- name: "Nginx / Engine / Installed packages ..."
+  ansible.builtin.package_facts:
+    manager: auto
+
+- name: "Nginx / Engine / Installed layout ..."
+  set_fact:
+    nginx_installed: "{{ 'debian' if 'nginx-common' in ansible_facts.packages else ('nginx.org' if 'nginx' in ansible_facts.packages else '') }}"
+
+- name: "Nginx / Engine / Migrate ..."
+  include_tasks: migrate.yaml
+  when:
+    - nginx_installed != ''
+    - nginx_installed != nginx_engine.layout
+
+- name: "Nginx / Engine / Replace nginx-light with nginx ..."
+  command:
+    cmd: apt-get install -y -o Dpkg::Options::=--force-confold nginx nginx-light-
+  environment:
+    DEBIAN_FRONTEND: noninteractive
+  when:
+    - nginx_engine_name == 'nginx'
+    - nginx_installed == 'debian'
+    - "'nginx-light' in ansible_facts.packages"
+
+- name: "Nginx / Engine / Install ..."
+  block:
+    - name: "Nginx / Engine / Repository ..."
+      include_role:
+        name: wyga/install-repository
+      vars:
+        repository: "{{ nginx_engine.repository }}"
+      when: nginx_engine.repository is defined
+
+    - name: "Nginx / Engine / Package ..."
+      include_role:
+        name: wyga/install-packages
+      vars:
+        packages:
+          - "{{ nginx_engine.package }}"
+  when: nginx_engine.package not in ansible_facts.packages
+
+- name: "Nginx / Engine / Installed packages ..."
+  ansible.builtin.package_facts:
+    manager: auto
+
+- name: "Nginx / Engine / Verify ..."
+  assert:
+    that:
+      - nginx_engine.package in ansible_facts.packages
+      - ('nginx-common' in ansible_facts.packages) == (nginx_engine.layout == 'debian')
+    fail_msg: "setup.nginx: {{ nginx_engine_name }} selected, but the packages installed do not match it"
+    quiet: true

@@ -1,0 +1,19 @@
+---
+- name: "Nginx / {{ nginx_site_name }} / Configuration ..."
+  template:
+    src: "{{ nginx_site_source }}"
+    dest: "{{ nginx_layout.available }}/{{ nginx_site_name }}{{ nginx_layout.suffix }}"
+    owner: root
+    group: root
+    mode: 0640
+  notify:
+    - reload-nginx
+
+- name: "Nginx / {{ nginx_site_name }} / Enable ..."
+  file:
+    src: "{{ nginx_layout.available }}/{{ nginx_site_name }}"
+    dest: "{{ nginx_layout.enabled }}/{{ nginx_site_name }}"
+    state: link
+  notify:
+    - reload-nginx
+  when: nginx_layout.enabled != ''

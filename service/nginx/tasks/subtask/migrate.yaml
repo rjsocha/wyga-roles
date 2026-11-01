@@ -1,0 +1,93 @@
+---
+- name: "Nginx / Migrate / {{ nginx_installed }} to {{ nginx_engine.layout }} ..."
+  block:
+    - name: "Nginx / Migrate / Install repository ..."
+      include_role:
+        name: wyga/install-repository
+      vars:
+        repository: "{{ nginx_engine.repository }}"
+      when: nginx_engine.repository is defined
+
+    - name: "Nginx / Migrate / Update package index ..."
+      apt:
+        update_cache: true
+      when: nginx_engine.repository is defined
+
+    - name: "Nginx / Migrate / Verify module packages ..."
+      command:
+        cmd: "apt-cache show --no-all-versions {{ nginx_module_package }}"
+      loop: "{{ nginx_module_packages }}"
+      loop_control:
+        loop_var: nginx_module_package
+      check_mode: false
+      changed_when: false
+  rescue:
+    - name: "Nginx / Migrate / Withdraw repository ..."
+      file:
+        path: "{{ nginx_leftover }}"
+        state: absent
+      loop:
+        - /etc/apt/sources.list.d/nginx.org.sources
+        - /etc/apt/sources.list.d/nginx.org.list
+        - /usr/share/keyrings/nginx.org.gpg
+      loop_control:
+        loop_var: nginx_leftover
+      when: nginx_engine.repository is defined
+
+    - name: "Nginx / Migrate / Update package index ..."
+      apt:
+        update_cache: true
+      when: nginx_engine.repository is defined
+
+    - name: "Nginx / Migrate / Refused ..."
+      fail:
+        msg: "setup.nginx: {{ nginx_engine_name }} cannot be reached, a repository or one of the modules {{ nginx_module_packages }} is not available; nginx was not touched"
+
+- name: "Nginx / Migrate / Stop ..."
+  systemd:
+    name: nginx
+    state: stopped
+
+- name: "Nginx / Migrate / Check logs ..."
+  stat:
+    path: /var/log/nginx
+  register: nginx_logs
+
+- name: "Nginx / Migrate / Keep logs ..."
+  shell:
+    cmd: mv -T /var/log/nginx "/var/log/nginx.{{ nginx_installed }}.$(date +%Y%m%d%H%M%S)"
+  when: nginx_logs.stat.exists
+
+- name: "Nginx / Migrate / Purge packages ..."
+  apt:
+    name: "{{ ansible_facts.packages.keys() | select('match', '^(nginx|nginx-.*|libnginx-mod-.*)$') | list }}"
+    state: absent
+    purge: true
+    autoremove: true
+
+- name: "Nginx / Migrate / Remove leftovers ..."
+  file:
+    path: "{{ nginx_leftover }}"
+    state: absent
+  loop:
+    - /etc/nginx
+    - /var/lib/nginx
+    - /var/cache/nginx
+  loop_control:
+    loop_var: nginx_leftover
+
+- name: "Nginx / Migrate / Remove repository ..."
+  file:
+    path: "{{ nginx_leftover }}"
+    state: absent
+  loop:
+    - /etc/apt/sources.list.d/nginx.org.sources
+    - /etc/apt/sources.list.d/nginx.org.list
+    - /usr/share/keyrings/nginx.org.gpg
+  loop_control:
+    loop_var: nginx_leftover
+  when: nginx_engine.repository is not defined
+
+- name: "Nginx / Migrate / Installed packages ..."
+  ansible.builtin.package_facts:
+    manager: auto

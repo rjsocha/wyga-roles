@@ -1,0 +1,196 @@
+---
+- name: "Nginx / Handler ..."
+  include_role:
+    name: wyga/handler/nginx
+
+- name: "Nginx / Engine name ..."
+  set_fact:
+    nginx_engine_name: "{{ host.setup.nginx.engine | default('nginx-light') }}"
+
+- name: "Nginx / Verify policy ..."
+  assert:
+    that:
+      - host.setup.nginx is mapping
+      - nginx_engine_name in nginx_engines
+      - host.setup.nginx.default | default('empty') in ['empty', 'none']
+      - host.setup.nginx.modules | default([]) is sequence
+      - host.setup.nginx.worker is not defined
+      - (host.package.packages | default([])) | select('match', '^(nginx|nginx-.*|libnginx-mod-.*)$') | list | length == 0
+      - nginx_engine_name == 'nginx.org' or 'nginx.org' not in host.package.repository | default([])
+    fail_msg: "setup.nginx: engine is one of {{ nginx_engines.keys() | join(', ') }}; default is empty or none; modules is a list; worker lives in config; the engine owns nginx packages and the nginx.org repository, keep them out of package"
+    quiet: true
+
+- name: "Nginx / Verify site directory ..."
+  assert:
+    that:
+      - nginx_site_root is directory
+    fail_msg: "setup.nginx: {{ nginx_site_root }} does not exist, every site on this host would be removed; a host without sites keeps an empty file in it"
+    quiet: true
+
+- name: "Nginx / Discover ..."
+  include_tasks: subtask/discover.yaml
+
+- name: "Nginx / Engine ..."
+  set_fact:
+    nginx_engine: "{{ nginx_engines[nginx_engine_name] }}"
+    nginx_layout: "{{ nginx_layouts[nginx_engines[nginx_engine_name].layout] }}"
+    nginx_user: "{{ nginx_layouts[nginx_engines[nginx_engine_name].layout].user }}"
+    nginx_module_names: "{{ host.setup.nginx.modules | default([]) }}"
+    nginx_module_packages: "{{ host.setup.nginx.modules | default([]) | map('regex_replace', '^', nginx_layouts[nginx_engines[nginx_engine_name].layout].module_package) | list }}"
+    nginx_worker_processes: "{{ nginx_config.worker.processes | default('auto') }}"
+    nginx_worker_connections: "{{ nginx_config.worker.connections | default('') }}"
+    nginx_log_error: "{{ nginx_config.log.error | default('') }}"
+    nginx_log_access: "{{ nginx_config.log.access | default('') }}"
+    nginx_log_formats: "{{ ({'extended': nginx_log_formats_builtin.extended} if nginx_config.log.access | default('') == 'extended' else {}) | combine(nginx_config.log.format | default({})) }}"
+    nginx_default_enabled: "{{ host.setup.nginx.default | default('empty') == 'empty' }}"
+    nginx_conf_own: "{{ (nginx_site_root ~ '/nginx.conf') in nginx_files }}"
+    nginx_conf_template: "{{ 'engine/nginx.org/nginx.conf' if nginx_engines[nginx_engine_name].layout == 'nginx.org' else 'engine/debian/' ~ platform.distribution ~ '/' ~ platform.version ~ '/nginx.conf' }}"
+    nginx_module_files: []
+  vars:
+    nginx_config: "{{ host.setup.nginx.config | default({}) }}"
+
+- name: "Nginx / Verify nginx.conf template ..."
+  assert:
+    that:
+      - query('ansible.builtin.fileglob', role_path ~ '/templates/' ~ nginx_conf_template) | length > 0
+    fail_msg: "setup.nginx: no {{ nginx_conf_template }} for {{ nginx_engine_name }} on {{ platform.distribution }} {{ platform.version }}, add one to the role or an own nginx.conf to {{ nginx_site_root }}"
+    quiet: true
+  when: not nginx_conf_own
+
+- name: "Nginx / Verify own nginx.conf ..."
+  assert:
+    that:
+      - host.setup.nginx.config is not defined
+      - (nginx_layout.enabled ~ '/' if nginx_layout.enabled != '' else 'conf.d/') | regex_replace('^/etc/nginx/', '') in lookup('file', nginx_site_root ~ '/nginx.conf')
+    fail_msg: "setup.nginx: an own nginx.conf excludes setup.nginx.config and has to include the sites of this engine, {{ nginx_layout.enabled if nginx_layout.enabled != '' else 'conf.d' }}"
+    quiet: true
+  when: nginx_conf_own
+
+- name: "Nginx / Site files ..."
+  set_fact:
+    nginx_site_files: "{{ (nginx_sites_active + (['host-default'] if nginx_default_enabled else [])) | map('regex_replace', '$', nginx_layout.suffix) | list }}"
+
+- name: "Nginx / Verify sites ..."
+  assert:
+    that:
+      - "'host-default' not in nginx_sites_active"
+      - nginx_layout.enabled | length > 0 or nginx_config_files | intersect(nginx_site_files) | length == 0
+    fail_msg: "setup.nginx: host-default is reserved; on nginx.org a site and a conf.d file share /etc/nginx/conf.d and cannot have the same name"
+    quiet: true
+
+- name: "Nginx / Engine / Install ..."
+  include_tasks: subtask/engine.yaml
+
+- name: "Nginx / Modules ..."
+  include_tasks: subtask/modules.yaml
+
+- name: "Nginx / Host configuration ..."
+  template:
+    src: "{{ nginx_config_source }}"
+    dest: "/etc/nginx/conf.d/{{ nginx_config_source | basename }}"
+    owner: root
+    group: root
+    mode: 0640
+  loop: "{{ nginx_config_sources }}"
+  loop_control:
+    loop_var: nginx_config_source
+    label: "{{ nginx_config_source | basename }}"
+  notify:
+    - reload-nginx
+
+- name: "Nginx / Convention files ..."
+  template:
+    src: "{{ (nginx_site_root ~ '/' ~ nginx_convention) if (nginx_site_root ~ '/' ~ nginx_convention) in nginx_files else ('engine/common/' ~ nginx_convention) }}"
+    dest: "/etc/nginx/{{ nginx_convention }}"
+    owner: root
+    group: root
+    mode: 0644
+  loop:
+    - mime.types
+    - fastcgi_params
+    - proxy_params
+  loop_control:
+    loop_var: nginx_convention
+  notify:
+    - reload-nginx
+
+- name: "Nginx / nginx.conf ..."
+  template:
+    src: "{{ (nginx_site_root ~ '/nginx.conf') if nginx_conf_own else nginx_conf_template }}"
+    dest: /etc/nginx/nginx.conf
+    owner: root
+    group: root
+    mode: 0644
+    validate: /usr/sbin/nginx -t -c %s
+  notify:
+    - reload-nginx
+
+- name: "Nginx / Default site ..."
+  include_tasks: subtask/default.yaml
+
+- name: "Nginx / site.d ..."
+  file:
+    path: "{{ nginx_site_d }}"
+    state: directory
+    owner: root
+    group: "{{ nginx_user }}"
+    mode: 0750
+  loop: "{{ nginx_sites_active }}"
+  loop_control:
+    loop_var: nginx_site_name
+
+- name: "Nginx / Hooks / init ..."
+  include_tasks: subtask/hook.yaml
+  loop: "{{ nginx_sites_active }}"
+  loop_control:
+    loop_var: nginx_site_name
+  vars:
+    nginx_hook: init
+
+- name: "Nginx / Sites ..."
+  include_tasks: subtask/site.yaml
+  loop: "{{ nginx_sites_active }}"
+  loop_control:
+    loop_var: nginx_site_name
+  vars:
+    nginx_site_source: "{{ nginx_site_root }}/{{ nginx_site_name }}/vhost.conf"
+
+- name: "Nginx / Cleanup ..."
+  include_tasks: subtask/cleanup.yaml
+  loop: "{{ nginx_cleanup }}"
+  loop_control:
+    loop_var: nginx_directory
+    label: "{{ nginx_directory.path }}"
+  vars:
+    nginx_cleanup: "{{ [{'path': '/etc/nginx', 'keep': nginx_known_files + nginx_layout.known}, {'path': '/etc/nginx/site.d', 'keep': nginx_sites_active}, {'path': '/etc/nginx/conf.d', 'keep': nginx_config_files + (nginx_site_files if nginx_layout.enabled == '' else [])}] + ([{'path': nginx_layout.available, 'keep': nginx_site_files}, {'path': nginx_layout.enabled, 'keep': nginx_site_files}, {'path': nginx_layout.modules, 'keep': nginx_module_names | map('regex_replace', '^(.*)$', '50-mod-\\1.conf') | list}] if nginx_layout.enabled != '' else []) }}"
+
+- name: "Nginx / Verify configuration ..."
+  command:
+    cmd: /usr/sbin/nginx -t
+  check_mode: false
+  changed_when: false
+
+- name: "Nginx / Service ..."
+  systemd:
+    name: nginx
+    enabled: true
+    state: started
+
+- name: "Nginx / Reload ..."
+  include_tasks: subtask/reload.yaml
+
+- name: "Nginx / Hooks / ready ..."
+  include_tasks: subtask/hook.yaml
+  loop: "{{ nginx_sites_active }}"
+  loop_control:
+    loop_var: nginx_site_name
+  vars:
+    nginx_hook: ready
+
+- name: "Nginx / Hooks / remove ..."
+  include_tasks: subtask/hook.yaml
+  loop: "{{ nginx_sites_absent }}"
+  loop_control:
+    loop_var: nginx_site_name
+  vars:
+    nginx_hook: remove

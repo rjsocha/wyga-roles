@@ -1,0 +1,36 @@
+---
+- name: "Nginx / Modules / Install ..."
+  include_role:
+    name: wyga/install-packages
+  vars:
+    packages: "{{ nginx_module_packages }}"
+  when: nginx_module_packages | difference(ansible_facts.packages.keys() | list) | length > 0
+
+- name: "Nginx / Modules / Enable ..."
+  file:
+    src: "/usr/share/nginx/modules-available/mod-{{ nginx_module }}.conf"
+    dest: "{{ nginx_layout.modules }}/50-mod-{{ nginx_module }}.conf"
+    state: link
+  loop: "{{ nginx_module_names }}"
+  loop_control:
+    loop_var: nginx_module
+  notify:
+    - reload-nginx
+  when: nginx_layout.modules is defined
+
+- name: "Nginx / Modules / Files ..."
+  shell:
+    cmd: dpkg-query -L {{ nginx_module_packages | join(' ') }} | grep -E '\.so$' | grep -v -- '-debug'
+  check_mode: false
+  changed_when: false
+  register: nginx_module_query
+  when:
+    - nginx_layout.modules is not defined
+    - nginx_module_packages | length > 0
+
+- name: "Nginx / Modules / Load ..."
+  set_fact:
+    nginx_module_files: "{{ nginx_module_query.stdout_lines }}"
+  when:
+    - nginx_layout.modules is not defined
+    - nginx_module_packages | length > 0

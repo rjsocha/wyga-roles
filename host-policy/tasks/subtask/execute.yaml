@@ -195,6 +195,11 @@
     name: wyga/ingress/nginx
   when: host.setup.ingress.nginx is defined
 
+- name: "Configure Nginx ..."
+  include_role:
+    name: wyga/service/nginx
+  when: host.setup.nginx is defined
+
 - name: "Configure TLS Fetch ..."
   include_role:
     name: wyga/ingress/fetch-tls

@@ -1,0 +1,29 @@
+---
+- name: "Nginx / Looking for site files ..."
+  find:
+    paths: "{{ nginx_site_root }}"
+    recurse: true
+    depth: 4
+    file_type: file
+  delegate_to: localhost
+  become: false
+  check_mode: false
+  register: nginx_repository
+
+- name: "Nginx / Site files ..."
+  set_fact:
+    nginx_files: "{{ nginx_repository.files | map(attribute='path') | sort }}"
+
+- name: "Nginx / Sites ..."
+  set_fact:
+    nginx_sites_active: "{{ nginx_sites_defined | difference(nginx_sites_marked) | sort }}"
+    nginx_sites_absent: "{{ nginx_sites_marked | sort }}"
+    nginx_config_sources: "{{ nginx_files | select('match', nginx_root_pattern ~ 'conf\\.d/[^/]+\\.conf$') | list }}"
+  vars:
+    nginx_root_pattern: "{{ (nginx_site_root ~ '/') | regex_escape }}"
+    nginx_sites_defined: "{{ nginx_files | select('match', nginx_root_pattern ~ '[^/]+/vhost\\.conf$') | map('dirname') | map('basename') | list }}"
+    nginx_sites_marked: "{{ nginx_files | select('match', nginx_root_pattern ~ '[^/]+/absent$') | map('dirname') | map('basename') | list }}"
+
+- name: "Nginx / Host configuration files ..."
+  set_fact:
+    nginx_config_files: "{{ nginx_config_sources | map('basename') | list }}"

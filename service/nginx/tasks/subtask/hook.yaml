@@ -1,0 +1,13 @@
+---
+- name: "Nginx / {{ nginx_site_name }} / Hook {{ nginx_hook }} ..."
+  include_tasks:
+    file: "{{ nginx_hook_file }}"
+    apply:
+      notify:
+        - reload-nginx
+  loop: "{{ nginx_files | select('match', (nginx_site_path ~ '/hook/' ~ nginx_hook ~ '/') | regex_escape ~ '[^/]+\\.yaml$') | list }}"
+  loop_control:
+    loop_var: nginx_hook_file
+    label: "{{ nginx_hook_file | basename }}"
+  vars:
+    nginx_site_path: "{{ nginx_site_root }}/{{ nginx_site_name }}"

@@ -1,0 +1,2 @@
+nginx_site_root: "{{ playbook_dir }}/site/{{ host_policy_site }}/nginx/{{ host.hostname | default(inventory_hostname) }}"
+nginx_default_root: /var/www/host-default
