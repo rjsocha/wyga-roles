@@ -1,7 +1,8 @@
 server {
-  listen 80 default_server;
+{% for listen in nginx_default_listen %}
+  listen {{ listen }} default_server;
+{% endfor %}
   server_name _;
 
-  root {{ nginx_default_root }};
-  index index.html;
+  return 200;
 }

@@ -9,7 +9,8 @@ below, not against the engine. Activates on `setup.nginx`; nginx does not belong
 setup:
   nginx:
     engine: nginx-light        # nginx-light (default), nginx or nginx.org
-    default: empty             # default_server with an empty index (default), or none
+    default: empty             # default_server answering 200 with no body: empty (default)
+                               # on IPv4 and IPv6, empty-v4, empty-v6; or none
     modules:                   # off unless listed
       - http-echo
     config:                    # no key: the values of the packaged nginx.conf

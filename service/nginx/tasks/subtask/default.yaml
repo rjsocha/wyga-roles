@@ -1,25 +1,7 @@
 ---
-- name: "Nginx / Default site / Directory ..."
-  file:
-    path: "{{ nginx_default_root }}"
-    state: "{{ 'directory' if nginx_default_enabled else 'absent' }}"
-    owner: root
-    group: root
-    mode: 0755
-
 - name: "Nginx / Default site ..."
-  block:
-    - name: "Nginx / Default site / Index ..."
-      copy:
-        content: ""
-        dest: "{{ nginx_default_root }}/index.html"
-        owner: root
-        group: root
-        mode: 0644
-
-    - name: "Nginx / Default site / Configuration ..."
-      include_tasks: site.yaml
-      vars:
-        nginx_site_name: host-default
-        nginx_site_source: site/default
+  include_tasks: site.yaml
+  vars:
+    nginx_site_name: host-default
+    nginx_site_source: site/default
   when: nginx_default_enabled

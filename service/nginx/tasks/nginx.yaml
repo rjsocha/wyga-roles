@@ -12,12 +12,12 @@
     that:
       - host.setup.nginx is mapping
       - nginx_engine_name in nginx_engines
-      - host.setup.nginx.default | default('empty') in ['empty', 'none']
+      - host.setup.nginx.default | default('empty') in ['empty', 'empty-v4', 'empty-v6', 'none']
       - host.setup.nginx.modules | default([]) is sequence
       - host.setup.nginx.worker is not defined
       - (host.package.packages | default([])) | select('match', '^(nginx|nginx-.*|libnginx-mod-.*)$') | list | length == 0
       - nginx_engine_name == 'nginx.org' or 'nginx.org' not in host.package.repository | default([])
-    fail_msg: "setup.nginx: engine is one of {{ nginx_engines.keys() | join(', ') }}; default is empty or none; modules is a list; worker lives in config; the engine owns nginx packages and the nginx.org repository, keep them out of package"
+    fail_msg: "setup.nginx: engine is one of {{ nginx_engines.keys() | join(', ') }}; default is empty, empty-v4, empty-v6 or none; modules is a list; worker lives in config; the engine owns nginx packages and the nginx.org repository, keep them out of package"
     quiet: true
 
 - name: "Nginx / Verify site directory ..."
@@ -42,7 +42,8 @@
     nginx_log_error: "{{ nginx_config.log.error | default('') }}"
     nginx_log_access: "{{ nginx_config.log.access | default('') }}"
     nginx_log_formats: "{{ ({'extended': nginx_log_formats_builtin.extended} if nginx_config.log.access | default('') == 'extended' else {}) | combine(nginx_config.log.format | default({})) }}"
-    nginx_default_enabled: "{{ host.setup.nginx.default | default('empty') == 'empty' }}"
+    nginx_default_enabled: "{{ host.setup.nginx.default | default('empty') != 'none' }}"
+    nginx_default_listen: "{{ {'empty': ['80', '[::]:80'], 'empty-v4': ['80'], 'empty-v6': ['[::]:80']}[host.setup.nginx.default | default('empty')] | default([]) }}"
     nginx_conf_own: "{{ (nginx_site_root ~ '/nginx.conf') in nginx_files }}"
     nginx_conf_template: "{{ 'engine/nginx.org/nginx.conf' if nginx_engines[nginx_engine_name].layout == 'nginx.org' else 'engine/debian/' ~ platform.distribution ~ '/' ~ platform.version ~ '/nginx.conf' }}"
     nginx_module_files: []
