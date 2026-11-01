@@ -3,6 +3,9 @@
 LLMNR={{ 'yes' if systemd_resolved.llmnr | default(false) else 'no' }}
 MulticastDNS={{ 'yes' if systemd_resolved.mdns | default(false) else 'no' }}
 Cache=no-negative
+{% if systemd_resolved_dnssec_mode %}
+DNSSEC={{ systemd_resolved_dnssec_mode }}
+{% endif %}
 {% if not systemd_resolved.hosts | default(true) %}
 ReadEtcHosts=no
 {% endif %}

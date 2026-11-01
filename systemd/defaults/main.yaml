@@ -1,5 +1,16 @@
 wyga_journal_registred_config:
   - "host-policy.conf"
+wyga_resolved_dnssec_mode:
+  "enforce": "yes"
+  "enable": "yes"
+  "yes": "yes"
+  "true": "yes"
+  "downgrade": "allow-downgrade"
+  "allow-downgrade": "allow-downgrade"
+  "off": "no"
+  "disable": "no"
+  "no": "no"
+  "false": "no"
 wyga_resolved_registred_config:
   - "host-policy.conf"
 wyga_system_registred_config:

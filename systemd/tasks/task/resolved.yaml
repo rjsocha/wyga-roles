@@ -19,6 +19,62 @@
     path: "/etc/systemd/resolved.conf.d"
     state: directory
 
+- name: "SYSTEMD / Resolved / DNSSEC configuration ..."
+  set_fact:
+    systemd_resolved_dnssec: "{{ (systemdConfig.resolved | default({})).dnssec | default({}) }}"
+
+- name: "SYSTEMD / Resolved / Verify DNSSEC configuration ..."
+  assert:
+    that:
+      - systemd_resolved_dnssec is mapping
+      - systemd_resolved_dnssec.mode is not defined or (systemd_resolved_dnssec.mode | string | lower) in wyga_resolved_dnssec_mode
+      - (systemd_resolved_dnssec.skip | default([])) is sequence and (systemd_resolved_dnssec.skip | default([])) is not string
+      - (systemd_resolved_dnssec.skip | default([])) | reject('match', '^[a-z0-9]([a-z0-9.-]*[a-z0-9])?$') | list | length == 0
+    fail_msg: "setup.systemd.resolved.dnssec: mode is one of {{ wyga_resolved_dnssec_mode.keys() | join(', ') }}, skip is a list of domains"
+    quiet: true
+
+- name: "SYSTEMD / Resolved / DNSSEC mode ..."
+  set_fact:
+    systemd_resolved_dnssec_mode: "{{ wyga_resolved_dnssec_mode[systemd_resolved_dnssec.mode | string | lower] if systemd_resolved_dnssec.mode is defined else '' }}"
+
+- name: "SYSTEMD / Resolved / DNSSEC skip directory ..."
+  file:
+    path: "/etc/dnssec-trust-anchors.d"
+    state: directory
+  when: systemd_resolved_dnssec.skip | default([]) | length > 0
+
+- name: "SYSTEMD / Resolved / DNSSEC skip ..."
+  copy:
+    content: "{{ domain }}\n"
+    dest: "/etc/dnssec-trust-anchors.d/skip-{{ domain }}.negative"
+    group: root
+    owner: root
+    mode: 0644
+  loop: "{{ systemd_resolved_dnssec.skip | default([]) }}"
+  loop_control:
+    loop_var: domain
+  notify:
+    - systemd-resolved
+
+- name: "SYSTEMD / Resolved / DNSSEC skip / Looking for unmanaged files ..."
+  find:
+    paths: "/etc/dnssec-trust-anchors.d"
+    patterns: "skip-*.negative"
+    file_type: file
+    excludes: "{{ systemd_resolved_dnssec.skip | default([]) | map('regex_replace', '^(.*)$', 'skip-\\1.negative') | list }}"
+  register: resolved_dnssec_skip_cleanup
+
+- name: "SYSTEMD / Resolved / DNSSEC skip / Cleanup ..."
+  file:
+    path: "{{ cleanup.path }}"
+    state: absent
+  loop: "{{ resolved_dnssec_skip_cleanup.files }}"
+  loop_control:
+    label: "{{ cleanup.path }}"
+    loop_var: cleanup
+  notify:
+    - systemd-resolved
+
 - name: "SYSTEMD / Resolved ..."
   template:
     src: "resolved/host-policy"
