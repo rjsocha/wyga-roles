@@ -8,6 +8,7 @@ import yaml
 from ansible.errors import AnsibleFilterError
 
 _PRINCIPAL = re.compile(r'^[A-Za-z0-9*][A-Za-z0-9._:*-]*$')
+_SPECIAL = ('.host',)
 
 
 def _addresses(entry):
@@ -86,7 +87,9 @@ def ssh_host_principals(host, playbook_dir):
     every domain of alias in the config of the VPN) and its addresses;
     certificate: false on the entry leaves it out, a list limits the
     addresses. address is the addresses of the network interfaces marked
-    certificate: true or with a list."""
+    certificate: true or with a list. .host, the name systemd-ssh-proxy
+    gives the local host over its AF_UNIX socket, is always a principal:
+    it names no host but the machine itself and cannot be redirected."""
     setup = host.get('setup') or {}
     ssh = (setup.get('ssh') or {}).get('host') or {}
     listed = ssh.get('principal', ['hostname'])
@@ -101,12 +104,15 @@ def ssh_host_principals(host, playbook_dir):
     for entry in listed:
         entry = str(entry)
         for principal in keyword[entry]() if entry in keyword else [entry]:
-            if not _PRINCIPAL.match(principal):
+            if principal not in _SPECIAL and not _PRINCIPAL.match(principal):
                 raise AnsibleFilterError("setup.ssh.host.principal: invalid principal %r" % principal)
             if principal not in out:
                 out.append(principal)
     if listed and not out:
         raise AnsibleFilterError("setup.ssh.host.principal %s gives no principal: the host has no such addresses" % listed)
+    for principal in _SPECIAL if listed else []:
+        if principal not in out:
+            out.append(principal)
     return out
 
 
