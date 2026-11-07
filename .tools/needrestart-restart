@@ -1,0 +1,7 @@
+#!/usr/bin/env -S ansible-playbook
+---
+- name: "Needrestart Maintenance ..."
+  gather_facts: no
+  hosts: all
+  roles:
+    - wyga/needrestart/maintenance

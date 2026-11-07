@@ -1,0 +1,140 @@
+- name: "Needrestart / Maintenance / Load policy ..."
+  include_role:
+    name: wyga/load-policy
+  when: host is not defined
+
+- name: "Needrestart / Maintenance / Check configuration ..."
+  assert:
+    that:
+      - host.security.restart.maintenance | default([], true) is sequence
+      - host.security.restart.maintenance | default([], true) is not string
+      - host.security.restart.maintenance | default([], true) is not mapping
+    fail_msg: "security.restart.maintenance: a list of unit names"
+    quiet: true
+
+- name: "Needrestart / Maintenance / Look for a running apt ..."
+  shell: |
+    systemctl is-active --quiet apt-daily.service && printf '%s\n' apt-daily.service
+    systemctl is-active --quiet apt-daily-upgrade.service && printf '%s\n' apt-daily-upgrade.service
+    [[ -e /var/run/unattended-upgrades.pid ]] && printf '%s\n' unattended-upgrade
+    exit 0
+  args:
+    executable: /bin/bash
+  check_mode: false
+  changed_when: false
+  register: needrestart_apt
+
+- name: "Needrestart / Maintenance / An apt run is in progress ..."
+  assert:
+    that:
+      - needrestart_apt.stdout_lines | length == 0
+    fail_msg: "in progress: {{ needrestart_apt.stdout_lines | join(', ') }} - run this after the upgrade finishes"
+    quiet: true
+
+- name: "Needrestart / Maintenance / Find needrestart ..."
+  stat:
+    path: "{{ needrestart_binary }}"
+  check_mode: false
+  register: needrestart_present
+
+- name: "Needrestart / Maintenance / Needrestart is not installed ..."
+  assert:
+    that:
+      - needrestart_present.stat.exists
+    fail_msg: "{{ needrestart_binary }} not found: the host policy has no security.restart"
+    quiet: true
+
+- name: "Needrestart / Maintenance / Read the report ..."
+  command: "{{ needrestart_binary }} -b -r l"
+  check_mode: false
+  changed_when: false
+  register: needrestart_report
+
+- name: "Needrestart / Maintenance / Parse the report ..."
+  set_fact:
+    needrestart_service: "{{ needrestart_report.stdout_lines | select('match', '^NEEDRESTART-SVC: ') | map('regex_replace', '^NEEDRESTART-SVC: +', '') | list }}"
+    needrestart_session: "{{ needrestart_report.stdout_lines | select('match', '^NEEDRESTART-SESS: ') | map('regex_replace', '^NEEDRESTART-SESS: +', '') | list }}"
+    needrestart_kernel: "{{ needrestart_report.stdout_lines | select('match', '^NEEDRESTART-KSTA: ') | map('regex_replace', '^NEEDRESTART-KSTA: +', '') | list | first | default('0') }}"
+    needrestart_microcode: "{{ needrestart_report.stdout_lines | select('match', '^NEEDRESTART-UCSTA: ') | map('regex_replace', '^NEEDRESTART-UCSTA: +', '') | list | first | default('0') }}"
+    needrestart_maintenance: "{{ host.security.restart.maintenance | default([], true) | map('regex_replace', '^([^.]+)$', '\\1.service') | list }}"
+
+- name: "Needrestart / Maintenance / Plan ..."
+  set_fact:
+    needrestart_skipped: "{{ needrestart_service | intersect(needrestart_skip | list) }}"
+    needrestart_rebootable: "{{ needrestart_service | intersect(needrestart_reboot) }}"
+    needrestart_selected: "{{ needrestart_service | difference(needrestart_skip | list) | difference(needrestart_reboot) | intersect(needrestart_allow | union(needrestart_maintenance)) }}"
+    needrestart_reported: "{{ needrestart_service | difference(needrestart_skip | list) | difference(needrestart_reboot) | difference(needrestart_allow | union(needrestart_maintenance)) }}"
+    needrestart_reboot_required: "{{ needrestart_kernel in ['2', '3'] or needrestart_microcode == '2' or needrestart_service | intersect(needrestart_reboot) | length > 0 }}"
+
+- name: "Needrestart / Maintenance / Plan by action ..."
+  set_fact:
+    needrestart_reload: "{{ needrestart_selected | intersect(needrestart_action | dict2items | selectattr('value', 'eq', 'reload') | map(attribute='key') | list) }}"
+    needrestart_reexec: "{{ needrestart_selected | intersect(needrestart_action | dict2items | selectattr('value', 'eq', 'daemon-reexec') | map(attribute='key') | list) }}"
+    needrestart_user: "{{ needrestart_selected | intersect(needrestart_action | dict2items | selectattr('value', 'eq', 'user-manager') | map(attribute='key') | list) }}"
+    needrestart_restart: "{{ needrestart_selected | difference(needrestart_action | list) }}"
+
+- name: "Needrestart / Maintenance / Nothing to do ..."
+  debug:
+    msg: "nothing runs old code"
+  when: needrestart_service | length == 0
+
+- name: "Needrestart / Maintenance / Plan: restart ..."
+  debug:
+    msg: "{{ needrestart_restart }}"
+  when: needrestart_restart | length > 0
+
+- name: "Needrestart / Maintenance / Plan: reload ..."
+  debug:
+    msg: "{{ needrestart_reload }}"
+  when: needrestart_reload | length > 0
+
+- name: "Needrestart / Maintenance / Plan: systemd daemon-reexec ..."
+  debug:
+    msg: "{{ needrestart_reexec }}"
+  when: needrestart_reexec | length > 0
+
+- name: "Needrestart / Maintenance / Plan: user manager re-exec ..."
+  debug:
+    msg: "{{ needrestart_user }}"
+  when: needrestart_user | length > 0
+
+- name: "Needrestart / Maintenance / Plan: skipped by the role ..."
+  debug:
+    msg: "{{ needrestart_skipped | zip(needrestart_skipped | map('extract', needrestart_skip)) | map('join', ': ') | list }}"
+  when: needrestart_skipped | length > 0
+
+- name: "Needrestart / Maintenance / Plan: reported only, not allowed by policy ..."
+  debug:
+    msg: "{{ needrestart_reported }}"
+  when: needrestart_reported | length > 0
+
+- name: "Needrestart / Maintenance / Plan: reboot required ..."
+  debug:
+    msg:
+      - "kernel: {{ needrestart_kernel_state[needrestart_kernel] | default('unknown') }}"
+      - "microcode: {{ needrestart_microcode_state[needrestart_microcode] | default('unknown') }}"
+  when: needrestart_kernel in ["2", "3"] or needrestart_microcode == "2"
+
+- name: "Needrestart / Maintenance / Plan: only a host reboot fixes these ..."
+  debug:
+    msg: "{{ needrestart_rebootable }}"
+  when: needrestart_rebootable | length > 0
+
+- name: "Needrestart / Maintenance / Plan: sessions to log in again ..."
+  debug:
+    msg: "{{ needrestart_session }}"
+  when: needrestart_session | length > 0
+
+- name: "Needrestart / Maintenance / A host reboot replaces this run ..."
+  debug:
+    msg: "nothing restarted: reboot the host, or pass -eneedrestart_force=1 to restart the services anyway"
+  when:
+    - needrestart_reboot_required
+    - needrestart_force is not defined
+
+- name: "Needrestart / Maintenance / Apply ..."
+  include_tasks: restart.yaml
+  when:
+    - not ansible_check_mode
+    - needrestart_selected | length > 0
+    - not needrestart_reboot_required or needrestart_force is defined

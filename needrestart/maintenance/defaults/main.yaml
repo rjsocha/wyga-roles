@@ -1,0 +1,45 @@
+needrestart_binary: /usr/sbin/needrestart
+
+needrestart_allow:
+  - bird.service
+  - cron.service
+  - knot.service
+  - libvirtd.service
+  - nginx.service
+  - polkit.service
+  - rsyslog.service
+  - ssh.service
+  - systemd-journald.service
+  - systemd-manager
+  - systemd-networkd.service
+  - systemd-resolved.service
+  - systemd-timesyncd.service
+  - systemd-udevd.service
+  - systemd-user
+  - unattended-upgrades.service
+  - virtlogd.service
+
+needrestart_action:
+  systemd-manager: daemon-reexec
+  systemd-user: user-manager
+  virtlogd.service: reload
+
+needrestart_skip:
+  apt-daily.service: "runs apt itself"
+  apt-daily-upgrade.service: "runs apt itself"
+  systemd-logind.service: "restart reaps stale session scopes, killing anything started by hand in an old login session"
+
+needrestart_reboot:
+  - dbus.service
+  - dbus-broker.service
+
+needrestart_kernel_state:
+  "0": unknown
+  "1": current
+  "2": "ABI upgrade pending, reboot required"
+  "3": "version upgrade pending, reboot required"
+
+needrestart_microcode_state:
+  "0": unknown
+  "1": current
+  "2": "obsolete, reboot required"

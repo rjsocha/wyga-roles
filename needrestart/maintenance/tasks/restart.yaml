@@ -1,0 +1,42 @@
+- name: "Needrestart / Maintenance / Reload ..."
+  systemd:
+    name: "{{ unit }}"
+    state: reloaded
+  loop: "{{ needrestart_reload }}"
+  loop_control:
+    loop_var: unit
+
+- name: "Needrestart / Maintenance / Restart ..."
+  systemd:
+    name: "{{ unit }}"
+    state: restarted
+  loop: "{{ needrestart_restart }}"
+  loop_control:
+    loop_var: unit
+
+- name: "Needrestart / Maintenance / Re-execute systemd ..."
+  command: systemctl daemon-reexec
+  changed_when: true
+  when: needrestart_reexec | length > 0
+
+- name: "Needrestart / Maintenance / Re-execute user managers ..."
+  shell: |
+    systemctl show --state=active --property=MainPID 'user@*.service' |
+    while IFS='=' read -r _ pid
+    do
+      [[ -n ${pid} ]] && env kill -SIGRTMIN+25 "${pid}"
+    done
+    exit 0
+  args:
+    executable: /bin/bash
+  changed_when: true
+  when: needrestart_user | length > 0
+
+- name: "Needrestart / Maintenance / Read the report again ..."
+  command: "{{ needrestart_binary }} -b -r l"
+  changed_when: false
+  register: needrestart_again
+
+- name: "Needrestart / Maintenance / Still running old code ..."
+  debug:
+    msg: "{{ needrestart_again.stdout_lines | select('match', '^NEEDRESTART-SVC: ') | map('regex_replace', '^NEEDRESTART-SVC: +', '') | list }}"

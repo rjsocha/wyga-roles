@@ -28,6 +28,7 @@ hosts                   inventory
 policy/default.yaml     defaults merged into every host
 policy/<hostname>.yaml  one file per host
 roles/wyga              this repository
+roles/wyga/.tools       helper playbooks shipped with the roles
 ```
 
 Playbook:
@@ -42,6 +43,25 @@ Playbook:
     - wyga/install/python
     - wyga/host-policy
 ```
+
+## Helper playbooks
+
+Adhoc playbooks that belong to a role live in `.tools` of this repository, so
+they travel with the role instead of being copied into every policy
+repository. A policy repository links them in its root:
+
+```sh
+ln -s roles/wyga/.tools/needrestart-restart needrestart-restart
+./needrestart-restart -i my --check
+```
+
+The link keeps `playbook_dir` in the policy repository, which is where
+`policy/` and `roles/` are looked up, because ansible takes the basedir from
+the path it was given and does not resolve symlinks.
+
+| Playbook | Role |
+| --- | --- |
+| `needrestart-restart` | `wyga/needrestart/maintenance` |
 
 ## Example policy
 

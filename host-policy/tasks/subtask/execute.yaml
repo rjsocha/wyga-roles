@@ -133,7 +133,7 @@
 
 - name: "Needrestart ..."
   include_role:
-    name: wyga/needrestart
+    name: wyga/needrestart/configure
   when: host.security.restart is defined
 
 - name: "Updates ..."
