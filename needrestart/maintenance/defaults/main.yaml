@@ -10,6 +10,7 @@ needrestart_allow:
   - rsyslog.service
   - ssh.service
   - systemd-journald.service
+  - systemd-machined.service
   - systemd-manager
   - systemd-networkd.service
   - systemd-resolved.service

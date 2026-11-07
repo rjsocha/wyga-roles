@@ -117,15 +117,19 @@ is not always a restart:
 
 | Action | Examples | Why |
 | --- | --- | --- |
-| `restart` | `ssh`, `cron`, `rsyslog`, `polkit`, `nginx`, `libvirtd`, `bird`, `knot`, `systemd-journald`, `systemd-networkd`, `systemd-resolved`, `systemd-timesyncd`, `systemd-udevd`, `unattended-upgrades` | the plain case |
+| `restart` | `ssh`, `cron`, `rsyslog`, `polkit`, `nginx`, `libvirtd`, `bird`, `knot`, `systemd-journald`, `systemd-machined`, `systemd-networkd`, `systemd-resolved`, `systemd-timesyncd`, `systemd-udevd`, `unattended-upgrades` | the plain case |
 | `reload` | `virtlogd` | `ExecReload` sends `SIGUSR1`, on which virtlogd re-exec()s its binary and keeps all current logs and clients (`man 8 virtlogd`); a restart would cut the log of every running guest |
 | own command | `systemd-manager`, `systemd-user` | not services: `systemctl daemon-reexec` and `SIGRTMIN+25` to every `user@*.service`, the same thing needrestart's own `restart.d` scripts do |
 | host reboot | `dbus`, the kernel, the microcode | below |
 | report only | `apt-daily*`, `systemd-logind`, `SESS` entries | below |
 
 `needrestart_allow` in the role's defaults is what every host may restart on
-its own: the fourteen services above plus `virtlogd`, `systemd-manager` and
-`systemd-user`. Policy adds to that list with `security.restart.maintenance`,
+its own: the fifteen services above plus `virtlogd`, `systemd-manager` and
+`systemd-user`. Restarting `systemd-machined` keeps the registered machines:
+it reads them back from `/run/systemd/machines/`, verified on a host with
+eight libvirt guests.
+
+Policy adds to that list with `security.restart.maintenance`,
 it never takes anything away from it, and the skip and reboot lists win over
 both. A service in neither the table nor the policy is reported and left
 running, so the operator can decide and add it.
