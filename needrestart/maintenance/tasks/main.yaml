@@ -125,12 +125,129 @@
     msg: "{{ needrestart_session }}"
   when: needrestart_session | length > 0
 
+- name: "Needrestart / Maintenance / Look for outdated qemu guests ..."
+  shell: |
+    set -eufo pipefail
+    IFS=$'\t\n'
+    SLICE=/sys/fs/cgroup/machine.slice
+    if [[ ! -d ${SLICE} ]]
+    then
+      exit 0
+    fi
+    SEEN=""
+    for PROCS in $(find "${SLICE}" -path '*/machine-qemu*.scope/*' -name cgroup.procs 2>/dev/null)
+    do
+      if [[ ! -r ${PROCS} ]]
+      then
+        continue
+      fi
+      while read -r PID
+      do
+        if [[ " ${SEEN} " == *" ${PID} "* ]] || [[ ! -r /proc/${PID}/maps ]]
+        then
+          continue
+        fi
+        SEEN+=" ${PID}"
+        read -r -d '' COMMAND < "/proc/${PID}/cmdline" || COMMAND=""
+        if [[ ${COMMAND} != *qemu-system* ]]
+        then
+          continue
+        fi
+        NAME=$(tr '\0' '\n' < "/proc/${PID}/cmdline" | sed -n 's/^guest=\([^,]*\).*/\1/p')
+        if [[ -z ${NAME} ]]
+        then
+          NAME="pid ${PID}"
+        fi
+        if [[ $(readlink "/proc/${PID}/exe") == *"(deleted)" ]]
+        then
+          printf '%s\n' "${NAME}"
+          continue
+        fi
+        if awk '$NF == "(deleted)" &&
+                $6 !~ /^\/(memfd:|SYSV|dev\/|run\/|var\/run\/|tmp\/|var\/tmp\/|\[aio\]|drm)/ &&
+                $6 !~ /\/#[0-9]+$/ { found = 1; exit }
+                END { exit !found }' "/proc/${PID}/maps"
+        then
+          printf '%s\n' "${NAME}"
+        fi
+      done < "${PROCS}" 2>/dev/null
+    done
+  args:
+    executable: /bin/bash
+  check_mode: false
+  changed_when: false
+  register: needrestart_guest
+
+- name: "Needrestart / Maintenance / Plan: guests running outdated qemu binaries ..."
+  debug:
+    msg: "{{ needrestart_guest.stdout_lines + ['only a restart of the guest replaces its qemu process: virsh shutdown and virsh start, a reboot inside the guest keeps the old binaries'] }}"
+  when: needrestart_guest.stdout_lines | length > 0
+
 - name: "Needrestart / Maintenance / A host reboot replaces this run ..."
   debug:
     msg: "nothing restarted: reboot the host, or pass -eneedrestart_force=1 to restart the services anyway"
   when:
     - needrestart_reboot_required
     - needrestart_force is not defined
+
+- name: "Needrestart / Maintenance / Look for daemons in session scopes ..."
+  shell: |
+    set -eufo pipefail
+    IFS=$'\t\n'
+    IGNORE="bash sh dash zsh sshd sshd-session ps grep awk sed cat tail head python3 python sudo su login systemd-cgls tmux screen"
+    MY=$(cut -d: -f3 /proc/self/cgroup | head -1)
+    for FILE in /run/systemd/sessions/[0-9]*
+    do
+      if [[ ! -f ${FILE} ]]
+      then
+        continue
+      fi
+      SCOPE=$(sed -n 's/^SCOPE=//p' "${FILE}")
+      LEADER=$(sed -n 's/^LEADER=//p' "${FILE}")
+      if [[ -z ${SCOPE} ]]
+      then
+        continue
+      fi
+      CG=$(systemctl show "${SCOPE}" -p ControlGroup --value 2>/dev/null)
+      if [[ -z ${CG} ]] || [[ ${CG} == "${MY}" ]] || [[ ! -r /sys/fs/cgroup${CG}/cgroup.procs ]]
+      then
+        continue
+      fi
+      FOUND=""
+      while read -r PID
+      do
+        if [[ ! -r /proc/${PID}/comm ]]
+        then
+          continue
+        fi
+        COMM=$(cat "/proc/${PID}/comm")
+        if [[ " ${IGNORE} " == *" ${COMM} "* ]] || [[ " ${FOUND} " == *" ${COMM} "* ]]
+        then
+          continue
+        fi
+        FOUND+=" ${COMM}"
+      done < "/sys/fs/cgroup${CG}/cgroup.procs"
+      if [[ -z ${FOUND} ]]
+      then
+        continue
+      fi
+      if kill -0 "${LEADER}" 2>/dev/null
+      then
+        printf '%s leader alive:%s\n' "${SCOPE}" "${FOUND}"
+      else
+        printf '%s LEADER GONE:%s\n' "${SCOPE}" "${FOUND}"
+      fi
+    done
+  args:
+    executable: /bin/bash
+  check_mode: false
+  changed_when: false
+  register: needrestart_scope
+
+- name: "Needrestart / Maintenance / Daemons live in a login session scope ..."
+  debug:
+    msg: "{{ needrestart_scope.stdout_lines + ['a restart of systemd-logind would kill these, start them from a unit or with systemd-run --slice=system.slice'] }}"
+  when: needrestart_scope.stdout_lines | length > 0
 
 - name: "Needrestart / Maintenance / Apply ..."
   include_tasks: restart.yaml

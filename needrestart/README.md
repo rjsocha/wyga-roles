@@ -157,6 +157,34 @@ exist.
   an upgrade is in flight, and the role refuses to run at all (below).
 - **Kernel (`KSTA`), microcode (`UCSTA`).** Only a reboot helps.
 - **Sessions (`SESS`).** Only the user can help, by logging in again.
+- **Guests on outdated qemu binaries.** Only a restart of the guest helps
+  (below).
+
+## Outdated qemu guests
+
+A `qemu-system-*` process keeps the binaries it was started with, so after a
+qemu or library upgrade every guest that has been running since before the
+upgrade still executes the old code. Rebooting the guest from the inside does
+not change that: the process stays. Only `virsh shutdown` plus `virsh start`,
+or a migration, replaces it.
+
+needrestart knows this, but prints it only in its interactive output - the
+list is behind `unless($opt_p || $opt_b)` and has no `$nrconf{}` switch - so
+the batch report the role reads says nothing about guests. The role therefore
+looks for them itself: it collects the PIDs from every `cgroup.procs` below
+`/sys/fs/cgroup/machine.slice/machine-qemu*.scope` (on cgroup v2 the process
+sits in the `libvirt` child of the scope, not in the scope itself), keeps the
+ones whose command line contains `qemu-system`, and reports a guest when its
+`/proc/<pid>/exe` is gone or `/proc/<pid>/maps` still carries a deleted
+mapping. The mappings needrestart ignores are ignored here too: `memfd:`,
+`SYSV`, `/dev`, `/run`, `/tmp`, `[aio]`, `drm` and the `/#NNN` form.
+
+The guest name comes from qemu's own `-name guest=<name>` argument, which is
+the libvirt domain name, so it can be pasted straight into `virsh`.
+
+The same two facts reach Checkmk from the `needrestart` local check, which
+emits a second service, `Local Needrestart VM`, on hosts that have a
+`machine.slice`.
 
 ## It refuses to run during an apt run
 
@@ -172,11 +200,18 @@ signal the running `unattended-upgrade` and wait for it, up to
 because needrestart itself runs from the apt hook, which is exactly the case
 this role excludes.
 
-One visible consequence: the restarted guard takes a fresh delay inhibitor,
-and unattended-upgrades raises `InhibitDelayMaxSec` to 30 seconds in logind, so
-the next `reboot` can sit for half a minute before it proceeds. A second
-`reboot` in that window is refused with "Action reboot already in progress",
-which is correct, not a failure.
+One trap found the hard way: the guard takes a `delay` inhibitor lock at
+startup and watches logind over a cached dbus proxy. Restart it and then
+restart `systemd-logind` under it, and that proxy stops answering;
+`is_preparing_for_shutdown()` swallows the exception and keeps returning
+false, so the guard never releases the lock. Every shutdown of that host then
+waits out `InhibitDelayMaxSec`, which unattended-upgrades raises to 30 seconds
+in a logind drop-in, and a second `reboot` in that window is refused with
+"Action reboot already in progress". A fresh `systemctl restart
+unattended-upgrades` clears it.
+
+This is why `systemd-logind` is not in the allow list, and it is the only
+service whose restart can break the guard this way.
 
 ## Why `systemd-logind` is not restarted
 
@@ -191,6 +226,25 @@ hand in an old login session lives there. On 2026-11-07 this stopped a
 Checkmk site on a monitoring host: its daemons sat in a days-old
 `session-2057.scope`, and `omd.service`, being a oneshot, reported `active`
 while the site was dead.
+
+## Daemons in a login session scope
+
+At the end of every run the role walks `/run/systemd/sessions/*`, and for each
+session compares the processes in its scope against a list of interactive
+commands, skipping the scope the run itself sits in. What is left is a daemon
+that was started by hand from a shell, so it lives in that session's scope and
+dies with it. `LEADER GONE` marks the dangerous shape: the session that opened
+it is long closed, only the daemons are left.
+
+That is how a Checkmk site was lost on 2026-11-07: `omd start` had been run
+over ssh, so the site sat in a days-old session scope. OMD has no systemd
+integration of its own, so the unit is the only thing that puts the site in
+`system.slice`: `systemctl restart omd`, not `omd restart`. In general, start
+such a thing from its unit or with
+`systemd-run --slice=system.slice --unit=<name>`.
+
+A signal to a running daemon never moves it between cgroups, so `nginx -s
+reload` and the like are not affected; only starting a process is.
 
 ## A reload is not always enough
 
