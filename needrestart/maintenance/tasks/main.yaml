@@ -112,6 +112,52 @@
   changed_when: false
   register: needrestart_scope
 
+- name: "Needrestart / Maintenance / Look for user managers on old code ..."
+  shell: |
+    set -eufo pipefail
+    IFS=$'\t\n'
+    for UNIT in $(systemctl list-units --state=active --no-legend --plain 'user@*.service' | cut -d' ' -f1)
+    do
+      CG=$(systemctl show "${UNIT}" -p ControlGroup --value)
+      if [[ -z ${CG} ]] || [[ ! -d /sys/fs/cgroup${CG} ]]
+      then
+        continue
+      fi
+      OLD=""
+      for PROCS in $(find "/sys/fs/cgroup${CG}" -name cgroup.procs)
+      do
+        while read -r PID
+        do
+          if [[ ! -r /proc/${PID}/maps ]]
+          then
+            continue
+          fi
+          if [[ $(readlink "/proc/${PID}/exe") == *"(deleted)" ]] ||
+             awk '$NF == "(deleted)" &&
+                  $6 !~ /^\/(memfd:|SYSV|dev\/|run\/|var\/run\/|tmp\/|var\/tmp\/|\[aio\]|drm)/ &&
+                  $6 !~ /\/#[0-9]+$/ { found = 1; exit }
+                  END { exit !found }' "/proc/${PID}/maps"
+          then
+            OLD="yes"
+            break
+          fi
+        done < "${PROCS}" 2>/dev/null
+        if [[ -n ${OLD} ]]
+        then
+          break
+        fi
+      done
+      if [[ -n ${OLD} ]]
+      then
+        printf '%s\n' "${UNIT}"
+      fi
+    done
+  args:
+    executable: /bin/bash
+  check_mode: false
+  changed_when: false
+  register: needrestart_manager
+
 - name: "Needrestart / Maintenance / Gate by session scopes ..."
   set_fact:
     needrestart_gated: "{{ needrestart_service | intersect(needrestart_gate | list) if needrestart_scope.stdout_lines | select('search', 'LEADER GONE') | length > 0 else [] }}"
@@ -183,10 +229,10 @@
     msg: "{{ needrestart_reexec }}"
   when: needrestart_reexec | length > 0
 
-- name: "Needrestart / Maintenance / Plan: user manager re-exec ..."
+- name: "Needrestart / Maintenance / Plan: user managers to restart ..."
   debug:
-    msg: "{{ needrestart_user }}"
-  when: needrestart_user | length > 0
+    msg: "{{ needrestart_manager.stdout_lines }}"
+  when: needrestart_manager.stdout_lines | length > 0
 
 - name: "Needrestart / Maintenance / Plan: skipped by the role ..."
   debug:
@@ -294,5 +340,5 @@
   include_tasks: restart.yaml
   when:
     - not ansible_check_mode
-    - needrestart_selected | length > 0
+    - needrestart_selected | length > 0 or needrestart_manager.stdout_lines | length > 0
     - not needrestart_reboot_required or needrestart_force is defined

@@ -26,18 +26,13 @@
   changed_when: true
   when: needrestart_reexec | length > 0
 
-- name: "Needrestart / Maintenance / Re-execute user managers ..."
-  shell: |
-    systemctl show --state=active --property=MainPID 'user@*.service' |
-    while IFS='=' read -r _ pid
-    do
-      [[ -n ${pid} ]] && env kill -SIGRTMIN+25 "${pid}"
-    done
-    exit 0
-  args:
-    executable: /bin/bash
-  changed_when: true
-  when: needrestart_user | length > 0
+- name: "Needrestart / Maintenance / Restart the user managers on old code ..."
+  systemd:
+    name: "{{ unit }}"
+    state: restarted
+  loop: "{{ needrestart_manager.stdout_lines }}"
+  loop_control:
+    loop_var: unit
 
 - name: "Needrestart / Maintenance / Read the report again ..."
   command: "{{ needrestart_binary }} -b -r l"

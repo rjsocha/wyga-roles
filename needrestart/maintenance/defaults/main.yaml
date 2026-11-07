@@ -20,6 +20,7 @@ needrestart_allow:
   - systemd-user
   - unattended-upgrades.service
   - virtlogd.service
+  - zerotier-one.service
 
 needrestart_action:
   systemd-manager: daemon-reexec

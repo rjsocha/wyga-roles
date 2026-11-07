@@ -117,9 +117,9 @@ is not always a restart:
 
 | Action | Examples | Why |
 | --- | --- | --- |
-| `restart` | `ssh`, `cron`, `rsyslog`, `polkit`, `nginx`, `libvirtd`, `bird`, `knot`, `systemd-journald`, `systemd-machined`, `systemd-networkd`, `systemd-resolved`, `systemd-timesyncd`, `systemd-udevd`, `unattended-upgrades` | the plain case |
+| `restart` | `ssh`, `cron`, `rsyslog`, `polkit`, `nginx`, `libvirtd`, `bird`, `knot`, `systemd-journald`, `systemd-machined`, `systemd-networkd`, `systemd-resolved`, `systemd-timesyncd`, `systemd-udevd`, `unattended-upgrades`, `zerotier-one` | the plain case |
 | `reload` | `virtlogd` | `ExecReload` sends `SIGUSR1`, on which virtlogd re-exec()s its binary and keeps all current logs and clients (`man 8 virtlogd`); a restart would cut the log of every running guest |
-| own command | `systemd-manager`, `systemd-user` | not services: `systemctl daemon-reexec` and `SIGRTMIN+25` to every `user@*.service`, the same thing needrestart's own `restart.d` scripts do |
+| own command | `systemd-manager`, `systemd-user` | not services: `systemctl daemon-reexec`, and a restart of every user manager that runs old code, below |
 | host reboot | `dbus`, the kernel, the microcode | below |
 | restart, but gated | `systemd-logind` | safe unless a session scope has lost its leader and still holds daemons; pulls `unattended-upgrades`, `polkit` and `omd` behind it, below |
 | report only | `apt-daily*`, `SESS` entries, guests on old qemu | below |
@@ -158,7 +158,9 @@ exist.
   needrestart only ever lists running processes, so seeing one of them means
   an upgrade is in flight, and the role refuses to run at all (below).
 - **Kernel (`KSTA`), microcode (`UCSTA`).** Only a reboot helps.
-- **Sessions (`SESS`).** Only the user can help, by logging in again.
+- **Sessions (`SESS`).** A login shell on an old binary is the user's to
+  solve, by logging in again. A `@ user manager` entry is not: the role
+  restarts those itself, below.
 - **Guests on outdated qemu binaries.** Only a restart of the guest helps
   (below).
 
@@ -257,6 +259,32 @@ stopped stays stopped - the run never starts something as a side effect - and
 a host that does not have the unit at all is filtered out beforehand with
 `systemctl cat`. They run after the unit that pulled them in, and the plan
 lists them under their own line.
+
+## User managers
+
+needrestart's own answer for a user manager is `SIGRTMIN+25`, which makes
+`systemd --user` re-exec itself. That is not enough. Every user manager also
+has a `(sd-pam)` child - a forked `systemd-executor` that holds the PAM
+session open and waits - and nothing re-executes it, so after a library
+upgrade it keeps the deleted mapping for as long as the session lives. On a
+lingering user that is forever: a WARN that no reload can clear.
+
+This is maintenance, so the role restarts the unit instead. It walks every
+active `user@*.service`, reads the whole cgroup tree of each one, and restarts
+the ones holding a process with a deleted `exe` or mapping. The UID comes from
+the instance name, so nothing is hardcoded; the whole user slice goes down and
+comes back, which means the user's enabled `--user` units return but anything
+that user started by hand in `app.slice` does not.
+
+Scanning the whole tree, not just `init.scope`, is deliberate: a user daemon
+on an old library (a sync client, an agent) is invisible to needrestart, which
+only looks at system services, and the manager restart is what fixes it.
+
+`loginctl terminate-user` is not used for this, and is worth avoiding by hand.
+It stops the manager through `exit.target`, and logind starts a lingering
+user's manager only at its own startup, on `enable-linger` and on a login - so
+the user stays down until someone logs in or the host reboots. `systemctl
+restart user@<uid>.service` has none of that problem.
 
 ## Daemons in a login session scope
 
