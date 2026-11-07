@@ -121,13 +121,15 @@ is not always a restart:
 | `reload` | `virtlogd` | `ExecReload` sends `SIGUSR1`, on which virtlogd re-exec()s its binary and keeps all current logs and clients (`man 8 virtlogd`); a restart would cut the log of every running guest |
 | own command | `systemd-manager`, `systemd-user` | not services: `systemctl daemon-reexec` and `SIGRTMIN+25` to every `user@*.service`, the same thing needrestart's own `restart.d` scripts do |
 | host reboot | `dbus`, the kernel, the microcode | below |
-| report only | `apt-daily*`, `systemd-logind`, `SESS` entries | below |
+| restart, but gated | `systemd-logind` | safe unless a session scope has lost its leader and still holds daemons; pulls `unattended-upgrades`, `polkit` and `omd` behind it, below |
+| report only | `apt-daily*`, `SESS` entries, guests on old qemu | below |
 
 `needrestart_allow` in the role's defaults is what every host may restart on
-its own: the fifteen services above plus `virtlogd`, `systemd-manager` and
-`systemd-user`. Restarting `systemd-machined` keeps the registered machines:
-it reads them back from `/run/systemd/machines/`, verified on a host with
-eight libvirt guests.
+its own, `needrestart_action` says how, `needrestart_gate` holds a unit back
+until its precondition is met and `needrestart_follow` names what has to be
+try-restarted behind it. Restarting `systemd-machined` keeps the registered
+machines: it reads them back from `/run/systemd/machines/`, verified on a host
+with eight libvirt guests.
 
 Policy adds to that list with `security.restart.maintenance`,
 it never takes anything away from it, and the skip and reboot lists win over
@@ -210,10 +212,11 @@ in a logind drop-in, and a second `reboot` in that window is refused with
 "Action reboot already in progress". A fresh `systemctl restart
 unattended-upgrades` clears it.
 
-This is why `systemd-logind` is not in the allow list, and it is the only
-service whose restart can break the guard this way.
+`systemd-logind` is the only service whose restart breaks the guard this way,
+which is why a logind restart always pulls a `try-restart` of the guard behind
+it (below).
 
-## Why `systemd-logind` is not restarted
+## `systemd-logind` is restarted, but only on a clean host
 
 Not for the reason needrestart blacklists it. Active sessions do survive: the
 unit has `FileDescriptorStoreMax=768`, so logind hands the session descriptors
@@ -227,9 +230,37 @@ Checkmk site on a monitoring host: its daemons sat in a days-old
 `session-2057.scope`, and `omd.service`, being a oneshot, reported `active`
 while the site was dead.
 
+So the unit is in the allow list, behind a gate (`needrestart_gate`): the run
+first walks the session scopes (below), and if any of them has lost its leader
+and still holds daemons, logind is held back and the plan says which scope
+blocks it. A host whose session scopes are empty, or whose sessions are all
+alive, gets the restart. In `--check` the gate runs too, so the plan already
+tells you whether logind will go.
+
+Some things must follow it, whether or not needrestart listed them, because
+they hold cached state from the logind they talked to at their own start.
+`needrestart_follow` is that table:
+
+- **`unattended-upgrades.service`**, the shutdown guard. It keeps a D-Bus
+  proxy to logind and a `delay` inhibitor lock taken through it; after a
+  logind restart the lock is broken, and every shutdown, reboot and `virsh
+  shutdown` of a guest waits out `InhibitDelayMaxSec` - 30 s on these hosts -
+  before it proceeds.
+- **`polkit.service`**, which caches the session and seat state it reads from
+  logind.
+- **`omd.service`**. A Checkmk site started by hand sits in a login session
+  scope, so it is exactly what a logind restart can reap; restarting the unit
+  afterwards puts the site back in `system.slice`.
+
+Followers are restarted with `systemctl try-restart`, so a unit that was
+stopped stays stopped - the run never starts something as a side effect - and
+a host that does not have the unit at all is filtered out beforehand with
+`systemctl cat`. They run after the unit that pulled them in, and the plan
+lists them under their own line.
+
 ## Daemons in a login session scope
 
-At the end of every run the role walks `/run/systemd/sessions/*`, and for each
+Before it plans anything the role walks `/run/systemd/sessions/*`, and for each
 session compares the processes in its scope against a list of interactive
 commands, skipping the scope the run itself sits in. What is left is a daemon
 that was started by hand from a shell, so it lives in that session's scope and

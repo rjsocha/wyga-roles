@@ -14,6 +14,13 @@
   loop_control:
     loop_var: unit
 
+- name: "Needrestart / Maintenance / Restart what must follow, if it runs ..."
+  command: "systemctl try-restart {{ unit }}"
+  changed_when: true
+  loop: "{{ needrestart_after }}"
+  loop_control:
+    loop_var: unit
+
 - name: "Needrestart / Maintenance / Re-execute systemd ..."
   command: systemctl daemon-reexec
   changed_when: true

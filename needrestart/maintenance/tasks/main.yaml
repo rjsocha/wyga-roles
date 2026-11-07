@@ -58,11 +58,69 @@
     needrestart_microcode: "{{ needrestart_report.stdout_lines | select('match', '^NEEDRESTART-UCSTA: ') | map('regex_replace', '^NEEDRESTART-UCSTA: +', '') | list | first | default('0') }}"
     needrestart_maintenance: "{{ host.security.restart.maintenance | default([], true) | map('regex_replace', '^([^.]+)$', '\\1.service') | list }}"
 
+- name: "Needrestart / Maintenance / Look for daemons in session scopes ..."
+  shell: |
+    set -eufo pipefail
+    IFS=$'\t\n'
+    IGNORE="bash sh dash zsh sshd sshd-session ps grep awk sed cat tail head python3 python sudo su login systemd-cgls tmux screen"
+    MY=$(cut -d: -f3 /proc/self/cgroup | head -1)
+    for FILE in /run/systemd/sessions/[0-9]*
+    do
+      if [[ ! -f ${FILE} ]]
+      then
+        continue
+      fi
+      SCOPE=$(sed -n 's/^SCOPE=//p' "${FILE}")
+      LEADER=$(sed -n 's/^LEADER=//p' "${FILE}")
+      if [[ -z ${SCOPE} ]]
+      then
+        continue
+      fi
+      CG=$(systemctl show "${SCOPE}" -p ControlGroup --value 2>/dev/null)
+      if [[ -z ${CG} ]] || [[ ${CG} == "${MY}" ]] || [[ ! -r /sys/fs/cgroup${CG}/cgroup.procs ]]
+      then
+        continue
+      fi
+      FOUND=""
+      while read -r PID
+      do
+        if [[ ! -r /proc/${PID}/comm ]]
+        then
+          continue
+        fi
+        COMM=$(cat "/proc/${PID}/comm")
+        if [[ " ${IGNORE} " == *" ${COMM} "* ]] || [[ " ${FOUND} " == *" ${COMM} "* ]]
+        then
+          continue
+        fi
+        FOUND+=" ${COMM}"
+      done < "/sys/fs/cgroup${CG}/cgroup.procs"
+      if [[ -z ${FOUND} ]]
+      then
+        continue
+      fi
+      if kill -0 "${LEADER}" 2>/dev/null
+      then
+        printf '%s leader alive:%s\n' "${SCOPE}" "${FOUND}"
+      else
+        printf '%s LEADER GONE:%s\n' "${SCOPE}" "${FOUND}"
+      fi
+    done
+  args:
+    executable: /bin/bash
+  check_mode: false
+  changed_when: false
+  register: needrestart_scope
+
+- name: "Needrestart / Maintenance / Gate by session scopes ..."
+  set_fact:
+    needrestart_gated: "{{ needrestart_service | intersect(needrestart_gate | list) if needrestart_scope.stdout_lines | select('search', 'LEADER GONE') | length > 0 else [] }}"
+
 - name: "Needrestart / Maintenance / Plan ..."
   set_fact:
     needrestart_skipped: "{{ needrestart_service | intersect(needrestart_skip | list) }}"
     needrestart_rebootable: "{{ needrestart_service | intersect(needrestart_reboot) }}"
-    needrestart_selected: "{{ needrestart_service | difference(needrestart_skip | list) | difference(needrestart_reboot) | intersect(needrestart_allow | union(needrestart_maintenance)) }}"
+    needrestart_selected: "{{ needrestart_service | difference(needrestart_skip | list) | difference(needrestart_reboot) | difference(needrestart_gated) | intersect(needrestart_allow | union(needrestart_maintenance)) }}"
     needrestart_reported: "{{ needrestart_service | difference(needrestart_skip | list) | difference(needrestart_reboot) | difference(needrestart_allow | union(needrestart_maintenance)) }}"
     needrestart_reboot_required: "{{ needrestart_kernel in ['2', '3'] or needrestart_microcode == '2' or needrestart_service | intersect(needrestart_reboot) | length > 0 }}"
 
@@ -71,7 +129,34 @@
     needrestart_reload: "{{ needrestart_selected | intersect(needrestart_action | dict2items | selectattr('value', 'eq', 'reload') | map(attribute='key') | list) }}"
     needrestart_reexec: "{{ needrestart_selected | intersect(needrestart_action | dict2items | selectattr('value', 'eq', 'daemon-reexec') | map(attribute='key') | list) }}"
     needrestart_user: "{{ needrestart_selected | intersect(needrestart_action | dict2items | selectattr('value', 'eq', 'user-manager') | map(attribute='key') | list) }}"
-    needrestart_restart: "{{ needrestart_selected | difference(needrestart_action | list) }}"
+    needrestart_plain: "{{ needrestart_selected | difference(needrestart_action | list) }}"
+
+- name: "Needrestart / Maintenance / Plan the restart order ..."
+  set_fact:
+    needrestart_followed: "{{ needrestart_follow | dict2items | selectattr('key', 'in', needrestart_plain) | map(attribute='value') | flatten | unique }}"
+
+- name: "Needrestart / Maintenance / Look for the units to restart after ..."
+  shell: |
+    set -eufo pipefail
+    IFS=$'\t\n'
+    for UNIT in {{ needrestart_followed | join(' ') }}
+    do
+      if systemctl cat "${UNIT}" > /dev/null 2>&1
+      then
+        printf '%s\n' "${UNIT}"
+      fi
+    done
+  args:
+    executable: /bin/bash
+  check_mode: false
+  changed_when: false
+  register: needrestart_follower
+  when: needrestart_followed | length > 0
+
+- name: "Needrestart / Maintenance / Plan the restart list ..."
+  set_fact:
+    needrestart_restart: "{{ (needrestart_follow | list | intersect(needrestart_plain)) + (needrestart_plain | difference(needrestart_follow | list) | difference(needrestart_followed)) }}"
+    needrestart_after: "{{ needrestart_follower.stdout_lines | default([], true) }}"
 
 - name: "Needrestart / Maintenance / Nothing to do ..."
   debug:
@@ -82,6 +167,11 @@
   debug:
     msg: "{{ needrestart_restart }}"
   when: needrestart_restart | length > 0
+
+- name: "Needrestart / Maintenance / Plan: try-restart after the units above ..."
+  debug:
+    msg: "{{ needrestart_after }}"
+  when: needrestart_after | length > 0
 
 - name: "Needrestart / Maintenance / Plan: reload ..."
   debug:
@@ -107,6 +197,16 @@
   debug:
     msg: "{{ needrestart_reported }}"
   when: needrestart_reported | length > 0
+
+- name: "Needrestart / Maintenance / Plan: held back, a daemon lives in a login session scope ..."
+  debug:
+    msg: "{{ needrestart_gated | zip(needrestart_gated | map('extract', needrestart_gate)) | map('join', ': ') | list }}"
+  when: needrestart_gated | length > 0
+
+- name: "Needrestart / Maintenance / Daemons live in a login session scope ..."
+  debug:
+    msg: "{{ needrestart_scope.stdout_lines + ['a restart of systemd-logind would kill these, start them from a unit or with systemd-run --slice=system.slice'] }}"
+  when: needrestart_scope.stdout_lines | length > 0
 
 - name: "Needrestart / Maintenance / Plan: reboot required ..."
   debug:
@@ -189,65 +289,6 @@
   when:
     - needrestart_reboot_required
     - needrestart_force is not defined
-
-- name: "Needrestart / Maintenance / Look for daemons in session scopes ..."
-  shell: |
-    set -eufo pipefail
-    IFS=$'\t\n'
-    IGNORE="bash sh dash zsh sshd sshd-session ps grep awk sed cat tail head python3 python sudo su login systemd-cgls tmux screen"
-    MY=$(cut -d: -f3 /proc/self/cgroup | head -1)
-    for FILE in /run/systemd/sessions/[0-9]*
-    do
-      if [[ ! -f ${FILE} ]]
-      then
-        continue
-      fi
-      SCOPE=$(sed -n 's/^SCOPE=//p' "${FILE}")
-      LEADER=$(sed -n 's/^LEADER=//p' "${FILE}")
-      if [[ -z ${SCOPE} ]]
-      then
-        continue
-      fi
-      CG=$(systemctl show "${SCOPE}" -p ControlGroup --value 2>/dev/null)
-      if [[ -z ${CG} ]] || [[ ${CG} == "${MY}" ]] || [[ ! -r /sys/fs/cgroup${CG}/cgroup.procs ]]
-      then
-        continue
-      fi
-      FOUND=""
-      while read -r PID
-      do
-        if [[ ! -r /proc/${PID}/comm ]]
-        then
-          continue
-        fi
-        COMM=$(cat "/proc/${PID}/comm")
-        if [[ " ${IGNORE} " == *" ${COMM} "* ]] || [[ " ${FOUND} " == *" ${COMM} "* ]]
-        then
-          continue
-        fi
-        FOUND+=" ${COMM}"
-      done < "/sys/fs/cgroup${CG}/cgroup.procs"
-      if [[ -z ${FOUND} ]]
-      then
-        continue
-      fi
-      if kill -0 "${LEADER}" 2>/dev/null
-      then
-        printf '%s leader alive:%s\n' "${SCOPE}" "${FOUND}"
-      else
-        printf '%s LEADER GONE:%s\n' "${SCOPE}" "${FOUND}"
-      fi
-    done
-  args:
-    executable: /bin/bash
-  check_mode: false
-  changed_when: false
-  register: needrestart_scope
-
-- name: "Needrestart / Maintenance / Daemons live in a login session scope ..."
-  debug:
-    msg: "{{ needrestart_scope.stdout_lines + ['a restart of systemd-logind would kill these, start them from a unit or with systemd-run --slice=system.slice'] }}"
-  when: needrestart_scope.stdout_lines | length > 0
 
 - name: "Needrestart / Maintenance / Apply ..."
   include_tasks: restart.yaml

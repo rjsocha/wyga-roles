@@ -10,6 +10,7 @@ needrestart_allow:
   - rsyslog.service
   - ssh.service
   - systemd-journald.service
+  - systemd-logind.service
   - systemd-machined.service
   - systemd-manager
   - systemd-networkd.service
@@ -28,7 +29,15 @@ needrestart_action:
 needrestart_skip:
   apt-daily.service: "runs apt itself"
   apt-daily-upgrade.service: "runs apt itself"
-  systemd-logind.service: "restart reaps stale session scopes, killing anything started by hand in an old login session"
+
+needrestart_gate:
+  systemd-logind.service: "its restart reaps stale session scopes, killing anything started by hand in an old login session"
+
+needrestart_follow:
+  systemd-logind.service:
+    - unattended-upgrades.service
+    - polkit.service
+    - omd.service
 
 needrestart_reboot:
   - dbus.service
