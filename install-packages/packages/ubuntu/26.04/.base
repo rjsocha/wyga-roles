@@ -5,11 +5,11 @@ prerequisite:
 require:
   - apparmor
   - bash-completion
+  - bind9-dnsutils
   - btrfs-progs
   - bzip2
   - curl
   - distro-info-data
-  - dnsutils
   - dosfstools
   - dracut
   - exfatprogs

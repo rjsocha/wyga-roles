@@ -1,0 +1,53 @@
+# The google-chrome-stable package manages its own repository: on install
+# (postinst) and daily from /etc/cron.daily/google-chrome it overwrites
+# /usr/share/keyrings/google-chrome.gpg with its built-in key and, unless
+# /etc/default/google-chrome exists, adds its own
+# /etc/apt/sources.list.d/google-chrome.sources. Writing to the same paths ends
+# in endless drift and two entries for the same repository.
+#
+# So the role uses its own names (site-google-chrome.*), keeps the key in
+# /etc/apt/keyrings (the operator's directory, not the package's) and stops the
+# package from adding the repository via /etc/default/google-chrome. That file
+# is written here, before the package is installed, because install-repository
+# runs before install-packages.
+#
+# /usr/share/keyrings/google-chrome.gpg will exist on the host anyway: it
+# belongs to the package, so the role neither touches nor removes it. There is
+# one suite (stable) for every distribution and release, so this lives in
+# common/.
+- name: "Install {{ repository }} repository / keyring directory ..."
+  file:
+    path: /etc/apt/keyrings
+    state: directory
+    group: root
+    owner: root
+    mode: 0755
+
+- name: "Install {{ repository }} repository ..."
+  copy:
+    src: "repository/{{ repository }}/common/{{ file.src }}"
+    dest: "{{ file.dst }}"
+    group: root
+    owner: root
+    mode: 0644
+    force: yes
+  loop:
+    - { 'src': 'file/site-{{ repository }}.gpg',  'dst': '/etc/apt/keyrings/site-{{ repository }}.gpg' }
+    - { 'src': 'file/site-{{ repository }}.list', 'dst': '/etc/apt/sources.list.d/site-{{ repository }}.list' }
+    - { 'src': 'file/default-{{ repository }}',   'dst': '/etc/default/{{ repository }}' }
+  loop_control:
+    loop_var: file
+    label: "{{ file.src }} => {{ file.dst }}"
+
+# What the package adds by itself when /etc/default/google-chrome is missing,
+# and what the previous version of this role wrote.
+- name: "Cleanup {{ repository }} repository ..."
+  file:
+    path: "{{ file.purge }}"
+    state: absent
+  loop:
+    - { 'purge': '/etc/apt/sources.list.d/{{ repository }}.list' }
+    - { 'purge': '/etc/apt/sources.list.d/{{ repository }}.sources' }
+  loop_control:
+    loop_var: file
+    label: "{{ file.purge }}"
