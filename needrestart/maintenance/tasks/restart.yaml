@@ -1,3 +1,10 @@
+- name: "Needrestart / Maintenance / Let needrestart restart what it does not defer ..."
+  command: "{{ needrestart_binary }} -r a"
+  environment:
+    LC_ALL: C
+  changed_when: true
+  when: needrestart_automatic | length > 0
+
 - name: "Needrestart / Maintenance / Reload ..."
   systemd:
     name: "{{ unit }}"
@@ -21,11 +28,6 @@
   loop_control:
     loop_var: unit
 
-- name: "Needrestart / Maintenance / Re-execute systemd ..."
-  command: systemctl daemon-reexec
-  changed_when: true
-  when: needrestart_reexec | length > 0
-
 - name: "Needrestart / Maintenance / Restart the user managers on old code ..."
   systemd:
     name: "{{ unit }}"
@@ -39,6 +41,16 @@
   changed_when: false
   register: needrestart_again
 
+- name: "Needrestart / Maintenance / Parse the report again ..."
+  set_fact:
+    needrestart_left: "{{ needrestart_again.stdout_lines | select('match', '^NEEDRESTART-SVC: ') | map('regex_replace', '^NEEDRESTART-SVC: +', '') | list }}"
+
+- name: "Needrestart / Maintenance / Restarted, and still running old code ..."
+  debug:
+    msg: "{{ needrestart_left | intersect(needrestart_automatic | union(needrestart_selected)) + ['a process of the workload still holds the old binary - the unit itself is up to date, only recreating the workload replaces it (containers: the shim of every running container, see the qemu guests above for the same case)'] }}"
+  when: needrestart_left | intersect(needrestart_automatic | union(needrestart_selected)) | length > 0
+
 - name: "Needrestart / Maintenance / Still running old code ..."
   debug:
-    msg: "{{ needrestart_again.stdout_lines | select('match', '^NEEDRESTART-SVC: ') | map('regex_replace', '^NEEDRESTART-SVC: +', '') | list }}"
+    msg: "{{ needrestart_left | difference(needrestart_automatic | union(needrestart_selected)) }}"
+  when: needrestart_left | difference(needrestart_automatic | union(needrestart_selected)) | length > 0

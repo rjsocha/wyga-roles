@@ -58,6 +58,40 @@
     needrestart_microcode: "{{ needrestart_report.stdout_lines | select('match', '^NEEDRESTART-UCSTA: ') | map('regex_replace', '^NEEDRESTART-UCSTA: +', '') | list | first | default('0') }}"
     needrestart_maintenance: "{{ host.security.restart.maintenance | default([], true) | map('regex_replace', '^([^.]+)$', '\\1.service') | list }}"
 
+- name: "Needrestart / Maintenance / Read the plan ..."
+  shell: |
+    set -eufo pipefail
+    IFS=$'\t\n'
+    LC_ALL=C {{ needrestart_binary }} -r l | awk '
+      /^Services to be restarted:$/ { group="restart"; next }
+      /^Service restarts being deferred:$/ { group="deferred"; next }
+      /^Service restarts being refused by systemd:$/ { group="refused"; next }
+      /^[^ ]/ { group=""; next }
+      group == "" { next }
+      NF == 0 { next }
+      $1 == "systemctl" && $2 == "restart" { for(i = 3; i <= NF; i++) print group, $i; next }
+      $1 ~ /\// { parts = split($1, part, "/"); print group, part[parts]; next }
+      { print group, $1 }
+    '
+  args:
+    executable: /bin/bash
+  check_mode: false
+  changed_when: false
+  register: needrestart_plan
+
+- name: "Needrestart / Maintenance / Parse the plan ..."
+  set_fact:
+    needrestart_automatic: "{{ needrestart_plan.stdout_lines | select('match', '^restart ') | map('regex_replace', '^restart ', '') | list }}"
+    needrestart_deferred: "{{ needrestart_plan.stdout_lines | select('match', '^deferred ') | map('regex_replace', '^deferred ', '') | list }}"
+    needrestart_refused: "{{ needrestart_plan.stdout_lines | select('match', '^refused ') | map('regex_replace', '^refused ', '') | list }}"
+
+- name: "Needrestart / Maintenance / The plan does not account for every service ..."
+  assert:
+    that:
+      - needrestart_service | difference(needrestart_automatic | union(needrestart_deferred) | union(needrestart_refused)) | length == 0
+    fail_msg: "not in the plan: {{ needrestart_service | difference(needrestart_automatic | union(needrestart_deferred) | union(needrestart_refused)) | join(', ') }} - the output format of needrestart changed, the role cannot tell what it would restart"
+    quiet: true
+
 - name: "Needrestart / Maintenance / Look for daemons in session scopes ..."
   shell: |
     set -eufo pipefail
@@ -160,21 +194,19 @@
 
 - name: "Needrestart / Maintenance / Gate by session scopes ..."
   set_fact:
-    needrestart_gated: "{{ needrestart_service | intersect(needrestart_gate | list) if needrestart_scope.stdout_lines | select('search', 'LEADER GONE') | length > 0 else [] }}"
+    needrestart_gated: "{{ needrestart_deferred | intersect(needrestart_gate | list) if needrestart_scope.stdout_lines | select('search', 'LEADER GONE') | length > 0 else [] }}"
 
 - name: "Needrestart / Maintenance / Plan ..."
   set_fact:
-    needrestart_skipped: "{{ needrestart_service | intersect(needrestart_skip | list) }}"
-    needrestart_rebootable: "{{ needrestart_service | intersect(needrestart_reboot) }}"
-    needrestart_selected: "{{ needrestart_service | difference(needrestart_skip | list) | difference(needrestart_reboot) | difference(needrestart_gated) | intersect(needrestart_allow | union(needrestart_maintenance)) }}"
-    needrestart_reported: "{{ needrestart_service | difference(needrestart_skip | list) | difference(needrestart_reboot) | difference(needrestart_allow | union(needrestart_maintenance)) }}"
+    needrestart_skipped: "{{ needrestart_deferred | intersect(needrestart_skip | list) }}"
+    needrestart_rebootable: "{{ needrestart_deferred | intersect(needrestart_reboot) }}"
+    needrestart_selected: "{{ needrestart_deferred | difference(needrestart_skip | list) | difference(needrestart_reboot) | difference(needrestart_gated) | intersect(needrestart_allow | union(needrestart_maintenance)) }}"
+    needrestart_reported: "{{ needrestart_deferred | difference(needrestart_skip | list) | difference(needrestart_reboot) | difference(needrestart_allow | union(needrestart_maintenance)) }}"
     needrestart_reboot_required: "{{ needrestart_kernel in ['2', '3'] or needrestart_microcode == '2' or needrestart_service | intersect(needrestart_reboot) | length > 0 }}"
 
 - name: "Needrestart / Maintenance / Plan by action ..."
   set_fact:
     needrestart_reload: "{{ needrestart_selected | intersect(needrestart_action | dict2items | selectattr('value', 'eq', 'reload') | map(attribute='key') | list) }}"
-    needrestart_reexec: "{{ needrestart_selected | intersect(needrestart_action | dict2items | selectattr('value', 'eq', 'daemon-reexec') | map(attribute='key') | list) }}"
-    needrestart_user: "{{ needrestart_selected | intersect(needrestart_action | dict2items | selectattr('value', 'eq', 'user-manager') | map(attribute='key') | list) }}"
     needrestart_plain: "{{ needrestart_selected | difference(needrestart_action | list) }}"
 
 - name: "Needrestart / Maintenance / Plan the restart order ..."
@@ -209,6 +241,11 @@
     msg: "nothing runs old code"
   when: needrestart_service | length == 0
 
+- name: "Needrestart / Maintenance / Plan: needrestart restarts these itself ..."
+  debug:
+    msg: "{{ needrestart_automatic }}"
+  when: needrestart_automatic | length > 0
+
 - name: "Needrestart / Maintenance / Plan: restart ..."
   debug:
     msg: "{{ needrestart_restart }}"
@@ -224,11 +261,6 @@
     msg: "{{ needrestart_reload }}"
   when: needrestart_reload | length > 0
 
-- name: "Needrestart / Maintenance / Plan: systemd daemon-reexec ..."
-  debug:
-    msg: "{{ needrestart_reexec }}"
-  when: needrestart_reexec | length > 0
-
 - name: "Needrestart / Maintenance / Plan: user managers to restart ..."
   debug:
     msg: "{{ needrestart_manager.stdout_lines }}"
@@ -239,7 +271,12 @@
     msg: "{{ needrestart_skipped | zip(needrestart_skipped | map('extract', needrestart_skip)) | map('join', ': ') | list }}"
   when: needrestart_skipped | length > 0
 
-- name: "Needrestart / Maintenance / Plan: reported only, not allowed by policy ..."
+- name: "Needrestart / Maintenance / Plan: systemd refuses to restart these ..."
+  debug:
+    msg: "{{ needrestart_refused }}"
+  when: needrestart_refused | length > 0
+
+- name: "Needrestart / Maintenance / Plan: deferred by needrestart, no entry in the table or the policy ..."
   debug:
     msg: "{{ needrestart_reported }}"
   when: needrestart_reported | length > 0
@@ -340,5 +377,5 @@
   include_tasks: restart.yaml
   when:
     - not ansible_check_mode
-    - needrestart_selected | length > 0 or needrestart_manager.stdout_lines | length > 0
+    - needrestart_automatic | length > 0 or needrestart_selected | length > 0 or needrestart_manager.stdout_lines | length > 0
     - not needrestart_reboot_required or needrestart_force is defined

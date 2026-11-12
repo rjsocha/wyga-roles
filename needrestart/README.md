@@ -31,7 +31,7 @@ policy:
 | --- | --- | --- |
 | `mode` | `configure` | `list` (default): report only; `interactive`: ask; `automatic`: restart services |
 | `kernel` | `configure` | report a running kernel older than the installed one (default `true`) |
-| `maintenance` | `maintenance` | services this host allows the maintenance run to restart, on top of the role's own table (default: none) |
+| `maintenance` | `maintenance` | units **needrestart refuses to restart** that this host nevertheless allows the maintenance run to bring up, on top of the role's own table (default: none). A unit needrestart restarts by itself needs no entry - see below |
 
 # wyga/needrestart/configure
 
@@ -97,11 +97,16 @@ and why, and changes nothing. The task that reads the report runs with
 Services that can be brought up to date without rebooting the host. Nothing
 else. A reboot is the operator's decision.
 
+The run is `needrestart -r a` plus the hard cases. needrestart decides for
+itself what it restarts and does it; the role handles what needrestart refuses
+to touch, and reports what nothing but a reboot or a recreated workload can
+fix. Both halves are below.
+
 The role exists only for the case where no reboot is needed, so it checks that
 first: with a pending kernel or microcode upgrade, or with a service only a
-reboot can fix, it prints the plan and restarts nothing. A reboot costs the
-same downtime and leaves the host in one consistent state instead of a half
-restarted one.
+reboot can fix, it prints the plan and restarts nothing - not even the
+`needrestart -r a`. A reboot costs the same downtime and leaves the host in
+one consistent state instead of a half restarted one.
 
 ```sh
 ./needrestart-restart -i my -eneedrestart_force=1
@@ -112,35 +117,64 @@ the running services off the old libraries.
 
 ## Where the decision comes from
 
-The role carries its own table of what a service needs, because the action
-is not always a restart:
+Two layers, and the first one is not the role's.
 
-| Action | Examples | Why |
+**needrestart restarts what it can.** Its own `$nrconf{override_rc}`
+(`/etc/needrestart/needrestart.conf` plus its `conf.d`, read as perl) is a
+table of regexes marking the units it refuses; everything else it restarts in
+one combined `systemctl restart`. On Debian 13 (needrestart 3.11) it refuses
+`dbus*`, `bird`, `network*`, `NetworkManager`, `wpa_supplicant`, `openvpn`,
+`*swan`, `getty@*`, `serial-getty@*`, `user@N.service`, `lxc*`, `libvirt*`,
+`virtlogd`, `virtlockd`, `docker*`, `apt-daily*`, `unattended-upgrades`,
+`cron-*`, `rc-local`, `systemd-logind`, `systemd-nspawn*`, the display
+managers and a handful of others. It does **not** refuse `ssh`, `cron`,
+`nginx`, `rsyslog`, `polkit`, `containerd`, `zerotier-one`, `knot`,
+`systemd-journald`, `systemd-machined`, `systemd-networkd` (the `network*`
+regex does not match it), `systemd-resolved`, `systemd-timesyncd` or
+`systemd-udevd` - all of those it restarts on its own, and none of them needs
+an entry in this role. It also brings itself up to date through its own
+`restart.d` helpers: `systemd-manager` is `systemctl daemon-reexec`, and
+`systemd-user` signals `SIGRTMIN+25` to every `user@*.service`.
+
+**The role handles what needrestart refuses**, because for those units the
+action is not always a plain restart:
+
+| Action | Units | Why |
 | --- | --- | --- |
-| `restart` | `ssh`, `cron`, `rsyslog`, `polkit`, `nginx`, `libvirtd`, `bird`, `knot`, `systemd-journald`, `systemd-machined`, `systemd-networkd`, `systemd-resolved`, `systemd-timesyncd`, `systemd-udevd`, `unattended-upgrades`, `zerotier-one` | the plain case |
+| `restart` | `bird`, `libvirtd`, `unattended-upgrades` | the plain case |
 | `reload` | `virtlogd` | `ExecReload` sends `SIGUSR1`, on which virtlogd re-exec()s its binary and keeps all current logs and clients (`man 8 virtlogd`); a restart would cut the log of every running guest |
-| own command | `systemd-manager`, `systemd-user` | not services: `systemctl daemon-reexec`, and a restart of every user manager that runs old code, below |
-| host reboot | `dbus`, the kernel, the microcode | below |
 | restart, but gated | `systemd-logind` | safe unless a session scope has lost its leader and still holds daemons; pulls `unattended-upgrades`, `polkit` and `omd` behind it, below |
-| report only | `apt-daily*`, `SESS` entries, guests on old qemu | below |
+| host reboot | `dbus`, the kernel, the microcode | below |
+| report only | `apt-daily*`, `SESS` entries, guests on old qemu, a unit restarted while its workload still holds the old binary | below |
+| own scan | user managers | needrestart's `SIGRTMIN+25` is not enough, below |
 
-`needrestart_allow` in the role's defaults is what every host may restart on
-its own, `needrestart_action` says how, `needrestart_gate` holds a unit back
-until its precondition is met and `needrestart_follow` names what has to be
-try-restarted behind it. Restarting `systemd-machined` keeps the registered
-machines: it reads them back from `/run/systemd/machines/`, verified on a host
-with eight libvirt guests.
+`needrestart_allow` in the role's defaults is the subset of the refused units
+every host may bring up, `needrestart_action` says how, `needrestart_gate`
+holds a unit back until its precondition is met and `needrestart_follow` names
+what has to be try-restarted behind it.
 
-Policy adds to that list with `security.restart.maintenance`,
-it never takes anything away from it, and the skip and reboot lists win over
-both. A service in neither the table nor the policy is reported and left
-running, so the operator can decide and add it.
+Policy adds to that list with `security.restart.maintenance`, it never takes
+anything away from it, and the skip and reboot lists win over both. A refused
+unit in neither the table nor the policy is reported and left running, so the
+operator can decide and add it. **Adding a unit needrestart already restarts
+is a no-op and should not be done** - it duplicates a decision that lives in
+needrestart and goes stale there.
 
-needrestart's own `$nrconf{override_rc}` is not the source of truth here. It
-already says no to `bird`, `docker`, `libvirt`, `virtlogd`, `systemd-logind`,
-`unattended-upgrades`, `apt-daily*` and `dbus`, which is why these are
-exactly the ones left over after an `automatic` run, and why the table has to
-exist.
+### How the plan is built
+
+`needrestart -b -r l` is the machine-readable report, and it lists every unit
+on old code without saying what needrestart would do with it - the refusal
+lives in the config, not in the report. The split comes from the human output
+of `needrestart -r l` (forced to `LC_ALL=C`), which prints three sections:
+`Services to be restarted:`, `Service restarts being deferred:` and `Service
+restarts being refused by systemd:` (`RefuseManualStop=yes`). The role parses
+those into `needrestart_automatic`, `needrestart_deferred` and
+`needrestart_refused`, and asserts that together they account for every unit
+in the batch report - if a future needrestart changes its output, the run
+fails instead of planning from half an answer.
+
+Only the plan depends on that parsing. The execution path does not: it runs
+`needrestart -r a`, then reads the report again and works from what is left.
 
 ## Why some things are only reported
 
@@ -163,6 +197,16 @@ exist.
   restarts those itself, below.
 - **Guests on outdated qemu binaries.** Only a restart of the guest helps
   (below).
+- **A unit that was restarted and is still reported.** The unit is up to date;
+  a process of its workload is not, and it sits in the unit's cgroup, so
+  needrestart keeps attributing it to the unit. `containerd` is the standing
+  case: every running container has a `containerd-shim-runc-v2` of its own,
+  started with the binary that was current then and never replaced by a
+  restart of containerd - the containers themselves survive the restart
+  (`KillMode=process`, `Delegate=yes`), and that is exactly why the shim
+  stays. Only recreating the workload replaces it. Structurally the same thing
+  as a guest on an old qemu, so the run reports it the same way, on its own
+  line, after the second report.
 
 ## Outdated qemu guests
 
@@ -263,7 +307,8 @@ lists them under their own line.
 ## User managers
 
 needrestart's own answer for a user manager is `SIGRTMIN+25`, which makes
-`systemd --user` re-exec itself. That is not enough. Every user manager also
+`systemd --user` re-exec itself, and it sends it in the `-r a` phase whenever
+it reports `systemd-user`. That is not enough. Every user manager also
 has a `(sd-pam)` child - a forked `systemd-executor` that holds the PAM
 session open and waits - and nothing re-executes it, so after a library
 upgrade it keeps the deleted mapping for as long as the session lives. On a
@@ -307,10 +352,12 @@ reload` and the like are not affected; only starting a process is.
 
 ## A reload is not always enough
 
-`nginx` is the trap. `ExecReload` is `nginx -s reload`, a `SIGHUP`: the master
+`nginx` is the trap, and it is worth knowing even though needrestart owns the
+decision for it. `ExecReload` is `nginx -s reload`, a `SIGHUP`: the master
 keeps running, and the workers are `fork()`ed from it, so they inherit its
 mappings, deleted libraries included. The report does not go away. The live
 binary upgrade is the `upgrade` action of `/etc/init.d/nginx` (`SIGUSR2`, wait
 for both pid files, `SIGQUIT` to the old master), which the systemd unit does
-not have. The table therefore says `restart` for nginx; a richer policy can be
-added when a host actually needs it.
+not have. needrestart restarts the unit, which is the right call of the two it
+has; a host that cannot take that needs an entry in its own policy, not a
+reload.

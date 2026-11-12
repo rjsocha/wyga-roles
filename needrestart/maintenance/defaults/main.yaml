@@ -1,30 +1,19 @@
 needrestart_binary: /usr/sbin/needrestart
 
+# needrestart decides for itself what it restarts: $nrconf{override_rc} in
+# /etc/needrestart/needrestart.conf and its conf.d holds the units it refuses.
+# The tables below describe only those refused units - whatever needrestart
+# restarts on its own never needs an entry here, and adding one would only
+# duplicate a decision that already lives in needrestart.
+
 needrestart_allow:
   - bird.service
-  - cron.service
-  - knot.service
   - libvirtd.service
-  - nginx.service
-  - polkit.service
-  - rsyslog.service
-  - ssh.service
-  - systemd-journald.service
   - systemd-logind.service
-  - systemd-machined.service
-  - systemd-manager
-  - systemd-networkd.service
-  - systemd-resolved.service
-  - systemd-timesyncd.service
-  - systemd-udevd.service
-  - systemd-user
   - unattended-upgrades.service
   - virtlogd.service
-  - zerotier-one.service
 
 needrestart_action:
-  systemd-manager: daemon-reexec
-  systemd-user: user-manager
   virtlogd.service: reload
 
 needrestart_skip:
