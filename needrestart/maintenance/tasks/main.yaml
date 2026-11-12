@@ -62,7 +62,7 @@
   shell: |
     set -eufo pipefail
     IFS=$'\t\n'
-    LC_ALL=C {{ needrestart_binary }} -r l | awk '
+    LC_ALL=C {{ needrestart_binary }} -r l 2>&1 | awk '
       /^Services to be restarted:$/ { group="restart"; next }
       /^Service restarts being deferred:$/ { group="deferred"; next }
       /^Service restarts being refused by systemd:$/ { group="refused"; next }
