@@ -22,7 +22,8 @@ LLMNR=no
 {% for route in routes %}
 
 [Route]
-Destination={{ "0.0.0.0/0" if route.to == "default" else route.to }}
+Destination={{ route.to if route.to != 'default'
+                else ('::/0' if route.via | ansible.utils.ipv6 else '0.0.0.0/0') }}
 Gateway={{ route.via }}
 {% if route.onlink | default(false) %}
 GatewayOnLink=yes

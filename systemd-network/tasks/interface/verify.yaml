@@ -186,8 +186,24 @@
       - route.via is defined
       - route.to == "default" or route.to | ansible.utils.ipaddr('net') is not false
       - route.via | ansible.utils.ipaddr('address') is not false
-    msg: "'to' and 'via' fields are required and must be defined, 'to' must be either 'default' or a valid IPv4 network address, and 'via' must contain a valid IPv4 address"
+    msg: "'to' and 'via' fields are required and must be defined, 'to' must be either 'default' or a valid IPv4 or IPv6 destination, and 'via' must contain a valid IPv4 or IPv6 address"
   loop: "{{ interface.route }}"
+  loop_control:
+    loop_var: route
+    label: "ROUTE"
+  when: interface.route is defined
+
+# The route family comes from the gateway: networkd writes Destination and
+# Gateway as a single route, so '10.0.0.0/8' via 'fe80::1' is an IPv4 route
+# with an IPv6 gateway (RFC 5549), not an IPv6 route - the role rejects it
+# instead of translating it.
+- name: "Verify interface.route address family ..."
+  assert:
+    that:
+      - (route.to | ansible.utils.ipv6 is not false)
+        == (route.via | ansible.utils.ipv6 is not false)
+    msg: "'to' and 'via' must be of the same address family - an IPv6 'via' requires an IPv6 'to' (or 'default', which takes the family of 'via')"
+  loop: "{{ interface.route | rejectattr('to', 'equalto', 'default') | list }}"
   loop_control:
     loop_var: route
     label: "ROUTE"

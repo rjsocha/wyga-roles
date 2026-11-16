@@ -21,9 +21,12 @@
   set_fact:
     routes: "{{ interface.route | default([]) }}"
 
+# 'default' instead of '0.0.0.0/0': the template picks the default route
+# prefix from the gateway family, so an IPv6 gw yields an IPv6 route,
+# not an IPv4 one via fe80::.
 - name: "Append GW to routes ..."
   set_fact:
-    routes: "{{ [ { 'to': '0.0.0.0/0', 'via': interface.gw } ] + routes }}"
+    routes: "{{ [ { 'to': 'default', 'via': interface.gw } ] + routes }}"
   when: interface.gw is defined
 
 - name: "Configure loopback interface ..."
